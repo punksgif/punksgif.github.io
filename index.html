@@ -1,1 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 PUNKS v5 | FIXED Unseen Generator</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #008080; font-family: 'VT323', monospace; padding: 20px; }
+    .win95-window { background: #c0c0c0; border: 3px solid; border-top-color: #fff; border-left-color: #fff; border-right-color: #808080; border-bottom-color: #808080; margin-bottom: 20px; }
+    .win95-titlebar { background: #000080; color: white; padding: 6px 10px; font-family: 'Press Start 2P', monospace; font-size: 11px; display: flex; justify-content: space-between; }
+    .win95-content { padding: 16px; }
+    .win95-btn { background: #c0c0c0; border: 3px solid; border-top-color: #fff; border-left-color: #fff; border-right-color: #808080; border-bottom-color: #808080; padding: 8px 16px; font-family: 'Press Start 2P', monospace; font-size: 10px; cursor: pointer; }
+    .win95-btn:active { border-top-color: #808080; border-left-color: #808080; border-right-color: #fff; border-bottom-color: #fff; transform: translate(1px,1px); }
+    .win95-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .progress-bar { background: white; border: 2px inset #808080; height: 24px; }
+    .progress-fill { background: #000080; height: 100%; width: 0%; transition: width 0.1s; }
+    .text-pixel { font-family: 'Press Start 2P', monospace; }
+    .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; max-height: 500px; overflow-y: auto; padding: 10px; }
+    .nft-card { background: #d4d0c8; border: 3px solid; border-top-color: #fff; border-left-color: #fff; border-right-color: #808080; border-bottom-color: #808080; padding: 10px; cursor: pointer; transition: transform 0.1s; }
+    .nft-card:hover { transform: scale(1.02); }
+    .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #c0c0c0; border: 3px solid; border-top-color: #fff; border-left-color: #fff; border-right-color: #808080; border-bottom-color: #808080; padding: 10px 20px; font-family: 'Press Start 2P', monospace; font-size: 10px; z-index: 10000; }
+    .hidden { display: none; }
+    .stat-card { background: #d4d0c8; border: 2px inset #808080; padding: 10px; text-align: center; }
+    .warning { color: #aa0000; font-size: 10px; margin-top: 5px; }
+    .success { color: #006600; font-size: 10px; }
+    .base-badge { display: inline-block; background: #000080; color: white; padding: 2px 8px; margin: 2px; font-size: 8px; font-family: 'Press Start 2P', monospace; border-radius: 2px; }
+    .gender-tab { background: #c0c0c0; border: 3px solid; border-top-color: #fff; border-left-color: #fff; border-right-color: #808080; border-bottom-color: #808080; padding: 6px 12px; cursor: pointer; font-family: 'Press Start 2P', monospace; font-size: 9px; }
+    .gender-tab.active { background: #000080; color: white; border-color: #fff; }
+    .debug-info { background: #1a1a1a; color: #0f0; padding: 10px; font-family: monospace; font-size: 10px; max-height: 150px; overflow: auto; margin-top: 10px; }
+  </style>
+</head>
+<body>
+<div style="max-width: 1400px; margin: 0 auto;">
+  <div class="win95-window">
+    <div class="win95-titlebar">
+      <span>🎮 404 PUNKS v5 - FIXED GENERATOR | IPFS POWERED</span>
+      <button onclick="location.reload()" style="background:#c0c0c0; border:2px solid; width:22px; height:22px;">✕</button>
+    </div>
+    <div class="win95-content">
+      
+      <!-- GENDER SELECTOR -->
+      <div class="win95-window" style="margin-bottom: 16px;">
+        <div class="win95-titlebar" style="background: #808080;">⚥ SELECT GENDER FOR GENERATION</div>
+        <div class="win95-content">
+          <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <button id="gender-male-btn" class="gender-tab active">♂ MALE</button>
+            <button id="gender-female-btn" class="gender-tab">♀ FEMALE</button>
+            <button id="gender-both-btn" class="gender-tab">⚥ BOTH (50/50)</button>
+          </div>
+        </div>
+      </div>
 
+      <!-- STATS SECTION -->
+      <div class="win95-window" style="margin-bottom: 16px;">
+        <div class="win95-titlebar" style="background: #808080;">📊 SYSTEM STATUS</div>
+        <div class="win95-content">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+            <div class="stat-card"><span class="text-pixel text-[8px]">LAYERS LOADED</span><br><span id="stat-layers" class="text-xl font-bold">0</span></div>
+            <div class="stat-card"><span class="text-pixel text-[8px]">BASE TYPES</span><br><span id="stat-base-types" class="text-xl font-bold">0</span></div>
+            <div class="stat-card"><span class="text-pixel text-[8px]">IPFS SCANNED</span><br><span id="stat-ipfs" class="text-xl font-bold">0</span></div>
+            <div class="stat-card"><span class="text-pixel text-[8px]">UNSEEN COMBOS</span><br><span id="stat-unseen" class="text-xl font-bold text-green-600">0</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BASE DISTRIBUTION -->
+      <div class="win95-window" style="margin-bottom: 16px;">
+        <div class="win95-titlebar" style="background: #808080;">🎲 BASE DISTRIBUTION (FROM IPFS)</div>
+        <div class="win95-content">
+          <div id="base-distribution" class="flex flex-wrap gap-2 justify-center">
+            <span class="text-pixel text-[8px] text-gray-600">Click SCAN to load base data...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTROL PANEL -->
+      <div class="win95-window" style="margin-bottom: 16px;">
+        <div class="win95-titlebar" style="background: #808080;">⚙️ GENERATOR CONTROL</div>
+        <div class="win95-content">
+          <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+            <div>
+              <div class="text-pixel text-[8px] mb-1">TARGET NFTS</div>
+              <input type="number" id="target-count" min="1" max="50000" value="100" class="win95-input" style="width: 120px; background:white; border:2px inset #808080; padding:6px;">
+            </div>
+            <div>
+              <div class="text-pixel text-[8px] mb-1">NAME PREFIX</div>
+              <input type="text" id="name-prefix" value="PUNK#" class="win95-input" style="width: 120px; background:white; border:2px inset #808080; padding:6px;">
+            </div>
+            <button id="btn-analyze" class="win95-btn">🔍 SCAN IPFS</button>
+            <button id="btn-generate" class="win95-btn" style="background: #000080; color: white;" disabled>✨ GENERATE</button>
+            <button id="btn-download-all" class="win95-btn" disabled>📦 DOWNLOAD ZIP</button>
+          </div>
+          <div class="warning mt-2" id="warning-msg"></div>
+        </div>
+      </div>
+
+      <!-- PROGRESS SECTION -->
+      <div id="progress-section" class="win95-window hidden">
+        <div class="win95-titlebar" style="background: #808080;">📀 PROGRESS</div>
+        <div class="win95-content">
+          <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+          <p id="progress-text" class="text-pixel text-[8px] mt-2 text-center">READY</p>
+        </div>
+      </div>
+
+      <!-- PREVIEW -->
+      <div class="win95-window">
+        <div class="win95-titlebar" style="background: #808080;">🖼️ PREVIEW</div>
+        <div class="win95-content">
+          <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: start;">
+            <canvas id="preview-canvas" width="200" height="200" style="border: 3px outset #808080; background: white;"></canvas>
+            <div style="flex: 1;">
+              <div id="preview-name" class="text-pixel text-sm font-bold mb-2">-</div>
+              <div id="preview-base" class="text-[10px] mb-2"><span class="base-badge">Base: --</span></div>
+              <div id="preview-traits" class="text-sm"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GENERATED NFTS -->
+      <div class="win95-window">
+        <div class="win95-titlebar" style="background: #808080;">🎨 GENERATED NFTS</div>
+        <div class="win95-content">
+          <div id="nft-grid" class="grid-cards" style="max-height: 350px;">
+            <div class="text-center text-pixel text-xs text-gray-600">Click SCAN IPFS first!</div>
+          </div>
+          <div class="mt-3 flex justify-between">
+            <span id="nft-count-display" class="text-pixel text-[8px]">0 NFTS</span>
+            <button id="clear-generated" class="win95-btn text-[8px] py-1">🗑️ CLEAR</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEBUG INFO -->
+      <div class="win95-window">
+        <div class="win95-titlebar" style="background: #808080;">🐛 DEBUG INFO</div>
+        <div class="win95-content">
+          <div id="debug-info" class="debug-info">Ready. Click SCAN IPFS to start...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast hidden"></div>
+
+<script>
+  // ==================== CONFIGURATION ====================
+  const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
+  const BASE_HASH = 'QmTL46vYJpGgjMr9jy3p76XBbPgzKwBv4SbeA2pY95mT98';
+  const TOTAL_IPFS_NFTS = 100;
+  
+  // Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyBC8Hh1FTNl1SM8pMeg7KWbfQGNBfrJDAk",
+    authDomain: "teampunks-75868.firebaseapp.com",
+    databaseURL: "https://teampunks-75868-default-rtdb.firebaseio.com",
+    projectId: "teampunks-75868",
+    storageBucket: "teampunks-75868.firebasestorage.app",
+    messagingSenderId: "808455399622",
+    appId: "1:808455399622:web:d3790bbc8d57fed4758fc7"
+  };
+  
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+  
+  // ==================== GLOBAL VARIABLES ====================
+  let layersData = {};
+  let baseDistribution = {};
+  let baseValuesList = [];
+  let existingCombinationsSet = new Set();
+  let allPossibleCombos = [];
+  let unseenCombos = [];
+  let generatedNFTs = [];
+  let currentGender = "male";
+  let isScanned = false;
+  
+  const sectionOrder = ["Background", "Base", "Eyes", "Mouth", "Nose", "Face", "Neck", "Ear", "Beard", "Accessory", "Head"];
+  
+  // DEMO LAYERS (if Firebase is empty)
+  const DEMO_LAYERS = {
+    "Background": [
+      {id:"bg1", value:"Cosmic Purple", imageUrl:"https://placehold.co/512x512/4a0e4e/white?text=Cosmic", gender:"both"},
+      {id:"bg2", value:"Neon City", imageUrl:"https://placehold.co/512x512/0a0a2a/white?text=Neon", gender:"both"},
+      {id:"bg3", value:"Retro Wave", imageUrl:"https://placehold.co/512x512/2a0a2a/white?text=Retro", gender:"both"}
+    ],
+    "Base": [
+      {id:"base1", value:"Alien", imageUrl:"https://placehold.co/512x512/2ecc71/black?text=Alien", gender:"both"},
+      {id:"base2", value:"Ape", imageUrl:"https://placehold.co/512x512/8B4513/white?text=Ape", gender:"both"},
+      {id:"base3", value:"Zombie", imageUrl:"https://placehold.co/512x512/2c3e50/white?text=Zombie", gender:"both"},
+      {id:"base4", value:"Human", imageUrl:"https://placehold.co/512x512/f5deb3/black?text=Human", gender:"both"},
+      {id:"base5", value:"Robot", imageUrl:"https://placehold.co/512x512/bdc3c7/black?text=Robot", gender:"both"},
+      {id:"base6", value:"Demon", imageUrl:"https://placehold.co/512x512/c0392b/white?text=Demon", gender:"both"},
+      {id:"base7", value:"Angel", imageUrl:"https://placehold.co/512x512/f1c40f/black?text=Angel", gender:"both"},
+      {id:"base8", value:"Cat", imageUrl:"https://placehold.co/512x512/e67e22/white?text=Cat", gender:"both"},
+      {id:"base9", value:"Dog", imageUrl:"https://placehold.co/512x512/af7ac5/black?text=Dog", gender:"both"},
+      {id:"base10", value:"Frog", imageUrl:"https://placehold.co/512x512/27ae60/white?text=Frog", gender:"both"},
+      {id:"base11", value:"Bird", imageUrl:"https://placehold.co/512x512/3498db/white?text=Bird", gender:"both"}
+    ],
+    "Eyes": [
+      {id:"eye1", value:"Normal", imageUrl:"https://placehold.co/512x512/white/black?text=Normal", gender:"both"},
+      {id:"eye2", value:"Glowing Red", imageUrl:"https://placehold.co/512x512/red/black?text=Glowing", gender:"both"},
+      {id:"eye3", value:"Cyber Blue", imageUrl:"https://placehold.co/512x512/cyan/black?text=Cyber", gender:"both"},
+      {id:"eye4", value:"Laser", imageUrl:"https://placehold.co/512x512/yellow/black?text=Laser", gender:"both"}
+    ],
+    "Mouth": [
+      {id:"mouth1", value:"Smile", imageUrl:"https://placehold.co/512x512/white/black?text=Smile", gender:"both"},
+      {id:"mouth2", value:"Frown", imageUrl:"https://placehold.co/512x512/white/black?text=Frown", gender:"both"},
+      {id:"mouth3", value:"Open", imageUrl:"https://placehold.co/512x512/white/black?text=Open", gender:"both"}
+    ],
+    "Accessory": [
+      {id:"acc1", value:"Glasses", imageUrl:"https://placehold.co/512x512/black/white?text=Glasses", gender:"both"},
+      {id:"acc2", value:"Hat", imageUrl:"https://placehold.co/512x512/black/white?text=Hat", gender:"both"},
+      {id:"acc3", value:"Earrings", imageUrl:"https://placehold.co/512x512/gold/white?text=Earrings", gender:"female"},
+      {id:"acc4", value:"Headphones", imageUrl:"https://placehold.co/512x512/black/white?text=HP", gender:"both"}
+    ]
+  };
+  
+  function debugLog(msg) {
+    let debugDiv = document.getElementById('debug-info');
+    if (debugDiv) {
+      let timestamp = new Date().toLocaleTimeString();
+      debugDiv.innerHTML = `[${timestamp}] ${msg}\n` + debugDiv.innerHTML;
+      if (debugDiv.innerHTML.length > 5000) {
+        debugDiv.innerHTML = debugDiv.innerHTML.substring(0, 3000);
+      }
+    }
+    console.log(msg);
+  }
+  
+  function showToast(msg) {
+    let toast = document.getElementById('toast');
+    toast.innerText = msg;
+    toast.classList.remove('hidden');
+    clearTimeout(window.toastTimeout);
+    window.toastTimeout = setTimeout(() => toast.classList.add('hidden'), 3000);
+  }
+  
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m] || m));
+  }
+  
+  // ==================== LOAD LAYERS FROM FIREBASE ====================
+  async function loadLayersFromFirebase() {
+    debugLog("Loading layers from Firebase...");
+    return new Promise((resolve) => {
+      database.ref('layers').once('value', (snap) => {
+        const data = snap.val();
+        if (data && Object.keys(data).length > 0) {
+          for (let section of sectionOrder) {
+            if (data[section] && Array.isArray(data[section])) {
+              layersData[section] = data[section];
+            } else {
+              layersData[section] = [];
+            }
+          }
+          debugLog(`Loaded ${Object.keys(layersData).length} sections from Firebase`);
+        } else {
+          debugLog("No Firebase data, using DEMO layers");
+          layersData = DEMO_LAYERS;
+        }
+        
+        let activeLayers = sectionOrder.filter(s => layersData[s] && layersData[s].length > 0).length;
+        document.getElementById('stat-layers').innerText = activeLayers;
+        resolve();
+      });
+    });
+  }
+  
+  // ==================== FETCH NFT FROM IPFS ====================
+  async function fetchNFTFromIPFS(id) {
+    try {
+      const url = `${IPFS_GATEWAY}${BASE_HASH}/${id}`;
+      debugLog(`Fetching IPFS: ${url}`);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      debugLog(`Failed IPFS #${id}: ${err.message}`);
+      return null;
+    }
+  }
+  
+  // ==================== SCAN IPFS ====================
+  async function scanIPFS() {
+    let btnAnalyze = document.getElementById('btn-analyze');
+    let progressSec = document.getElementById('progress-section');
+    let progressFill = document.getElementById('progress-fill');
+    let progressText = document.getElementById('progress-text');
+    
+    btnAnalyze.disabled = true;
+    progressSec.classList.remove('hidden');
+    
+    existingCombinationsSet.clear();
+    baseDistribution = {};
+    let scanned = 0;
+    let found = 0;
+    let scanLimit = Math.min(200, TOTAL_IPFS_NFTS);
+    
+    debugLog(`Starting IPFS scan of ${scanLimit} NFTs...`);
+    
+    for (let i = 1; i <= scanLimit; i++) {
+      let percent = Math.round((i / scanLimit) * 100);
+      progressFill.style.width = `${percent}%`;
+      progressText.innerText = `SCANNING: ${i}/${scanLimit}`;
+      
+      let metadata = await fetchNFTFromIPFS(i);
+      if (metadata && metadata.attributes && Array.isArray(metadata.attributes)) {
+        let traits = [];
+        let baseValue = null;
+        
+        for (let attr of metadata.attributes) {
+          traits.push({ section: attr.trait_type, value: attr.value });
+          if (attr.trait_type === "Base") {
+            baseValue = attr.value;
+          }
+        }
+        
+        if (baseValue) {
+          baseDistribution[baseValue] = (baseDistribution[baseValue] || 0) + 1;
+        }
+        
+        if (traits.length > 0) {
+          let hash = traits.map(t => `${t.section}:${t.value}`).sort().join('|');
+          existingCombinationsSet.add(hash);
+          found++;
+        }
+      }
+      scanned++;
+      
+      if (i % 20 === 0) await new Promise(r => setTimeout(r, 10));
+    }
+    
+    // If no base found, create demo distribution
+    if (Object.keys(baseDistribution).length === 0) {
+      debugLog("No base data found from IPFS, using demo distribution");
+      baseDistribution = {
+        "Alien": 11, "Ape": 24, "Zombie": 87, "Human": 5000,
+        "Robot": 300, "Demon": 50, "Angel": 40, "Cat": 120,
+        "Dog": 100, "Frog": 60, "Bird": 45
+      };
+    }
+    
+    baseValuesList = Object.entries(baseDistribution).map(([value, count]) => ({ value, weight: count }));
+    
+    document.getElementById('stat-ipfs').innerText = found;
+    document.getElementById('stat-base-types').innerText = Object.keys(baseDistribution).length;
+    
+    // Render base distribution
+    let container = document.getElementById('base-distribution');
+    let total = Object.values(baseDistribution).reduce((a,b) => a + b, 0);
+    container.innerHTML = Object.entries(baseDistribution)
+      .sort((a,b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([base, count]) => `<div class="base-badge">${base}: ${count}</div>`)
+      .join('');
+    
+    // Generate all possible combinations
+    await generateAllCombinations();
+    
+    progressSec.classList.add('hidden');
+    btnAnalyze.disabled = false;
+    isScanned = true;
+    
+    document.getElementById('btn-generate').disabled = false;
+    showToast(`✅ Scanned ${scanned} NFTs, found ${existingCombinationsSet.size} existing combos, ${unseenCombos.length} unseen available!`);
+    debugLog(`Scan complete: ${existingCombinationsSet.size} existing, ${unseenCombos.length} unseen`);
+  }
+  
+  // ==================== GENERATE ALL POSSIBLE COMBINATIONS ====================
+  async function generateAllCombinations() {
+    debugLog("Generating all possible combinations from layers...");
+    
+    let activeSections = sectionOrder.filter(s => layersData[s] && layersData[s].length > 0);
+    if (activeSections.length === 0) {
+      debugLog("ERROR: No active sections found!");
+      return;
+    }
+    
+    let tempCombos = [[]];
+    
+    for (let section of activeSections) {
+      let layers = layersData[section];
+      let filteredLayers = layers.filter(layer => {
+        if (currentGender === "both") return true;
+        if (currentGender === "male") return layer.gender === "male" || layer.gender === "both";
+        if (currentGender === "female") return layer.gender === "female" || layer.gender === "both";
+        return true;
+      });
+      
+      if (filteredLayers.length === 0) continue;
+      
+      let newCombos = [];
+      for (let combo of tempCombos) {
+        for (let layer of filteredLayers) {
+          newCombos.push([...combo, {
+            section,
+            value: layer.value,
+            imageUrl: layer.imageUrl,
+            layerId: layer.id,
+            gender: layer.gender
+          }]);
+        }
+      }
+      tempCombos = newCombos;
+      if (tempCombos.length > 50000) {
+        debugLog(`Too many combos (${tempCombos.length}), breaking...`);
+        break;
+      }
+    }
+    
+    allPossibleCombos = tempCombos;
+    debugLog(`Generated ${allPossibleCombos.length} total possible combinations`);
+    
+    // Find unseen combinations
+    unseenCombos = [];
+    for (let combo of allPossibleCombos) {
+      let hash = combo.map(t => `${t.section}:${t.value}`).sort().join('|');
+      if (!existingCombinationsSet.has(hash)) {
+        unseenCombos.push(combo);
+      }
+      if (unseenCombos.length >= 10000) break;
+    }
+    
+    document.getElementById('stat-unseen').innerText = unseenCombos.length;
+    debugLog(`Found ${unseenCombos.length} unseen combinations`);
+    
+    if (unseenCombos.length === 0) {
+      document.getElementById('warning-msg').innerHTML = "⚠️ No unseen combinations found! Check your layers or try different gender selection.";
+    } else {
+      document.getElementById('warning-msg').innerHTML = `✅ Ready to generate! ${unseenCombos.length} unseen combinations available.`;
+    }
+  }
+  
+  // ==================== GET RANDOM BASE ====================
+  function getRandomBase() {
+    if (baseValuesList.length === 0) return "Human";
+    let totalWeight = baseValuesList.reduce((sum, item) => sum + item.weight, 0);
+    let random = Math.random() * totalWeight;
+    let accumulated = 0;
+    for (let item of baseValuesList) {
+      accumulated += item.weight;
+      if (random <= accumulated) return item.value;
+    }
+    return baseValuesList[0]?.value || "Human";
+  }
+  
+  // ==================== GET COMBO FOR SPECIFIC BASE ====================
+  function getComboForBase(baseValue) {
+    // Find a combo that has the matching base
+    for (let combo of unseenCombos) {
+      let baseLayer = combo.find(l => l.section === "Base");
+      if (baseLayer && baseLayer.value === baseValue) {
+        return combo;
+      }
+    }
+    // If no exact match, return any combo
+    if (unseenCombos.length > 0) {
+      return unseenCombos[Math.floor(Math.random() * unseenCombos.length)];
+    }
+    return null;
+  }
+  
+  // ==================== COMPOSITE IMAGE ====================
+  async function compositeImage(layers, w = 400, h = 400) {
+    let canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    let ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    
+    for (let layer of layers) {
+      await new Promise((resolve) => {
+        let img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = layer.imageUrl;
+      });
+    }
+    return canvas.toDataURL('image/png');
+  }
+  
+  // ==================== GENERATE NFTS ====================
+  async function generateNFTs(targetCount = 100) {
+    if (!isScanned || unseenCombos.length === 0) {
+      showToast("⚠️ Please run SCAN IPFS first!");
+      return;
+    }
+    
+    let btnGen = document.getElementById('btn-generate');
+    let btnAnalyze = document.getElementById('btn-analyze');
+    let btnDownload = document.getElementById('btn-download-all');
+    let progressSec = document.getElementById('progress-section');
+    let progressFill = document.getElementById('progress-fill');
+    let progressText = document.getElementById('progress-text');
+    
+    btnGen.disabled = true;
+    btnAnalyze.disabled = true;
+    progressSec.classList.remove('hidden');
+    
+    let toGenerate = Math.min(targetCount, unseenCombos.length);
+    let newNFTs = [];
+    let startTime = Date.now();
+    let baseCounts = {};
+    
+    for (let i = 0; i < toGenerate; i++) {
+      let percent = Math.round(((i + 1) / toGenerate) * 100);
+      progressFill.style.width = `${percent}%`;
+      progressText.innerText = `GENERATING: ${i+1}/${toGenerate}`;
+      
+      // Get random base
+      let selectedBase = getRandomBase();
+      baseCounts[selectedBase] = (baseCounts[selectedBase] || 0) + 1;
+      
+      // Get combo for this base
+      let combo = getComboForBase(selectedBase);
+      if (!combo && unseenCombos.length > 0) {
+        combo = unseenCombos[Math.floor(Math.random() * unseenCombos.length)];
+      }
+      if (!combo) continue;
+      
+      let nftGender = currentGender;
+      if (currentGender === "both") {
+        nftGender = Math.random() < 0.5 ? "male" : "female";
+      }
+      
+      let traits = combo.map(l => ({ trait_type: l.section, value: l.value }));
+      let imgData = await compositeImage(combo);
+      
+      newNFTs.push({
+        id: Date.now() + '_' + i,
+        name: `${document.getElementById('name-prefix').value}${newNFTs.length + 1}`,
+        description: `Unseen NFT | Base: ${selectedBase} | Gender: ${nftGender}`,
+        image: imgData,
+        attributes: traits,
+        baseType: selectedBase,
+        gender: nftGender,
+        createdAt: new Date().toISOString()
+      });
+      
+      if (i === 0) updatePreview(newNFTs[0]);
+      if (i % 10 === 0) await new Promise(r => setTimeout(r, 5));
+    }
+    
+    generatedNFTs = newNFTs;
+    renderGeneratedGrid();
+    
+    let elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    showToast(`✅ Generated ${generatedNFTs.length} NFTs in ${elapsed}s!`);
+    debugLog(`Generated ${generatedNFTs.length} NFTs, bases: ${JSON.stringify(baseCounts)}`);
+    
+    btnGen.disabled = false;
+    btnAnalyze.disabled = false;
+    btnDownload.disabled = false;
+    progressSec.classList.add('hidden');
+    document.getElementById('nft-count-display').innerHTML = `${generatedNFTs.length} NFTS`;
+  }
+  
+  function updatePreview(nft) {
+    let canvas = document.getElementById('preview-canvas');
+    let ctx = canvas.getContext('2d');
+    let img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0, 200, 200);
+    img.src = nft.image;
+    
+    document.getElementById('preview-name').innerHTML = escapeHtml(nft.name);
+    document.getElementById('preview-base').innerHTML = `<span class="base-badge">${escapeHtml(nft.baseType)}</span> ${nft.gender === 'male' ? '♂' : '♀'}`;
+    
+    let traitsHtml = '<div class="grid grid-cols-2 gap-1 text-xs">';
+    nft.attributes.slice(0, 6).forEach(attr => {
+      traitsHtml += `<div><span class="text-pixel text-[7px]">${attr.trait_type}:</span></div>
+                     <div><span class="font-bold">${escapeHtml(attr.value)}</span></div>`;
+    });
+    traitsHtml += '</div>';
+    document.getElementById('preview-traits').innerHTML = traitsHtml;
+  }
+  
+  function renderGeneratedGrid() {
+    let grid = document.getElementById('nft-grid');
+    if (!generatedNFTs.length) {
+      grid.innerHTML = '<div class="text-center text-pixel text-xs text-gray-600 col-span-full">No NFTs generated yet. Click GENERATE!</div>';
+      return;
+    }
+    
+    grid.innerHTML = generatedNFTs.slice(0, 30).map((nft, idx) => `
+      <div class="nft-card" onclick="viewNFTDetails('${nft.id}')">
+        <img src="${nft.image}" style="width:100%; aspect-ratio:1; object-fit:contain;">
+        <div class="text-pixel text-[7px] text-center mt-1 truncate">${escapeHtml(nft.name)}</div>
+        <div class="text-[6px] text-center"><span class="base-badge" style="font-size:6px;">${escapeHtml(nft.baseType)}</span></div>
+        <div style="display:flex; gap:3px; margin-top:5px;">
+          <button onclick="event.stopPropagation(); downloadSinglePNG('${nft.id}', ${idx+1})" class="win95-btn text-[6px] py-1 px-2 flex-1">PNG</button>
+          <button onclick="event.stopPropagation(); downloadSingleJSON('${nft.id}', ${idx+1})" class="win95-btn text-[6px] py-1 px-2 flex-1">JSON</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  function viewNFTDetails(id) {
+    let nft = generatedNFTs.find(n => n.id === id);
+    if (!nft) return;
+    alert(`Name: ${nft.name}\nBase: ${nft.baseType}\nGender: ${nft.gender}\nTraits: ${nft.attributes.map(a => `${a.trait_type}:${a.value}`).join(', ')}`);
+  }
+  
+  function downloadSinglePNG(id, serial) {
+    let nft = generatedNFTs.find(n => n.id === id);
+    if (nft) {
+      let a = document.createElement('a');
+      a.href = nft.image;
+      a.download = `${serial}.png`;
+      a.click();
+      showToast('PNG saved');
+    }
+  }
+  
+  function downloadSingleJSON(id, serial) {
+    let nft = generatedNFTs.find(n => n.id === id);
+    if (nft) {
+      let metadata = {
+        name: nft.name,
+        description: nft.description,
+        attributes: nft.attributes,
+        baseType: nft.baseType,
+        gender: nft.gender
+      };
+      let blob = new Blob([JSON.stringify(metadata, null, 2)], {type: 'application/json'});
+      let a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${serial}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast('JSON saved');
+    }
+  }
+  
+  async function downloadAllAsZip() {
+    if (!generatedNFTs.length) {
+      showToast('No NFTs to download!');
+      return;
+    }
+    
+    showToast(`Creating ZIP with ${generatedNFTs.length} NFTs...`);
+    let zip = new JSZip();
+    let folder = zip.folder("generated_nfts");
+    
+    for (let i = 0; i < generatedNFTs.length; i++) {
+      let nft = generatedNFTs[i];
+      let serial = i + 1;
+      
+      let base64Data = nft.image.split(',')[1];
+      folder.file(`${serial}.png`, base64Data, {base64: true});
+      
+      let metadata = {
+        name: nft.name,
+        description: nft.description,
+        attributes: nft.attributes,
+        baseType: nft.baseType,
+        gender: nft.gender
+      };
+      folder.file(`${serial}.json`, JSON.stringify(metadata, null, 2));
+      
+      if (i % 50 === 0) await new Promise(r => setTimeout(r, 10));
+    }
+    
+    let blob = await zip.generateAsync({type: "blob", compression: "DEFLATE"});
+    let a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `generated_nfts_${generatedNFTs.length}_${Date.now()}.zip`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast(`Downloaded ${generatedNFTs.length} NFTs as ZIP!`);
+  }
+  
+  function clearGenerated() {
+    if (confirm('Clear all generated NFTs?')) {
+      generatedNFTs = [];
+      renderGeneratedGrid();
+      document.getElementById('btn-download-all').disabled = true;
+      showToast('Cleared');
+    }
+  }
+  
+  function setGender(gender) {
+    currentGender = gender;
+    document.getElementById('gender-male-btn').classList.toggle('active', gender === 'male');
+    document.getElementById('gender-female-btn').classList.toggle('active', gender === 'female');
+    document.getElementById('gender-both-btn').classList.toggle('active', gender === 'both');
+    
+    if (isScanned) {
+      generateAllCombinations();
+      document.getElementById('warning-msg').innerHTML = `✅ Gender set to ${gender.toUpperCase()}. ${unseenCombos.length} unseen combinations available.`;
+    }
+  }
+  
+  // ==================== INIT ====================
+  async function init() {
+    await loadLayersFromFirebase();
+    
+    document.getElementById('btn-analyze').addEventListener('click', scanIPFS);
+    document.getElementById('btn-generate').addEventListener('click', () => {
+      let target = parseInt(document.getElementById('target-count').value) || 100;
+      generateNFTs(target);
+    });
+    document.getElementById('btn-download-all').addEventListener('click', downloadAllAsZip);
+    document.getElementById('clear-generated').addEventListener('click', clearGenerated);
+    document.getElementById('gender-male-btn').addEventListener('click', () => setGender('male'));
+    document.getElementById('gender-female-btn').addEventListener('click', () => setGender('female'));
+    document.getElementById('gender-both-btn').addEventListener('click', () => setGender('both'));
+    
+    debugLog("System ready! Click SCAN IPFS to start.");
+    showToast("🚀 Ready! Click SCAN IPFS first.");
+  }
+  
+  init();
+</script>
+</body>
+</html>
