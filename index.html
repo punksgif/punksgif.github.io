@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>404 PUNKS // RETRO WINDOS 95</title>
+  <title>404 PUNKS // MATCH ENGINE v2 - JSON INDEX</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -39,56 +39,20 @@
     .layer-row { background: #d4d0c8; border: 2px outset #808080; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
     .move-btn { background: #c0c0c0; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 5px 10px; cursor: pointer; font-family: monospace; font-size: 14px; margin-left: 5px; }
     .move-btn:active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; transform: translate(1px, 1px); }
-    .move-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .search-input { background: #ffffff; border: 2px inset #808080; padding: 8px 12px; font-family: 'VT323', monospace; font-size: 16px; width: 200px; }
     .warning-text { color: #aa0000; font-family: 'Press Start 2P', monospace; font-size: 8px; margin-top: 5px; }
     .info-text { color: #000080; font-family: 'Press Start 2P', monospace; font-size: 8px; margin-top: 5px; }
-
-    /* ===== IPFS MATCH STYLES ===== */
-    .match-badge {
-      background: #000080;
-      color: #ffff00;
-      border: 2px solid;
-      border-top-color: #4444ff;
-      border-left-color: #4444ff;
-      border-right-color: #000044;
-      border-bottom-color: #000044;
-      padding: 3px 6px;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 6px;
-      margin-top: 5px;
-      display: block;
-      text-align: center;
-      line-height: 1.6;
-    }
-    .match-badge-loading {
-      background: #404040;
-      color: #00ff00;
-      border: 2px inset #808080;
-      padding: 3px 6px;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 6px;
-      margin-top: 5px;
-      text-align: center;
-      animation: ipfs-blink 1s step-start infinite;
-    }
-    @keyframes ipfs-blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-    #ipfs-global-bar {
-      position: fixed; top: 0; left: 0; right: 0;
-      background: #000080; color: #00ff00;
-      font-family: 'Press Start 2P', monospace; font-size: 7px;
-      padding: 5px 10px; text-align: center;
-      z-index: 99999; display: none;
-      border-bottom: 2px solid #4444ff;
-    }
+    .match-badge { background: #000080; color: #ffff00; border: 2px solid; border-top-color: #4444ff; border-left-color: #4444ff; border-right-color: #000044; border-bottom-color: #000044; padding: 3px 6px; font-family: 'Press Start 2P', monospace; font-size: 6px; margin-top: 5px; display: block; text-align: center; line-height: 1.6; }
+    .match-badge-loading { background: #404040; color: #00ff00; border: 2px inset #808080; padding: 3px 6px; font-family: 'Press Start 2P', monospace; font-size: 6px; margin-top: 5px; text-align: center; animation: blink 1s step-start infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .success-bg { background: #006400 !important; }
   </style>
 </head>
 <body>
-<div id="ipfs-global-bar">📡 IPFS SCANNING... <span id="ipfs-bar-text">0 / 10000</span></div>
 
 <div class="win95-desktop">
   <div class="win95-window">
-    <div class="win95-titlebar"><span>📁 404 PUNKS GENERATOR - v95.RETRO (PUBLIC)</span><button onclick="location.reload()">✕</button></div>
+    <div class="win95-titlebar"><span>📁 404 PUNKS GENERATOR - INDEX MATCH ENGINE</span><button onclick="location.reload()">✕</button></div>
     <div style="background: #c0c0c0; padding: 8px 16px 0 16px;">
       <div style="display: flex; gap: 4px; flex-wrap: wrap;">
         <button onclick="App.switchTab('layers')" id="tab-layers" class="win95-tab active">📂 LAYERS</button>
@@ -133,7 +97,6 @@
             <div class="info-text">✓ ALL NFTS ARE PUBLIC - Visible to everyone</div>
             <div class="info-text">✓ MAX 15,000 NFTS</div>
             <div class="info-text">✓ JSON: Background EXCLUDED, all other traits become "Accessory" trait_type</div>
-            <div class="info-text">✓ Attribute Count shows total number of traits (excluding Background)</div>
           </div>
         </div>
         <div id="create-sections-container" class="space-y-3 mb-4"></div>
@@ -153,7 +116,6 @@
               <div class="flex-1"><div class="text-pixel text-[8px] mb-1">TOTAL NFTS (MAX 15,000)</div><input type="number" id="total-nft-count" min="1" max="15000" value="10" class="qty-input w-full"></div>
               <div class="flex-1"><div class="text-pixel text-[8px] mb-1">NAME PREFIX</div><input type="text" id="name-prefix" value="PUNK#" class="win95-input w-full" style="font-size: 12px;"></div>
             </div>
-            <div class="warning-text">⚠️ WARNING: Minting 5000+ NFTs may take time.</div>
             <textarea id="nft-description" rows="2" class="win95-input w-full mb-3 mt-2">404 PUNKS // RETRO GLITCH COLLECTION</textarea>
             <button id="bulk-mint-btn" onclick="App.startMint()" class="win95-btn w-full">🎮 MINT NFTs (PUBLIC)</button>
             <div id="progress-wrap" class="hidden mt-3">
@@ -184,30 +146,24 @@
               <button onclick="App.clearSearch()" class="win95-btn">🗑️ CLEAR</button>
             </div>
             <div class="text-pixel text-[8px] mt-2">💡 Example: "100-500" or "42"</div>
-            <div class="info-text mt-2">🌍 PUBLIC COLLECTION - JSON: All traits (except Background) stored as "Accessory"</div>
           </div>
         </div>
 
-        <!-- IPFS MATCH PANEL -->
+        <!-- INDEX MATCH PANEL (NEW) -->
         <div class="win95-window" style="margin-bottom: 16px;">
-          <div class="win95-titlebar" style="background: #006400;">📡 IPFS MATCH ENGINE — AUTO SCAN</div>
+          <div class="win95-titlebar" style="background: #006400;">📡 INDEX MATCH ENGINE — FAST JSON SCAN</div>
           <div class="win95-content">
             <div class="flex gap-3 flex-wrap" style="align-items:flex-end;">
-              <div style="flex:1;">
-                <div class="text-pixel text-[8px] mb-1">IPFS BASE URL (10,000 JSONs)</div>
-                <input type="text" id="ipfs-base-url" value="https://ipfs.io/ipfs/QmTL46vYJpGgjMr9jy3p76XBbPgzKwBv4SbeA2pY95mT98/" class="win95-input" style="font-size:9px;">
+              <div style="flex:2;">
+                <div class="text-pixel text-[8px] mb-1">INDEX.JSON URL (10k Tokens)</div>
+                <input type="text" id="index-json-url" value="https://gist.githubusercontent.com/yourusername/raw/index.json" class="win95-input" style="font-size:9px; font-family:monospace;">
               </div>
-              <div style="display:flex;flex-direction:column;gap:6px;">
-                <button onclick="App.startIPFSScan()" class="win95-btn" style="font-size:8px;background:#000080;color:#fff;border-color:#4444ff;">🚀 START AUTO SCAN</button>
-                <button onclick="App.stopIPFSScan()" class="win95-btn" style="font-size:8px;">⏹ STOP</button>
-                <button onclick="App.clearIPFSCache()" class="win95-btn" style="font-size:8px;border-color:#ff4444;">🗑️ CLEAR CACHE</button>
+              <div>
+                <button onclick="App.loadIndexJSON()" class="win95-btn" style="background:#000080;color:#fff;">📥 LOAD & INDEX</button>
               </div>
             </div>
-            <div id="ipfs-scan-status" class="info-text mt-2">💡 Click START AUTO SCAN — সব NFT এ অটো ম্যাচ ব্যাজ লাগবে</div>
-            <div id="ipfs-scan-bar" class="hidden mt-2">
-              <div class="progress-bar"><div id="ipfs-scan-fill" class="progress-fill"></div></div>
-              <div class="text-pixel text-[7px] mt-1" id="ipfs-scan-text">Scanning...</div>
-            </div>
+            <div id="index-status" class="info-text mt-2">💡 Paste your index.json URL and click LOAD — super fast matching!</div>
+            <div id="index-stats" class="text-pixel text-[7px] mt-1" style="color:#006400;"></div>
           </div>
         </div>
 
@@ -223,60 +179,67 @@
 
 <script>
 // ============================================================
-// IPFS MATCH ENGINE
+// INDEX MATCH ENGINE (FAST)
 // ============================================================
-const IPFS_TOTAL = 10000;
-const IPFS_GATEWAY = 'https://ipfs.io/ipfs/QmTL46vYJpGgjMr9jy3p76XBbPgzKwBv4SbeA2pY95mT98/';
+let globalIndex = null;        // { tokenId: { attributes: [...] } }
+let tokenTraitMap = new Map(); // tokenId -> Set of trait values (lowercase)
+let isIndexLoaded = false;
 
-// ipfsIndex[tokenId] = Set of trait values (all lowercase)
-let ipfsIndex = {};       // { 1: Set(['male','gold chain','cap',...]), 2: Set([...]), ... }
-let ipfsCachedCount = 0;
-let ipfsScanRunning = false;
-let ipfsScanStopped = false;
+function showToast(m) { let t=document.getElementById('toast'); t.innerText=m; t.classList.remove('hidden'); clearTimeout(window.tt); window.tt=setTimeout(()=>t.classList.add('hidden'),3000); }
 
-function getIPFSBase() {
-  const el = document.getElementById('ipfs-base-url');
-  let url = el ? el.value.trim() : IPFS_GATEWAY;
-  if (!url.endsWith('/')) url += '/';
-  return url;
-}
-
-// Fetch one IPFS token and index all its trait values
-async function fetchAndIndexToken(tokenId) {
-  if (ipfsIndex[tokenId]) return; // already cached
-  const base = getIPFSBase();
+async function loadIndexJSON() {
+  const urlInput = document.getElementById('index-json-url');
+  let url = urlInput.value.trim();
+  if (!url) { showToast('ENTER INDEX.JSON URL'); return; }
+  showToast('📥 LOADING INDEX...');
+  document.getElementById('index-status').innerHTML = '<span style="color:#aa0000;">⏳ LOADING...</span>';
   try {
-    const res = await fetch(`${base}${tokenId}.json`);
-    if (!res.ok) return;
-    const data = await res.json();
-    if (!data || !data.attributes) return;
-    const vals = new Set();
-    for (const attr of data.attributes) {
-      if (attr.value !== undefined && attr.value !== null) {
-        vals.add(String(attr.value).toLowerCase().trim());
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    // data should be like { "1": { attributes: [...] }, "2": {...} }
+    globalIndex = data;
+    tokenTraitMap.clear();
+    let totalTokens = 0;
+    for (const [tokenId, tokenData] of Object.entries(data)) {
+      if (!tokenData.attributes) continue;
+      const traitSet = new Set();
+      for (const attr of tokenData.attributes) {
+        if (attr.value) {
+          traitSet.add(String(attr.value).toLowerCase().trim());
+        }
       }
+      tokenTraitMap.set(tokenId, traitSet);
+      totalTokens++;
     }
-    ipfsIndex[tokenId] = vals;
-    ipfsCachedCount++;
-  } catch(e) { /* skip */ }
+    isIndexLoaded = true;
+    document.getElementById('index-status').innerHTML = `<span style="color:#006400;">✅ LOADED! ${totalTokens} tokens indexed</span>`;
+    document.getElementById('index-stats').innerHTML = `📊 ${totalTokens} unique tokens ready for matching`;
+    showToast(`✅ INDEXED ${totalTokens} TOKENS!`);
+    // Update all badges if collection is visible
+    updateAllMatchBadges();
+  } catch(err) {
+    console.error(err);
+    document.getElementById('index-status').innerHTML = `<span style="color:#aa0000;">❌ FAILED: ${err.message}</span>`;
+    showToast('INDEX LOAD FAILED! Check URL/CORS');
+  }
 }
 
-// Given a local NFT, find all IPFS token IDs where ANY trait value matches
+// Find matches for a single NFT
 function findMatchesForNFT(nft) {
-  if (!nft || !nft.layers) return [];
-  // Collect local trait values (from layers, exclude Background)
+  if (!isIndexLoaded || !nft || !nft.layers) return [];
+  // Collect local trait values (excluding Background)
   const localVals = new Set();
   for (const l of nft.layers) {
     if (l.section === 'Background') continue;
     if (l.value) localVals.add(String(l.value).toLowerCase().trim());
   }
   if (localVals.size === 0) return [];
-
   const matched = [];
-  for (const [tokenId, ipfsVals] of Object.entries(ipfsIndex)) {
-    // Check intersection: at least one common value
+  for (const [tokenId, traitSet] of tokenTraitMap.entries()) {
+    // Check intersection: at least one common trait value
     for (const v of localVals) {
-      if (ipfsVals.has(v)) {
+      if (traitSet.has(v)) {
         matched.push(Number(tokenId));
         break;
       }
@@ -287,105 +250,33 @@ function findMatchesForNFT(nft) {
 }
 
 // Update badge for one NFT card
-function updateMatchBadge(nft) {
-  const badgeEl = document.getElementById('match-badge-' + nft.id);
+function updateMatchBadgeForNFT(nft) {
+  const badgeEl = document.getElementById(`match-badge-${nft.id}`);
   if (!badgeEl) return;
+  if (!isIndexLoaded) {
+    badgeEl.innerHTML = '<div class="match-badge-loading">⚠️ LOAD INDEX FIRST</div>';
+    return;
+  }
   const matches = findMatchesForNFT(nft);
   if (matches.length === 0) {
-    badgeEl.innerHTML = '';
+    badgeEl.innerHTML = '<div class="match-badge" style="background:#404040; color:#cccccc;">❌ NO MATCH FOUND</div>';
   } else {
     const show = matches.slice(0, 5).map(n => '#' + n).join(', ');
-    const extra = matches.length > 5 ? ` +${matches.length - 5} more` : '';
-    badgeEl.innerHTML = `<div class="match-badge">🎯 IPFS MATCH: ${show}${extra}</div>`;
+    const extra = matches.length > 5 ? ` +${matches.length-5} more` : '';
+    badgeEl.innerHTML = `<div class="match-badge success-bg">🎯 INDEX MATCH: ${show}${extra}</div>`;
   }
 }
 
-// Update all visible NFT badges
-function updateAllBadges() {
+function updateAllMatchBadges() {
+  if (!isIndexLoaded) return;
   const displayNFTs = filteredNFTs || nfts;
   for (const nft of displayNFTs) {
-    updateMatchBadge(nft);
+    updateMatchBadgeForNFT(nft);
   }
-}
-
-// Main scan: fetch all 10k IPFS tokens in batches, update badges live
-async function startIPFSScan() {
-  if (ipfsScanRunning) { showToast('ALREADY SCANNING...'); return; }
-  ipfsScanRunning = true;
-  ipfsScanStopped = false;
-
-  const bar = document.getElementById('ipfs-scan-bar');
-  const fill = document.getElementById('ipfs-scan-fill');
-  const text = document.getElementById('ipfs-scan-text');
-  const status = document.getElementById('ipfs-scan-status');
-  const globalBar = document.getElementById('ipfs-global-bar');
-  const globalText = document.getElementById('ipfs-bar-text');
-
-  bar.classList.remove('hidden');
-  globalBar.style.display = 'block';
-  showToast('📡 IPFS AUTO SCAN STARTED!');
-
-  const BATCH = 50;
-  let scanned = 0;
-
-  for (let start = 1; start <= IPFS_TOTAL; start += BATCH) {
-    if (ipfsScanStopped) break;
-    const end = Math.min(start + BATCH - 1, IPFS_TOTAL);
-    const promises = [];
-    for (let id = start; id <= end; id++) {
-      promises.push(fetchAndIndexToken(id));
-    }
-    await Promise.all(promises);
-    scanned = end;
-
-    const pct = Math.round((scanned / IPFS_TOTAL) * 100);
-    if (fill) fill.style.width = pct + '%';
-    if (text) text.innerText = `SCANNED ${scanned} / ${IPFS_TOTAL} — CACHED: ${ipfsCachedCount}`;
-    if (globalText) globalText.innerText = `${scanned} / ${IPFS_TOTAL} (${pct}%)`;
-    if (status) status.innerHTML = `<span style="color:#006400;">⚡ SCANNING... ${scanned}/${IPFS_TOTAL} — ${ipfsCachedCount} indexed</span>`;
-
-    // Update badges after every batch
-    updateAllBadges();
-
-    await new Promise(r => setTimeout(r, 0)); // yield to UI
-  }
-
-  ipfsScanRunning = false;
-  bar.classList.add('hidden');
-  globalBar.style.display = 'none';
-
-  if (ipfsScanStopped) {
-    if (status) status.innerHTML = `<span style="color:#aa0000;">⏹ SCAN STOPPED at ${ipfsCachedCount} tokens</span>`;
-    showToast('SCAN STOPPED');
-  } else {
-    if (status) status.innerHTML = `<span style="color:#006400;">✅ SCAN COMPLETE — ${ipfsCachedCount} / ${IPFS_TOTAL} tokens indexed</span>`;
-    showToast(`✅ SCAN DONE! ${ipfsCachedCount} IPFS tokens indexed`);
-    updateAllBadges();
-  }
-}
-
-function stopIPFSScan() {
-  ipfsScanStopped = true;
-  ipfsScanRunning = false;
-  showToast('STOPPING SCAN...');
-}
-
-function clearIPFSCache() {
-  ipfsIndex = {};
-  ipfsCachedCount = 0;
-  ipfsScanRunning = false;
-  ipfsScanStopped = false;
-  document.getElementById('ipfs-scan-status').innerHTML = '💡 Cache cleared. Click START to re-scan.';
-  const bar = document.getElementById('ipfs-scan-bar');
-  if (bar) bar.classList.add('hidden');
-  const fill = document.getElementById('ipfs-scan-fill');
-  if (fill) fill.style.width = '0%';
-  updateAllBadges();
-  showToast('🗑️ IPFS CACHE CLEARED');
 }
 
 // ============================================================
-// MAIN APP — হুবহু আগের কোড
+// MAIN APP (Modified to call badge updates after minting)
 // ============================================================
 const SECTIONS_ORDER = ["Background","Base","Nose","Face","Neck","Mouth","Eyes","Ear","Beard","Accessory","Head"];
 const MAX_TRAITS = 8, MAX_NFT_LIMIT = 15000;
@@ -411,7 +302,6 @@ let previewCtx = null, globalOrderCounter = 0;
 
 SECTIONS_ORDER.forEach(s => { layersBySection[s]=[]; selectedLayersPerSection[s]=[]; sectionQuantities[s]=0; });
 
-function showToast(m) { let t=document.getElementById('toast'); t.innerText=m; t.classList.remove('hidden'); clearTimeout(window.tt); window.tt=setTimeout(()=>t.classList.add('hidden'),3000); }
 function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]||m)); }
 async function saveNFTsToFirebase() { try { await database.ref('user_nfts').set(nfts); } catch(e) { console.error(e); } }
 async function updateNFTsInFirebase() { await saveNFTsToFirebase(); localStorage.setItem('404punks_backup', JSON.stringify(nfts)); }
@@ -561,7 +451,7 @@ async function startMint() {
   for(let i=0;i<femaleCount;i++) order.push('female');
   for(let i=order.length-1;i>0;i--){ let j=Math.floor(Math.random()*(i+1)); [order[i],order[j]]=[order[j],order[i]]; }
   for(let idx=0;idx<order.length;idx++) {
-    let gender=order[idx], genderTotal=(gender==='male')?maleCount:femaleCount;
+    let gender=order[idx];
     let percent=Math.round(((idx+1)/order.length)*100);
     progText.innerText=`${gender==='male'?'♂ MALE':'♀ FEMALE'} ${idx+1}/${order.length} (${percent}%)`;
     progCounter.innerText=`${idx+1}/${order.length}`; progFill.style.width=`${((idx+1)/order.length)*100}%`;
@@ -592,8 +482,8 @@ async function startMint() {
   nfts.push(...newNFTs); await updateNFTsInFirebase(); renderCollection();
   showToast(`✅ MINTED ${order.length} NFTS!`);
   btn.disabled=false; progWrap.classList.add('hidden');
-  // After minting, update badges for newly minted NFTs
-  updateAllBadges();
+  // Update match badges after minting
+  updateAllMatchBadges();
 }
 
 function renderCollection() {
@@ -611,7 +501,9 @@ function renderCollection() {
         <img src="${nft.image}" style="width:100%;height:100%;object-fit:contain;">
       </div>
       <div class="text-pixel text-[8px] text-center">${escapeHtml(nft.name)}</div>
-      <div id="match-badge-${nft.id}"></div>
+      <div id="match-badge-${nft.id}">
+        ${isIndexLoaded ? '<div class="match-badge-loading">🔍 MATCHING...</div>' : '<div class="match-badge-loading">📡 LOAD INDEX FIRST</div>'}
+      </div>
       <div style="display:flex; gap:5px; margin-top:8px;">
         <button onclick="App.viewNFTDetails('${nft.id}')" class="win95-btn" style="padding:4px; font-size:7px; flex:1;">📝 EDIT</button>
         <button onclick="App.downloadSingleImage('${nft.id}', ${idx+1})" class="win95-btn" style="padding:4px; font-size:7px; flex:1;">PNG</button>
@@ -619,8 +511,7 @@ function renderCollection() {
         <button onclick="App.deleteSingleNFT('${nft.id}')" class="win95-btn" style="padding:4px; font-size:7px; flex:1; border-color:#ff4444;">DEL</button>
       </div>
     </div>`).join('');
-  // Show cached matches immediately if index exists
-  if (ipfsCachedCount > 0) updateAllBadges();
+  if (isIndexLoaded) updateAllMatchBadges();
 }
 
 function searchNFTs() {
@@ -644,11 +535,10 @@ async function viewNFTDetails(id) {
   let modal=document.createElement('div'); modal.id='nft-modal-'+id;
   modal.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;overflow:auto;';
   let layersHtml=nft.layers.map((l,idx)=>`<div class="layer-row"><span>${idx+1}. ${l.section}: ${escapeHtml(l.value)}</span><div><button onclick="App.editNFTLayer('${id}',${idx},'up')" class="move-btn">▲</button><button onclick="App.editNFTLayer('${id}',${idx},'down')" class="move-btn">▼</button><button onclick="App.deleteNFTLayer('${id}',${idx})" class="move-btn" style="border-color:#ff4444;">✕</button></div></div>`).join('');
-  // Get current matches
-  const matches=findMatchesForNFT(nft);
+  const matches = isIndexLoaded ? findMatchesForNFT(nft) : [];
   const matchHtml = matches.length>0
-    ? `<div style="background:#000080;color:#ffff00;border:2px solid #4444ff;padding:8px;margin-bottom:10px;font-family:'Press Start 2P',monospace;font-size:7px;">🎯 IPFS MATCHES (${matches.length}): ${matches.slice(0,10).map(n=>'#'+n).join(', ')}${matches.length>10?' +more':''}</div>`
-    : (ipfsCachedCount>0 ? `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#666;margin-bottom:8px;">❌ NO IPFS MATCH FOUND</div>` : `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#666;margin-bottom:8px;">💡 Run IPFS SCAN to see matches</div>`);
+    ? `<div style="background:#000080;color:#ffff00;border:2px solid #4444ff;padding:8px;margin-bottom:10px;font-family:'Press Start 2P',monospace;font-size:7px;">🎯 INDEX MATCHES (${matches.length}): ${matches.slice(0,10).map(n=>'#'+n).join(', ')}${matches.length>10?' +more':''}</div>`
+    : (isIndexLoaded ? `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#666;margin-bottom:8px;">❌ NO MATCH FOUND</div>` : `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#666;margin-bottom:8px;">💡 Load index.json first!</div>`);
   modal.innerHTML=`<div class="win95-window" style="width:90%;max-width:500px;max-height:90vh;overflow:auto;">
     <div class="win95-titlebar"><span>✏️ EDIT: ${escapeHtml(nft.name)}</span><button onclick="document.getElementById('nft-modal-${id}').remove()">✕</button></div>
     <div class="win95-content">
@@ -677,11 +567,25 @@ window.App = {
   startMint, deleteAllNFTs, downloadAllAsZip,
   viewNFTDetails, downloadSingleImage, downloadSingleJSON, deleteSingleNFT,
   searchNFTs, clearSearch, editNFTLayer, deleteNFTLayer,
-  // IPFS
-  startIPFSScan, stopIPFSScan, clearIPFSCache
+  loadIndexJSON  // NEW
 };
 
-async function init() { await loadNFTsFromFirebase(); previewCtx=document.getElementById('live-preview-canvas')?.getContext('2d'); listenFirebase(); renderCreateSections(); }
+async function init() { 
+  await loadNFTsFromFirebase(); 
+  previewCtx=document.getElementById('live-preview-canvas')?.getContext('2d'); 
+  listenFirebase(); 
+  renderCreateSections();
+  // Optional: auto-load from localStorage saved URL
+  const savedUrl = localStorage.getItem('indexJsonUrl');
+  if(savedUrl) {
+    document.getElementById('index-json-url').value = savedUrl;
+    await loadIndexJSON();
+  }
+}
+// Save URL on load
+document.getElementById('index-json-url')?.addEventListener('change', (e) => {
+  localStorage.setItem('indexJsonUrl', e.target.value);
+});
 init();
 </script>
 </body>
