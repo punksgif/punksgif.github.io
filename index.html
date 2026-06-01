@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>404 PUNKS // FULL ACCESSORY MATCH ENGINE</title>
+  <title>404 PUNKS // BASE + TRAITS MATCH ENGINE</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -63,7 +63,7 @@
 
 <div class="win95-desktop">
   <div class="win95-window">
-    <div class="win95-titlebar"><span>📁 404 PUNKS - ACCESSORY MATCH ENGINE</span><button onclick="location.reload()">✕</button></div>
+    <div class="win95-titlebar"><span>📁 404 PUNKS - BASE + TRAITS MATCH ENGINE</span><button onclick="location.reload()">✕</button></div>
     <div style="background: #c0c0c0; padding: 8px 16px 0 16px;">
       <div style="display: flex; gap: 4px; flex-wrap: wrap;">
         <button onclick="App.switchTab('layers')" id="tab-layers" class="win95-tab active">📂 LAYERS</button>
@@ -107,7 +107,7 @@
           <div class="win95-content">
             <div class="info-text">✓ ALL NFTS ARE PUBLIC - Visible to everyone</div>
             <div class="info-text">✓ MAX 15,000 NFTS</div>
-            <div class="info-text">✓ JSON: Background EXCLUDED, all other traits become "Accessory" trait_type</div>
+            <div class="info-text">✓ JSON: Base as "Base", others as "Accessory" (Background excluded)</div>
           </div>
         </div>
         <div id="create-sections-container" class="space-y-3 mb-4"></div>
@@ -160,17 +160,17 @@
           </div>
         </div>
 
-        <!-- INDEX MATCH PANEL (UPDATED DESIGN - HIDDEN URL) -->
+        <!-- INDEX MATCH PANEL -->
         <div class="win95-window" style="margin-bottom: 16px; overflow: hidden;">
           <div class="win95-titlebar match-engine-header" style="background: linear-gradient(135deg, #000080, #0000aa);">
-            <span>🎯 ACCESSORY MATCH ENGINE <span class="pulse-text" style="color: #ffff00;">● LIVE</span></span>
-            <span style="font-size: 8px;">v2.0</span>
+            <span>🎯 BASE + TRAITS MATCH ENGINE <span class="pulse-text" style="color: #ffff00;">● LIVE</span></span>
+            <span style="font-size: 8px;">v3.0</span>
           </div>
           <div class="win95-content" style="background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
               <div style="background: #000080; padding: 8px 12px; border-radius: 0; border: 2px outset #4444ff;">
                 <span style="font-family: 'Press Start 2P', monospace; font-size: 10px; color: #00ff00;">⬤</span>
-                <span style="font-family: 'Press Start 2P', monospace; font-size: 8px; color: #ffffff; margin-left: 6px;">ACCESSORY MATCH</span>
+                <span style="font-family: 'Press Start 2P', monospace; font-size: 8px; color: #ffffff; margin-left: 6px;">MATCH MODE</span>
               </div>
               <div style="flex: 1;">
                 <div id="index-status" class="info-text" style="color: #000080; font-weight: bold;">🔄 Initializing match engine...</div>
@@ -178,12 +178,12 @@
               </div>
               <div style="display: flex; gap: 8px;">
                 <div style="background: #008080; padding: 4px 8px; border: 2px inset #00aaaa;">
-                  <span style="font-family: 'Press Start 2P', monospace; font-size: 7px; color: #ffffff;">🔒 SECURE LINK</span>
+                  <span style="font-family: 'Press Start 2P', monospace; font-size: 7px; color: #ffffff;">🔒 SECURE</span>
                 </div>
               </div>
             </div>
             <div class="mt-2 text-pixel text-[7px]" style="color: #404040; border-top: 1px solid #808080; padding-top: 6px; margin-top: 8px;">
-              💡 Matching: ALL Accessory traits must match exactly
+              💡 Matching: Base + ALL other traits (Background ignored)
             </div>
           </div>
         </div>
@@ -200,43 +200,57 @@
 
 <script>
 // ============================================================
-// ACCESSORY MATCH ENGINE (Matches ONLY Accessory traits)
+// BASE + TRAITS MATCH ENGINE 
 // ============================================================
 const FIXED_INDEX_URL = "https://raw.githubusercontent.com/punksgif/punksgif.github.io/main/index.json";
-let accessoryTokenMap = new Map(); // tokenId -> Set of accessory values
+let baseTraitsTokenMap = new Map(); // tokenId -> { base: string, traitsSet: Set }
 let isIndexLoaded = false;
 
 function showToast(m) { let t=document.getElementById('toast'); t.innerText=m; t.classList.remove('hidden'); clearTimeout(window.tt); window.tt=setTimeout(()=>t.classList.add('hidden'),3000); }
 
 async function loadIndexJSON() {
-  showToast('📥 LOADING ACCESSORY INDEX...');
-  document.getElementById('index-status').innerHTML = '<span style="color:#aa0000;">⏳ LOADING ACCESSORY INDEX...</span>';
+  showToast('📥 LOADING INDEX...');
+  document.getElementById('index-status').innerHTML = '<span style="color:#aa0000;">⏳ LOADING INDEX...</span>';
   try {
     const response = await fetch(FIXED_INDEX_URL);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
-    accessoryTokenMap.clear();
+    baseTraitsTokenMap.clear();
     let totalTokens = 0;
     
     for (const [tokenId, tokenData] of Object.entries(data)) {
       if (!tokenData.attributes) continue;
-      const accessorySet = new Set();
+      
+      let baseValue = null;
+      const traitValues = new Set();
+      
       for (const attr of tokenData.attributes) {
-        // Collect ONLY traits where trait_type is "Accessory"
-        if (attr.trait_type === "Accessory" && attr.value) {
-          accessorySet.add(String(attr.value).toLowerCase().trim());
+        const traitType = attr.trait_type;
+        const val = attr.value;
+        
+        if (!val) continue;
+        
+        // Store Base value separately
+        if (traitType === "Base" || traitType === "base") {
+          baseValue = String(val).toLowerCase().trim();
+        }
+        // Collect ALL Accessory traits (these are the other traits)
+        else if (traitType === "Accessory") {
+          traitValues.add(String(val).toLowerCase().trim());
         }
       }
-      if (accessorySet.size > 0) {
-        accessoryTokenMap.set(tokenId, accessorySet);
+      
+      // Store if we have a Base value
+      if (baseValue) {
+        baseTraitsTokenMap.set(tokenId, { base: baseValue, traits: traitValues });
         totalTokens++;
       }
     }
     
     isIndexLoaded = true;
-    document.getElementById('index-status').innerHTML = `<span style="color:#006400;">✅ ACCESSORY INDEX LOADED!</span>`;
-    document.getElementById('index-stats').innerHTML = `🎯 ${totalTokens} tokens indexed | Matching ALL Accessory values`;
-    showToast(`✅ ACCESSORY INDEX LOADED! ${totalTokens} tokens ready`);
+    document.getElementById('index-status').innerHTML = `<span style="color:#006400;">✅ INDEX LOADED!</span>`;
+    document.getElementById('index-stats').innerHTML = `🎯 ${totalTokens} tokens indexed | Base + ALL traits match`;
+    showToast(`✅ INDEX LOADED! ${totalTokens} tokens ready`);
     updateAllMatchBadges();
   } catch(err) {
     console.error(err);
@@ -247,34 +261,45 @@ async function loadIndexJSON() {
   }
 }
 
-// Find matches based ONLY on Accessory traits (ALL must match)
+// Find matches: Base MUST match + ALL other traits must exist in index
 function findMatchesForNFT(nft) {
   if (!isIndexLoaded || !nft || !nft.layers) return [];
   
-  // Collect ALL Accessory values from the NFT
-  const localAccessories = new Set();
+  // Extract Base value and other traits from NFT layers
+  let myBase = null;
+  const myTraits = new Set();
+  
   for (const l of nft.layers) {
-    if (l.section === 'Accessory' && l.value) {
-      localAccessories.add(String(l.value).toLowerCase().trim());
+    if (l.section === 'Base') {
+      myBase = String(l.value).toLowerCase().trim();
+    } 
+    else if (l.section !== 'Background') {
+      myTraits.add(String(l.value).toLowerCase().trim());
     }
   }
-  if (localAccessories.size === 0) return [];
+  
+  // Must have a Base value to match
+  if (!myBase) return [];
   
   const matched = [];
-  for (const [tokenId, remoteAccessorySet] of accessoryTokenMap.entries()) {
-    // Check if ALL local accessories exist in remote token's accessories
-    let allMatch = true;
-    for (const v of localAccessories) {
-      if (!remoteAccessorySet.has(v)) {
-        allMatch = false;
+  for (const [tokenId, indexedData] of baseTraitsTokenMap.entries()) {
+    // First: Base must match exactly
+    if (indexedData.base !== myBase) continue;
+    
+    // Second: ALL my traits must exist in indexed traits
+    let allTraitsMatch = true;
+    for (const myTrait of myTraits) {
+      if (!indexedData.traits.has(myTrait)) {
+        allTraitsMatch = false;
         break;
       }
     }
-    // Also check if remote has ALL local (same size condition ensures exact match)
-    if (allMatch && remoteAccessorySet.size === localAccessories.size) {
+    
+    if (allTraitsMatch) {
       matched.push(Number(tokenId));
     }
   }
+  
   matched.sort((a,b) => a-b);
   return matched;
 }
@@ -286,16 +311,23 @@ function updateMatchBadgeForNFT(nft) {
     badgeEl.innerHTML = '<div class="match-badge-loading">⚠️ INDEX LOADING...</div>';
     return;
   }
+  
+  // Get Base value and trait count for display
+  let baseVal = "Unknown";
+  let traitCount = 0;
+  for (const l of nft.layers) {
+    if (l.section === 'Base') baseVal = l.value;
+    else if (l.section !== 'Background') traitCount++;
+  }
+  
   const matches = findMatchesForNFT(nft);
-  // Get accessory count for display
-  const accessoryCount = (nft.layers || []).filter(l => l.section === 'Accessory').length;
   
   if (matches.length === 0) {
-    badgeEl.innerHTML = `<div class="match-badge" style="background:#404040; color:#cccccc;">❌ NO ACCESSORY MATCH (${accessoryCount} acc)</div>`;
+    badgeEl.innerHTML = `<div class="match-badge" style="background:#404040; color:#cccccc;">❌ NO MATCH (${baseVal} + ${traitCount} traits)</div>`;
   } else {
     const show = matches.slice(0, 8).map(n => '#' + n).join(', ');
     const extra = matches.length > 8 ? ` +${matches.length-8}` : '';
-    badgeEl.innerHTML = `<div class="match-badge success-bg">🎯 MATCH (${accessoryCount} acc): ${show}${extra}</div>`;
+    badgeEl.innerHTML = `<div class="match-badge success-bg">🎯 MATCH (${baseVal}): ${show}${extra}</div>`;
   }
 }
 
@@ -459,10 +491,45 @@ function isSectionBlockedForBase(section,baseValue) {
   return false;
 }
 
+// ============================================================
+// UPDATED: buildNFTAttributes - Base as separate trait
+// ============================================================
 function buildNFTAttributes(layers) {
-  let attrs=[];
-  for(let l of layers) { if(l.section==="Background") continue; attrs.push({ trait_type:"Accessory", value:l.value }); }
-  attrs.push({ trait_type:"Attribute Count", value:attrs.length.toString() });
+  let attrs = [];
+  let baseValue = null;
+  
+  // First, find Base value
+  for (let l of layers) {
+    if (l.section === "Base") {
+      baseValue = l.value;
+      break;
+    }
+  }
+  
+  // Add Base as separate trait_type
+  if (baseValue) {
+    attrs.push({ 
+      trait_type: "Base", 
+      value: baseValue 
+    });
+  }
+  
+  // Add all other traits as Accessory (excluding Background)
+  for (let l of layers) {
+    if (l.section === "Background") continue;
+    if (l.section === "Base") continue;
+    attrs.push({ 
+      trait_type: "Accessory", 
+      value: l.value 
+    });
+  }
+  
+  // Add Attribute Count
+  attrs.push({ 
+    trait_type: "Attribute Count", 
+    value: attrs.length.toString() 
+  });
+  
   return attrs;
 }
 
@@ -613,8 +680,8 @@ async function viewNFTDetails(id) {
   let layersHtml=nft.layers.map((l,idx)=>`<div class="layer-row"><span>${idx+1}. ${l.section}: ${escapeHtml(l.value)}</span><div><button onclick="App.editNFTLayer('${id}',${idx},'up')" class="move-btn">▲</button><button onclick="App.editNFTLayer('${id}',${idx},'down')" class="move-btn">▼</button><button onclick="App.deleteNFTLayer('${id}',${idx})" class="move-btn" style="border-color:#ff4444;">✕</button></div></div>`).join('');
   const matches = isIndexLoaded ? findMatchesForNFT(nft) : [];
   const matchHtml = matches.length>0
-    ? `<div style="background:#000080;color:#ffff00;border:2px solid #4444ff;padding:8px;margin-bottom:10px;font-family:'Press Start 2P',monospace;font-size:7px;">🎯 ACCESSORY MATCH (${matches.length}): ${matches.slice(0,10).map(n=>'#'+n).join(', ')}${matches.length>10?' +more':''}</div>`
-    : (isIndexLoaded ? `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#666;margin-bottom:8px;">❌ NO ACCESSORY MATCH</div>` : `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#666;margin-bottom:8px;">💡 Loading index...</div>`);
+    ? `<div style="background:#000080;color:#ffff00;border:2px solid #4444ff;padding:8px;margin-bottom:10px;font-family:'Press Start 2P',monospace;font-size:7px;">🎯 MATCH FOUND (${matches.length} tokens): ${matches.slice(0,10).map(n=>'#'+n).join(', ')}${matches.length>10?' +more':''}</div>`
+    : (isIndexLoaded ? `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#666;margin-bottom:8px;">❌ NO MATCH FOUND</div>` : `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#666;margin-bottom:8px;">💡 Loading index...</div>`);
   modal.innerHTML=`<div class="win95-window" style="width:90%;max-width:500px;max-height:90vh;overflow:auto;">
     <div class="win95-titlebar"><span>✏️ EDIT: ${escapeHtml(nft.name)}</span><button onclick="document.getElementById('nft-modal-${id}').remove()">✕</button></div>
     <div class="win95-content">
