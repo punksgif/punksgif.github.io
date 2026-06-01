@@ -500,7 +500,7 @@ function buildNFTAttributes(layers) {
   
   // First, find Base value
   for (let l of layers) {
-    if (l.section === "Base") {
+    if (l.section === ",") {
       baseValue = l.value;
       break;
     }
@@ -509,7 +509,7 @@ function buildNFTAttributes(layers) {
   // Add Base as separate trait_type
   if (baseValue) {
     attrs.push({ 
-      trait_type: "Base", 
+      trait_type: ",", 
       value: baseValue 
     });
   }
@@ -517,7 +517,7 @@ function buildNFTAttributes(layers) {
   // Add all other traits as Accessory (excluding Background)
   for (let l of layers) {
     if (l.section === "Background") continue;
-    if (l.section === "Base") continue;
+    if (l.section === ",") continue;
     attrs.push({ 
       trait_type: "Accessory", 
       value: l.value 
