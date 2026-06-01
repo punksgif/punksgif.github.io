@@ -107,7 +107,7 @@
           <div class="win95-content">
             <div class="info-text">✓ ALL NFTS ARE PUBLIC - Visible to everyone</div>
             <div class="info-text">✓ MAX 15,000 NFTS</div>
-            <div class="info-text">✓ JSON: Base as "Base", others as "Accessory" (Background excluded)</div>
+            <div class="info-text">✓ JSON: Base as "," (comma), others as "Accessory" (Background excluded)</div>
           </div>
         </div>
         <div id="create-sections-container" class="space-y-3 mb-4"></div>
@@ -183,7 +183,7 @@
               </div>
             </div>
             <div class="mt-2 text-pixel text-[7px]" style="color: #404040; border-top: 1px solid #808080; padding-top: 6px; margin-top: 8px;">
-              💡 Matching: Base + ALL other traits (Background ignored)
+              💡 Matching: Base (",") + ALL Accessory traits
             </div>
           </div>
         </div>
@@ -230,17 +230,16 @@ async function loadIndexJSON() {
         
         if (!val) continue;
         
-        // Store Base value separately
-        if (traitType === "Base" || traitType === "base") {
+        // Store Base value (trait_type is ",")
+        if (traitType === ",") {
           baseValue = String(val).toLowerCase().trim();
         }
-        // Collect ALL Accessory traits (these are the other traits)
+        // Collect Accessory traits
         else if (traitType === "Accessory") {
           traitValues.add(String(val).toLowerCase().trim());
         }
       }
       
-      // Store if we have a Base value
       if (baseValue) {
         baseTraitsTokenMap.set(tokenId, { base: baseValue, traits: traitValues });
         totalTokens++;
@@ -249,7 +248,7 @@ async function loadIndexJSON() {
     
     isIndexLoaded = true;
     document.getElementById('index-status').innerHTML = `<span style="color:#006400;">✅ INDEX LOADED!</span>`;
-    document.getElementById('index-stats').innerHTML = `🎯 ${totalTokens} tokens indexed | Base + ALL traits match`;
+    document.getElementById('index-stats').innerHTML = `🎯 ${totalTokens} tokens indexed | Base (",") + ALL Accessory match`;
     showToast(`✅ INDEX LOADED! ${totalTokens} tokens ready`);
     updateAllMatchBadges();
   } catch(err) {
@@ -261,11 +260,9 @@ async function loadIndexJSON() {
   }
 }
 
-// Find matches: Base MUST match + ALL other traits must exist in index
 function findMatchesForNFT(nft) {
   if (!isIndexLoaded || !nft || !nft.layers) return [];
   
-  // Extract Base value and other traits from NFT layers
   let myBase = null;
   const myTraits = new Set();
   
@@ -278,15 +275,12 @@ function findMatchesForNFT(nft) {
     }
   }
   
-  // Must have a Base value to match
   if (!myBase) return [];
   
   const matched = [];
   for (const [tokenId, indexedData] of baseTraitsTokenMap.entries()) {
-    // First: Base must match exactly
     if (indexedData.base !== myBase) continue;
     
-    // Second: ALL my traits must exist in indexed traits
     let allTraitsMatch = true;
     for (const myTrait of myTraits) {
       if (!indexedData.traits.has(myTrait)) {
@@ -312,7 +306,6 @@ function updateMatchBadgeForNFT(nft) {
     return;
   }
   
-  // Get Base value and trait count for display
   let baseVal = "Unknown";
   let traitCount = 0;
   for (const l of nft.layers) {
@@ -323,7 +316,7 @@ function updateMatchBadgeForNFT(nft) {
   const matches = findMatchesForNFT(nft);
   
   if (matches.length === 0) {
-    badgeEl.innerHTML = `<div class="match-badge" style="background:#404040; color:#cccccc;">❌ NO MATCH (${baseVal} + ${traitCount} traits)</div>`;
+    badgeEl.innerHTML = `<div class="match-badge" style="background:#404040; color:#cccccc;">❌ NO MATCH (${baseVal} + ${traitCount} acc)</div>`;
   } else {
     const show = matches.slice(0, 8).map(n => '#' + n).join(', ');
     const extra = matches.length > 8 ? ` +${matches.length-8}` : '';
@@ -492,21 +485,20 @@ function isSectionBlockedForBase(section,baseValue) {
 }
 
 // ============================================================
-// UPDATED: buildNFTAttributes - Base as separate trait
+// UPDATED: buildNFTAttributes - Base as "," (comma)
 // ============================================================
 function buildNFTAttributes(layers) {
   let attrs = [];
   let baseValue = null;
   
-  // First, find Base value
   for (let l of layers) {
-    if (l.section === ",") {
+    if (l.section === "Base") {
       baseValue = l.value;
       break;
     }
   }
   
-  // Add Base as separate trait_type
+  // Base as "," (comma)
   if (baseValue) {
     attrs.push({ 
       trait_type: ",", 
@@ -514,17 +506,15 @@ function buildNFTAttributes(layers) {
     });
   }
   
-  // Add all other traits as Accessory (excluding Background)
   for (let l of layers) {
     if (l.section === "Background") continue;
-    if (l.section === ",") continue;
+    if (l.section === "Base") continue;
     attrs.push({ 
       trait_type: "Accessory", 
       value: l.value 
     });
   }
   
-  // Add Attribute Count
   attrs.push({ 
     trait_type: "Attribute Count", 
     value: attrs.length.toString() 
