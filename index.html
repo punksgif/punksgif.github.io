@@ -485,12 +485,13 @@ function isSectionBlockedForBase(section,baseValue) {
 }
 
 // ============================================================
-// UPDATED: buildNFTAttributes - Base as "," (comma)
+// FIXED: buildNFTAttributes - ONLY Base as "," (comma), ALL others as "Accessory"
 // ============================================================
 function buildNFTAttributes(layers) {
   let attrs = [];
   let baseValue = null;
   
+  // Find Base value
   for (let l of layers) {
     if (l.section === "Base") {
       baseValue = l.value;
@@ -498,7 +499,7 @@ function buildNFTAttributes(layers) {
     }
   }
   
-  // Base as "," (comma)
+  // Add Base as "," (comma) - ONLY THIS ONE IS CHANGED TO COMMA
   if (baseValue) {
     attrs.push({ 
       trait_type: ",", 
@@ -506,6 +507,7 @@ function buildNFTAttributes(layers) {
     });
   }
   
+  // ALL other sections (Nose, Face, Mouth, Eyes, Accessory, etc.) remain as "Accessory"
   for (let l of layers) {
     if (l.section === "Background") continue;
     if (l.section === "Base") continue;
@@ -515,6 +517,7 @@ function buildNFTAttributes(layers) {
     });
   }
   
+  // Add Attribute Count
   attrs.push({ 
     trait_type: "Attribute Count", 
     value: attrs.length.toString() 
