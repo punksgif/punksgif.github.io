@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>404 PUNKS // BASE + TRAITS MATCH ENGINE</title>
+  <title>404 PUNKS // UNIVERSAL MATCH ENGINE</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -63,7 +63,7 @@
 
 <div class="win95-desktop">
   <div class="win95-window">
-    <div class="win95-titlebar"><span>📁 404 PUNKS - BASE + TRAITS MATCH ENGINE</span><button onclick="location.reload()">✕</button></div>
+    <div class="win95-titlebar"><span>📁 404 PUNKS - UNIVERSAL MATCH ENGINE</span><button onclick="location.reload()">✕</button></div>
     <div style="background: #c0c0c0; padding: 8px 16px 0 16px;">
       <div style="display: flex; gap: 4px; flex-wrap: wrap;">
         <button onclick="App.switchTab('layers')" id="tab-layers" class="win95-tab active">📂 LAYERS</button>
@@ -107,7 +107,7 @@
           <div class="win95-content">
             <div class="info-text">✓ ALL NFTS ARE PUBLIC - Visible to everyone</div>
             <div class="info-text">✓ MAX 15,000 NFTS</div>
-            <div class="info-text">✓ JSON: Base as "," (comma), others as "Accessory" (Background excluded)</div>
+            <div class="info-text">✓ JSON: Base as "," (comma), others as "Accessory"</div>
           </div>
         </div>
         <div id="create-sections-container" class="space-y-3 mb-4"></div>
@@ -163,8 +163,8 @@
         <!-- INDEX MATCH PANEL -->
         <div class="win95-window" style="margin-bottom: 16px; overflow: hidden;">
           <div class="win95-titlebar match-engine-header" style="background: linear-gradient(135deg, #000080, #0000aa);">
-            <span>🎯 BASE + TRAITS MATCH ENGINE <span class="pulse-text" style="color: #ffff00;">● LIVE</span></span>
-            <span style="font-size: 8px;">v3.0</span>
+            <span>🎯 UNIVERSAL MATCH ENGINE <span class="pulse-text" style="color: #ffff00;">● LIVE</span></span>
+            <span style="font-size: 8px;">v7.0</span>
           </div>
           <div class="win95-content" style="background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -176,14 +176,12 @@
                 <div id="index-status" class="info-text" style="color: #000080; font-weight: bold;">🔄 Initializing match engine...</div>
                 <div id="index-stats" class="text-pixel text-[7px] mt-1" style="color: #006400;"></div>
               </div>
-              <div style="display: flex; gap: 8px;">
-                <div style="background: #008080; padding: 4px 8px; border: 2px inset #00aaaa;">
-                  <span style="font-family: 'Press Start 2P', monospace; font-size: 7px; color: #ffffff;">🔒 SECURE</span>
-                </div>
+              <div>
+                <button onclick="App.loadIndexJSON()" class="win95-btn" style="background:#000080;color:#fff;padding:4px 8px;font-size:7px;">🔄 RELOAD</button>
               </div>
             </div>
             <div class="mt-2 text-pixel text-[7px]" style="color: #404040; border-top: 1px solid #808080; padding-top: 6px; margin-top: 8px;">
-              💡 Matching: Base (",") + ALL Accessory traits
+              💡 Matching: ALL traits (except Attribute Count) - regardless of trait_type name
             </div>
           </div>
         </div>
@@ -200,96 +198,106 @@
 
 <script>
 // ============================================================
-// BASE + TRAITS MATCH ENGINE 
+// UNIVERSAL MATCH ENGINE - Ignores "Attribute Count", matches ALL other values
 // ============================================================
 const FIXED_INDEX_URL = "https://raw.githubusercontent.com/punksgif/punksgif.github.io/main/index.json";
-let baseTraitsTokenMap = new Map(); // tokenId -> { base: string, traitsSet: Set }
+let matchIndexMap = new Map(); // tokenId -> sorted match key string
 let isIndexLoaded = false;
 
-function showToast(m) { let t=document.getElementById('toast'); t.innerText=m; t.classList.remove('hidden'); clearTimeout(window.tt); window.tt=setTimeout(()=>t.classList.add('hidden'),3000); }
+function showToast(m) { 
+  let t=document.getElementById('toast'); 
+  t.innerText=m; 
+  t.classList.remove('hidden'); 
+  clearTimeout(window.tt); 
+  window.tt=setTimeout(()=>t.classList.add('hidden'),3000); 
+}
+
+// Extract all trait values from attributes, excluding "Attribute Count"
+function extractAllTraitValues(attributes) {
+  const values = [];
+  for (const attr of attributes) {
+    const traitType = attr.trait_type;
+    const val = attr.value;
+    if (!val) continue;
+    // Skip "Attribute Count" - case insensitive
+    if (traitType && traitType.toLowerCase() === "attribute count") continue;
+    values.push(String(val).toLowerCase().trim());
+  }
+  // Sort for consistent matching
+  values.sort();
+  return values;
+}
+
+// Create a unique match key from sorted values
+function createMatchKey(values) {
+  return values.join("|");
+}
 
 async function loadIndexJSON() {
   showToast('📥 LOADING INDEX...');
-  document.getElementById('index-status').innerHTML = '<span style="color:#aa0000;">⏳ LOADING INDEX...</span>';
+  document.getElementById('index-status').innerHTML = '<span style="color:#aa0000;">⏳ LOADING...</span>';
   try {
     const response = await fetch(FIXED_INDEX_URL);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
-    baseTraitsTokenMap.clear();
+    matchIndexMap.clear();
     let totalTokens = 0;
+    const allValues = new Set();
     
     for (const [tokenId, tokenData] of Object.entries(data)) {
       if (!tokenData.attributes) continue;
       
-      let baseValue = null;
-      const traitValues = new Set();
-      
-      for (const attr of tokenData.attributes) {
-        const traitType = attr.trait_type;
-        const val = attr.value;
-        
-        if (!val) continue;
-        
-        // Store Base value (trait_type is ",")
-        if (traitType === ",") {
-          baseValue = String(val).toLowerCase().trim();
-        }
-        // Collect Accessory traits
-        else if (traitType === "Accessory") {
-          traitValues.add(String(val).toLowerCase().trim());
-        }
-      }
-      
-      if (baseValue) {
-        baseTraitsTokenMap.set(tokenId, { base: baseValue, traits: traitValues });
+      const traitValues = extractAllTraitValues(tokenData.attributes);
+      if (traitValues.length > 0) {
+        const matchKey = createMatchKey(traitValues);
+        matchIndexMap.set(tokenId, matchKey);
         totalTokens++;
+        traitValues.forEach(v => allValues.add(v));
+        
+        // Debug first few tokens
+        if (totalTokens <= 5) {
+          console.log(`Token ${tokenId} values:`, traitValues, "Key:", matchKey);
+        }
       }
     }
     
     isIndexLoaded = true;
     document.getElementById('index-status').innerHTML = `<span style="color:#006400;">✅ INDEX LOADED!</span>`;
-    document.getElementById('index-stats').innerHTML = `🎯 ${totalTokens} tokens indexed | Base (",") + ALL Accessory match`;
-    showToast(`✅ INDEX LOADED! ${totalTokens} tokens ready`);
+    document.getElementById('index-stats').innerHTML = `🎯 ${totalTokens} tokens indexed | Ignoring "Attribute Count"`;
+    showToast(`✅ INDEX LOADED! ${totalTokens} tokens`);
     updateAllMatchBadges();
   } catch(err) {
     console.error(err);
-    document.getElementById('index-status').innerHTML = `<span style="color:#aa0000;">❌ FAILED TO LOAD INDEX</span>`;
-    document.getElementById('index-stats').innerHTML = `⚠️ Check network connection`;
-    showToast('INDEX LOAD FAILED! Check network');
+    document.getElementById('index-status').innerHTML = `<span style="color:#aa0000;">❌ FAILED: ${err.message}</span>`;
+    showToast('INDEX LOAD FAILED!');
     isIndexLoaded = false;
   }
 }
 
-function findMatchesForNFT(nft) {
-  if (!isIndexLoaded || !nft || !nft.layers) return [];
-  
-  let myBase = null;
-  const myTraits = new Set();
-  
+// Extract trait values from NFT layers (excluding Background)
+function getNFTTraitValues(nft) {
+  if (!nft || !nft.layers) return [];
+  const values = [];
   for (const l of nft.layers) {
-    if (l.section === 'Base') {
-      myBase = String(l.value).toLowerCase().trim();
-    } 
-    else if (l.section !== 'Background') {
-      myTraits.add(String(l.value).toLowerCase().trim());
+    if (l.section !== 'Background') {
+      values.push(String(l.value).toLowerCase().trim());
     }
   }
+  values.sort();
+  return values;
+}
+
+function findMatchesForNFT(nft) {
+  if (!isIndexLoaded || !nft) return [];
   
-  if (!myBase) return [];
+  const myValues = getNFTTraitValues(nft);
+  if (myValues.length === 0) return [];
+  
+  const myMatchKey = createMatchKey(myValues);
   
   const matched = [];
-  for (const [tokenId, indexedData] of baseTraitsTokenMap.entries()) {
-    if (indexedData.base !== myBase) continue;
-    
-    let allTraitsMatch = true;
-    for (const myTrait of myTraits) {
-      if (!indexedData.traits.has(myTrait)) {
-        allTraitsMatch = false;
-        break;
-      }
-    }
-    
-    if (allTraitsMatch) {
+  for (const [tokenId, indexKey] of matchIndexMap.entries()) {
+    if (indexKey === myMatchKey) {
       matched.push(Number(tokenId));
     }
   }
@@ -302,25 +310,20 @@ function updateMatchBadgeForNFT(nft) {
   const badgeEl = document.getElementById(`match-badge-${nft.id}`);
   if (!badgeEl) return;
   if (!isIndexLoaded) {
-    badgeEl.innerHTML = '<div class="match-badge-loading">⚠️ INDEX LOADING...</div>';
+    badgeEl.innerHTML = '<div class="match-badge-loading">⚠️ LOAD INDEX FIRST</div>';
     return;
   }
   
-  let baseVal = "Unknown";
-  let traitCount = 0;
-  for (const l of nft.layers) {
-    if (l.section === 'Base') baseVal = l.value;
-    else if (l.section !== 'Background') traitCount++;
-  }
-  
+  const traitValues = getNFTTraitValues(nft);
   const matches = findMatchesForNFT(nft);
+  const traitDisplay = traitValues.slice(0, 3).join(', ') + (traitValues.length > 3 ? '...' : '');
   
   if (matches.length === 0) {
-    badgeEl.innerHTML = `<div class="match-badge" style="background:#404040; color:#cccccc;">❌ NO MATCH (${baseVal} + ${traitCount} acc)</div>`;
+    badgeEl.innerHTML = `<div class="match-badge" style="background:#404040; color:#cccccc;">❌ NO MATCH (${traitDisplay})</div>`;
   } else {
     const show = matches.slice(0, 8).map(n => '#' + n).join(', ');
     const extra = matches.length > 8 ? ` +${matches.length-8}` : '';
-    badgeEl.innerHTML = `<div class="match-badge success-bg">🎯 MATCH (${baseVal}): ${show}${extra}</div>`;
+    badgeEl.innerHTML = `<div class="match-badge success-bg">🎯 MATCH (${matches.length}): ${show}${extra}</div>`;
   }
 }
 
@@ -484,45 +487,17 @@ function isSectionBlockedForBase(section,baseValue) {
   return false;
 }
 
-// ============================================================
-// FIXED: buildNFTAttributes - ONLY Base as "," (comma), ALL others as "Accessory"
-// ============================================================
 function buildNFTAttributes(layers) {
   let attrs = [];
   let baseValue = null;
-  
-  // Find Base value
-  for (let l of layers) {
-    if (l.section === "Base") {
-      baseValue = l.value;
-      break;
-    }
-  }
-  
-  // Add Base as "," (comma) - ONLY THIS ONE IS CHANGED TO COMMA
-  if (baseValue) {
-    attrs.push({ 
-      trait_type: ",", 
-      value: baseValue 
-    });
-  }
-  
-  // ALL other sections (Nose, Face, Mouth, Eyes, Accessory, etc.) remain as "Accessory"
+  for (let l of layers) { if (l.section === "Base") { baseValue = l.value; break; } }
+  if (baseValue) { attrs.push({ trait_type: ",", value: baseValue }); }
   for (let l of layers) {
     if (l.section === "Background") continue;
     if (l.section === "Base") continue;
-    attrs.push({ 
-      trait_type: "Accessory", 
-      value: l.value 
-    });
+    attrs.push({ trait_type: "Accessory", value: l.value });
   }
-  
-  // Add Attribute Count
-  attrs.push({ 
-    trait_type: "Attribute Count", 
-    value: attrs.length.toString() 
-  });
-  
+  attrs.push({ trait_type: "Attribute Count", value: attrs.length.toString() });
   return attrs;
 }
 
@@ -531,11 +506,9 @@ async function startMint() {
   if(total>MAX_NFT_LIMIT) total=MAX_NFT_LIMIT;
   let maleCount=Math.ceil(total/2), femaleCount=Math.floor(total/2);
   let genderTotal = total;
-  
   let activeSections=[];
   for(let s of SECTIONS_ORDER) if(sectionQuantities[s]>0 && selectedLayersPerSection[s].length>0) activeSections.push(s);
   if(!activeSections.length){ showToast('SELECT LAYERS FIRST'); return; }
-  
   let prefix=document.getElementById('name-prefix').value.trim()||"PUNK#";
   let desc=document.getElementById('nft-description').value;
   let btn=document.getElementById('bulk-mint-btn'); 
@@ -546,79 +519,39 @@ async function startMint() {
   for(let i=0;i<maleCount;i++) order.push('male');
   for(let i=0;i<femaleCount;i++) order.push('female');
   for(let i=order.length-1;i>0;i--){ let j=Math.floor(Math.random()*(i+1)); [order[i],order[j]]=[order[j],order[i]]; }
-  
   for(let idx=0;idx<order.length;idx++) {
     let gender=order[idx];
     let percent=Math.round(((idx+1)/order.length)*100);
     progText.innerText=`${gender==='male'?'♂ MALE':'♀ FEMALE'} ${idx+1}/${order.length} (${percent}%)`;
     progCounter.innerText=`${idx+1}/${order.length}`; progFill.style.width=`${((idx+1)/order.length)*100}%`;
-    
     let selectedForNFT=[], baseValue=null;
-    
     for(let section of activeSections) {
       if(section==='Base') {
         let sL=selectedLayersPerSection[section];
         let filtered=sL.filter(l=>l.gender==='both'||(gender==='male'&&l.gender==='male')||(gender==='female'&&l.gender==='female'));
-        if(filtered.length){ 
-          let qty=sectionQuantities[section]; 
-          if(qty > 0 && Math.random() < (qty/genderTotal)){ 
-            let r=filtered[Math.floor(Math.random()*filtered.length)]; 
-            baseValue=r.value; 
-            selectedForNFT.push({...r, section, orderIndex:r.orderIndex}); 
-          } 
-        }
+        if(filtered.length){ let qty=sectionQuantities[section]; if(qty > 0 && Math.random() < (qty/genderTotal)){ let r=filtered[Math.floor(Math.random()*filtered.length)]; baseValue=r.value; selectedForNFT.push({...r, section, orderIndex:r.orderIndex}); } }
       }
     }
-    
     for(let section of activeSections) {
       if(section==='Base') continue;
       if(selectedForNFT.length>=MAX_TRAITS) break;
       if(isSectionBlockedForBase(section,baseValue)) continue;
-      
       let sL=selectedLayersPerSection[section];
       let filtered=sL.filter(l=>l.gender==='both'||(gender==='male'&&l.gender==='male')||(gender==='female'&&l.gender==='female'));
       if(!filtered.length) continue;
-      
       let qty = sectionQuantities[section];
-      if(qty > 0 && Math.random() < (qty/genderTotal)){
-        let r=filtered[Math.floor(Math.random()*filtered.length)]; 
-        selectedForNFT.push({...r, section, orderIndex:r.orderIndex}); 
-      }
+      if(qty > 0 && Math.random() < (qty/genderTotal)){ let r=filtered[Math.floor(Math.random()*filtered.length)]; selectedForNFT.push({...r, section, orderIndex:r.orderIndex}); }
     }
-    
-    if(!selectedForNFT.length){ 
-      for(let section of activeSections){ 
-        if(isSectionBlockedForBase(section,baseValue)) continue; 
-        let sL=selectedLayersPerSection[section]; 
-        let filtered=sL.filter(l=>l.gender==='both'||(gender==='male'&&l.gender==='male')||(gender==='female'&&l.gender==='female')); 
-        if(filtered.length){ 
-          selectedForNFT.push({...filtered[0], section, orderIndex:filtered[0].orderIndex}); 
-          break; 
-        } 
-      } 
-    }
-    
+    if(!selectedForNFT.length){ for(let section of activeSections){ if(isSectionBlockedForBase(section,baseValue)) continue; let sL=selectedLayersPerSection[section]; let filtered=sL.filter(l=>l.gender==='both'||(gender==='male'&&l.gender==='male')||(gender==='female'&&l.gender==='female')); if(filtered.length){ selectedForNFT.push({...filtered[0], section, orderIndex:filtered[0].orderIndex}); break; } } }
     selectedForNFT.sort((a,b)=>a.orderIndex-b.orderIndex);
     let imgData=await compositeFromLayers(selectedForNFT);
     let attributes=buildNFTAttributes(selectedForNFT);
-    newNFTs.push({ 
-      id:Date.now()+'_'+Math.random().toString(36).substr(2,8)+'_'+idx, 
-      name:`${prefix}${idx+1}`, 
-      description:desc, 
-      image:imgData, 
-      attributes:attributes, 
-      layers:selectedForNFT.map(l=>({section:l.section,value:l.value,imageUrl:l.imageUrl,orderIndex:l.orderIndex})), 
-      createdAt:new Date().toISOString() 
-    });
+    newNFTs.push({ id:Date.now()+'_'+Math.random().toString(36).substr(2,8)+'_'+idx, name:`${prefix}${idx+1}`, description:desc, image:imgData, attributes:attributes, layers:selectedForNFT.map(l=>({section:l.section,value:l.value,imageUrl:l.imageUrl,orderIndex:l.orderIndex})), createdAt:new Date().toISOString() });
     if(idx%20===0) await new Promise(r=>setTimeout(r,10));
   }
-  
-  nfts.push(...newNFTs); 
-  await updateNFTsInFirebase(); 
-  renderCollection();
+  nfts.push(...newNFTs); await updateNFTsInFirebase(); renderCollection();
   showToast(`✅ MINTED ${order.length} NFTS!`);
-  btn.disabled=false; 
-  progWrap.classList.add('hidden');
+  btn.disabled=false; progWrap.classList.add('hidden');
   if (isIndexLoaded) updateAllMatchBadges();
 }
 
@@ -633,13 +566,9 @@ function renderCollection() {
   if(!displayNFTs.length){ container.innerHTML=''; return; }
   container.innerHTML=displayNFTs.map((nft,idx)=>`
     <div class="nft-card" style="padding:12px;" id="card-${nft.id}">
-      <div style="aspect-ratio:1; background:#fff; margin-bottom:10px; border:2px inset #808080;">
-        <img src="${nft.image}" style="width:100%;height:100%;object-fit:contain;">
-      </div>
+      <div style="aspect-ratio:1; background:#fff; margin-bottom:10px; border:2px inset #808080;"><img src="${nft.image}" style="width:100%;height:100%;object-fit:contain;"></div>
       <div class="text-pixel text-[8px] text-center">${escapeHtml(nft.name)}</div>
-      <div id="match-badge-${nft.id}">
-        ${isIndexLoaded ? '<div class="match-badge-loading">🔍 MATCHING...</div>' : '<div class="match-badge-loading">📡 LOADING INDEX...</div>'}
-      </div>
+      <div id="match-badge-${nft.id}">${isIndexLoaded ? '<div class="match-badge-loading">🔍 MATCHING...</div>' : '<div class="match-badge-loading">📡 LOAD INDEX FIRST...</div>'}</div>
       <div style="display:flex; gap:5px; margin-top:8px;">
         <button onclick="App.viewNFTDetails('${nft.id}')" class="win95-btn" style="padding:4px; font-size:7px; flex:1;">📝 EDIT</button>
         <button onclick="App.downloadSingleImage('${nft.id}', ${idx+1})" class="win95-btn" style="padding:4px; font-size:7px; flex:1;">PNG</button>
@@ -672,22 +601,8 @@ async function viewNFTDetails(id) {
   modal.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;overflow:auto;';
   let layersHtml=nft.layers.map((l,idx)=>`<div class="layer-row"><span>${idx+1}. ${l.section}: ${escapeHtml(l.value)}</span><div><button onclick="App.editNFTLayer('${id}',${idx},'up')" class="move-btn">▲</button><button onclick="App.editNFTLayer('${id}',${idx},'down')" class="move-btn">▼</button><button onclick="App.deleteNFTLayer('${id}',${idx})" class="move-btn" style="border-color:#ff4444;">✕</button></div></div>`).join('');
   const matches = isIndexLoaded ? findMatchesForNFT(nft) : [];
-  const matchHtml = matches.length>0
-    ? `<div style="background:#000080;color:#ffff00;border:2px solid #4444ff;padding:8px;margin-bottom:10px;font-family:'Press Start 2P',monospace;font-size:7px;">🎯 MATCH FOUND (${matches.length} tokens): ${matches.slice(0,10).map(n=>'#'+n).join(', ')}${matches.length>10?' +more':''}</div>`
-    : (isIndexLoaded ? `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#666;margin-bottom:8px;">❌ NO MATCH FOUND</div>` : `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#666;margin-bottom:8px;">💡 Loading index...</div>`);
-  modal.innerHTML=`<div class="win95-window" style="width:90%;max-width:500px;max-height:90vh;overflow:auto;">
-    <div class="win95-titlebar"><span>✏️ EDIT: ${escapeHtml(nft.name)}</span><button onclick="document.getElementById('nft-modal-${id}').remove()">✕</button></div>
-    <div class="win95-content">
-      <img src="${nft.image}" style="width:100%;margin-bottom:10px;border:3px outset #808080;">
-      ${matchHtml}
-      <div class="text-pixel text-[8px] mb-2">LAYERS (Background excluded from JSON)</div>
-      <div style="max-height:200px;overflow:auto;">${layersHtml}</div>
-      <div class="flex gap-3 mt-3">
-        <button onclick="App.downloadSingleImage('${id}');document.getElementById('nft-modal-${id}').remove()" class="win95-btn flex-1">📸 PNG</button>
-        <button onclick="App.downloadSingleJSON('${id}');document.getElementById('nft-modal-${id}').remove()" class="win95-btn flex-1">📄 JSON</button>
-      </div>
-    </div>
-  </div>`;
+  const matchHtml = matches.length>0 ? `<div style="background:#000080;color:#ffff00;border:2px solid #4444ff;padding:8px;margin-bottom:10px;font-family:'Press Start 2P',monospace;font-size:7px;">🎯 MATCH (${matches.length}): ${matches.slice(0,10).map(n=>'#'+n).join(', ')}${matches.length>10?' +more':''}</div>` : (isIndexLoaded ? `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#666;margin-bottom:8px;">❌ NO MATCH</div>` : `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#666;margin-bottom:8px;">💡 Load index first</div>`);
+  modal.innerHTML=`<div class="win95-window" style="width:90%;max-width:500px;max-height:90vh;overflow:auto;"><div class="win95-titlebar"><span>✏️ EDIT: ${escapeHtml(nft.name)}</span><button onclick="document.getElementById('nft-modal-${id}').remove()">✕</button></div><div class="win95-content"><img src="${nft.image}" style="width:100%;margin-bottom:10px;border:3px outset #808080;">${matchHtml}<div class="text-pixel text-[8px] mb-2">LAYERS</div><div style="max-height:200px;overflow:auto;">${layersHtml}</div><div class="flex gap-3 mt-3"><button onclick="App.downloadSingleImage('${id}');document.getElementById('nft-modal-${id}').remove()" class="win95-btn flex-1">📸 PNG</button><button onclick="App.downloadSingleJSON('${id}');document.getElementById('nft-modal-${id}').remove()" class="win95-btn flex-1">📄 JSON</button></div></div></div>`;
   document.body.appendChild(modal);
 }
 
@@ -695,15 +610,14 @@ async function editNFTLayer(nftId,layerIndex,direction) { let nft=nfts.find(n=>n
 async function deleteNFTLayer(nftId,layerIndex) { let nft=nfts.find(n=>n.id===nftId); if(!nft||!nft.layers) return; let removed=nft.layers[layerIndex]; if(confirm(`DELETE "${removed.section}: ${removed.value}"?`)){ nft.layers.splice(layerIndex,1); nft.layers.forEach((l,idx)=>l.orderIndex=idx); let imgData=await compositeFromLayers(nft.layers); nft.image=imgData; nft.attributes=buildNFTAttributes(nft.layers); await updateNFTsInFirebase(); renderCollection(); showToast('REMOVED'); viewNFTDetails(nftId); } }
 
 window.App = {
-  switchTab,
+  switchTab, loadIndexJSON,
   toggleSectionLayers: (s)=>{ openSectionLayers=openSectionLayers===s?null:s; renderSections(); },
   toggleSectionCreate: (s)=>{ openSectionCreate=openSectionCreate===s?null:s; renderCreateSections(); },
   addLayer, deleteLayer: deleteLayerFromFirebase,
   toggleLayerSelection, updateQuantity: updateSectionQuantity,
   startMint, deleteAllNFTs, downloadAllAsZip,
   viewNFTDetails, downloadSingleImage, downloadSingleJSON, deleteSingleNFT,
-  searchNFTs, clearSearch, editNFTLayer, deleteNFTLayer,
-  loadIndexJSON
+  searchNFTs, clearSearch, editNFTLayer, deleteNFTLayer
 };
 
 async function init() { 
