@@ -50,7 +50,6 @@
     .pulse-text { animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
 
-    /* Layer selection order indicator */
     .layer-item .order-num {
       position: absolute; top: 2px; right: 2px;
       background: #ffff00; color: #000000;
@@ -61,14 +60,12 @@
     .layer-item.selected .order-num { display: block; }
     .layer-item { position: relative; }
 
-    /* Section header with probability indicator */
     .prob-badge {
       background: #000080; color: #ffff00;
       font-family: 'Press Start 2P', monospace; font-size: 7px;
       padding: 2px 6px; border: 1px solid #4444ff;
     }
 
-    /* Selected layers order panel */
     .selected-order-item {
       background: #d4d0c8; border: 2px outset #808080;
       padding: 6px 10px; margin-bottom: 4px;
@@ -124,10 +121,10 @@
         <div class="win95-window" style="margin-bottom: 16px;">
           <div class="win95-titlebar" style="background: #808080;">📜 HOW IT WORKS</div>
           <div class="win95-content">
-            <div class="info-text">✓ প্রতিটি Section থেকে RANDOMLY একটি Layer বাছাই হবে</div>
-            <div class="info-text">✓ Layer selection order = compositing order (আগে সিলেক্ট = নিচে)</div>
-            <div class="info-text">✓ প্রতিটি NFT-তে Background + Base থাকবেই</div>
-            <div class="info-text">✓ Male layer শুধু Male base-এ, Female layer শুধু Female base-এ</div>
+            <div class="info-text">✓ One layer will be randomly selected from each Section</div>
+            <div class="info-text">✓ Layer selection order = compositing order (first selected = bottom)</div>
+            <div class="info-text">✓ Every NFT will have Background + Base</div>
+            <div class="info-text">✓ Male layer only on Male base, Female layer only on Female base</div>
             <div class="info-text">✓ MAX 10,000 NFTs</div>
           </div>
         </div>
@@ -142,13 +139,13 @@
 
         <!-- Layer Order Preview -->
         <div class="win95-window" style="margin-bottom:16px;">
-          <div class="win95-titlebar" style="background: #808080;">🔢 LAYER COMPOSITING ORDER (আগে সিলেক্ট = নিচে থাকবে)</div>
+          <div class="win95-titlebar" style="background: #808080;">🔢 LAYER COMPOSITING ORDER (First selected = Bottom)</div>
           <div class="win95-content">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
               <div style="flex:1;">
-                <div class="text-pixel text-[8px] mb-2" style="color:#000080;">⬇ BOTTOM (নিচে)</div>
+                <div class="text-pixel text-[8px] mb-2" style="color:#000080;">⬇ BOTTOM (Bottom)</div>
                 <div id="order-preview-list"></div>
-                <div class="text-pixel text-[8px] mt-2" style="color:#000080;">⬆ TOP (উপরে)</div>
+                <div class="text-pixel text-[8px] mt-2" style="color:#000080;">⬆ TOP (Top)</div>
               </div>
               <div style="text-align:center;">
                 <div class="text-pixel text-[8px] mb-2">LIVE PREVIEW</div>
@@ -351,23 +348,21 @@ function updateAllMatchBadges() {
   for (const nft of displayNFTs) updateMatchBadgeForNFT(nft);
 }
 
-// Delete all matched NFTs
 async function deleteAllMatched() {
-  if (!isIndexLoaded) { showToast('INDEX লোড করুন আগে!'); return; }
+  if (!isIndexLoaded) { showToast('Please load index first!'); return; }
   const matched = nfts.filter(nft => findMatchesForNFT(nft).length > 0);
-  if (!matched.length) { showToast('কোনো match নেই!'); return; }
-  if (!confirm(`⚠️ ${matched.length}টি matched NFT DELETE করবেন?`)) return;
+  if (!matched.length) { showToast('No matches found!'); return; }
+  if (!confirm(`⚠️ Delete ${matched.length} matched NFTs?`)) return;
   const matchedIds = new Set(matched.map(n => n.id));
   nfts = nfts.filter(n => !matchedIds.has(n.id));
   await updateNFTsInFirebase();
   renderCollection();
-  showToast(`🗑️ ${matched.length}টি matched NFT deleted!`);
+  showToast(`🗑️ ${matched.length} matched NFTs deleted!`);
 }
 
 // ============================================================
 // MAIN APP
 // ============================================================
-// SECTIONS_ORDER defines the default compositing order (bottom to top)
 const SECTIONS_ORDER = ["Background","Base","Nose","Face","Neck","Mouth","Eyes","Ear","Beard","Accessory","Head"];
 const MAX_NFT_LIMIT = 10000;
 const BLOCKED_SECTIONS_FOR_ALIEN_APE = ["Nose", "Face", "Neck", "Beard"];
@@ -386,14 +381,11 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
 let layersBySection = {};
-// selectedLayersPerSection[section] = array of selected layer objects, in selection order
 let selectedLayersPerSection = {};
-// sectionProbability[section] = 0-100 (percentage chance this section appears in an NFT)
 let sectionProbability = {};
 let nfts = [], filteredNFTs = null;
 let openSectionLayers = null, openSectionCreate = null;
 let previewCtx = null;
-// Global selection order counter - determines compositing order
 let globalSelectionCounter = 0;
 
 SECTIONS_ORDER.forEach(s => {
@@ -456,8 +448,8 @@ async function deleteLayerFromFirebase(section, id) {
 
 // ============================================================
 // LAYER SELECTION - ORDER TRACKING
-// Each selected layer gets a selectionOrder number.
-// Lower selectionOrder = drawn first (bottom layer).
+// First selected layer gets lowest selectionOrder = drawn first (bottom)
+// Each new selection gets incrementing counter, so earlier selections stay at bottom
 // ============================================================
 
 function toggleLayerSelection(section, layerId, value, imageUrl, gender) {
@@ -468,7 +460,7 @@ function toggleLayerSelection(section, layerId, value, imageUrl, gender) {
   } else {
     selected.push({
       layerId, value, imageUrl, gender,
-      selectionOrder: globalSelectionCounter++  // when selected = compositing order
+      selectionOrder: globalSelectionCounter++
     });
   }
   renderCreateSections();
@@ -479,7 +471,6 @@ function updateSectionProbability(section, val) {
   sectionProbability[section] = Math.min(100, Math.max(0, parseInt(val) || 0));
 }
 
-// Get all selected layers sorted by selectionOrder (ascending = bottom first)
 function getAllSelectedLayersInOrder() {
   let all = [];
   for (let s of SECTIONS_ORDER) {
@@ -530,11 +521,6 @@ function renderCreateSections() {
     let bothLayers = layers.filter(l => l.gender === 'both');
     let selectedIds = selectedInSection.map(l => l.layerId);
 
-    // Find selection order numbers for selected items
-    let selOrderMap = {};
-    selectedInSection.forEach(l => { selOrderMap[l.layerId] = l.selectionOrder; });
-
-    // Get the global rank (position among all selected layers)
     let allSelected = getAllSelectedLayersInOrder();
     let rankMap = {};
     allSelected.forEach((l, idx) => { rankMap[l.layerId + '_' + l.section] = idx + 1; });
@@ -607,7 +593,7 @@ function updateOrderPreview() {
   if (!div) return;
   let all = getAllSelectedLayersInOrder();
   if (!all.length) {
-    div.innerHTML = '<div class="selected-order-item" style="color:#808080;">[ Layer সিলেক্ট করুন ]</div>';
+    div.innerHTML = '<div class="selected-order-item" style="color:#808080;">[ Select layers first ]</div>';
     return;
   }
   div.innerHTML = all.map((l, i) =>
@@ -681,20 +667,15 @@ function buildNFTAttributes(layers) {
 
 // ============================================================
 // GENERATIVE MINT ENGINE
-// - Each section has selected layers pool
-// - For each NFT: Background (required), Base (required), then other sections randomly based on probability
-// - Male layers go to male NFTs, female layers to female NFTs, both to any
-// - Layer compositing order = selection order (earlier selected = bottom)
 // ============================================================
 
 async function startMint() {
   let total = Math.min(MAX_NFT_LIMIT, parseInt(document.getElementById('total-nft-count').value) || 1);
 
-  // Validate
   let bgLayers = selectedLayersPerSection['Background'] || [];
   let baseLayers = selectedLayersPerSection['Base'] || [];
-  if (!bgLayers.length) { showToast('⚠️ Background layer সিলেক্ট করুন!'); return; }
-  if (!baseLayers.length) { showToast('⚠️ Base layer সিলেক্ট করুন!'); return; }
+  if (!bgLayers.length) { showToast('⚠️ Please select Background layer!'); return; }
+  if (!baseLayers.length) { showToast('⚠️ Please select Base layer!'); return; }
 
   let prefix = document.getElementById('name-prefix').value.trim() || "PUNK#";
   let desc = document.getElementById('nft-description').value;
@@ -708,21 +689,15 @@ async function startMint() {
   let progText = document.getElementById('progress-text');
   let progEta = document.getElementById('progress-eta');
 
-  // Build gender order: alternate male/female
   let maleCount = Math.ceil(total / 2);
   let femaleCount = Math.floor(total / 2);
   let order = [...Array(maleCount).fill('male'), ...Array(femaleCount).fill('female')];
-  // Shuffle
   for (let i = order.length - 1; i > 0; i--) {
     let j = Math.floor(Math.random() * (i + 1));
     [order[i], order[j]] = [order[j], order[i]];
   }
 
-  // Get sorted selection order for all sections
-  // allSelectedOrder[section] = sorted array of layers by selectionOrder
-  // This determines compositing position
   let allSelectedByOrder = getAllSelectedLayersInOrder();
-  // Create a map: section -> sorted layers (by selectionOrder)
   let sectionLayerOrder = {};
   allSelectedByOrder.forEach(l => {
     if (!sectionLayerOrder[l.section]) sectionLayerOrder[l.section] = [];
@@ -736,7 +711,6 @@ async function startMint() {
     let gender = order[idx];
     let percent = Math.round(((idx + 1) / order.length) * 100);
 
-    // ETA calculation
     if (idx > 0) {
       let elapsed = (Date.now() - startTime) / 1000;
       let rate = idx / elapsed;
@@ -748,15 +722,11 @@ async function startMint() {
     progCounter.innerText = `${idx+1}/${order.length}`;
     progFill.style.width = `${percent}%`;
 
-    // Build this NFT's layers
-    // We maintain the global selection order for compositing
-    let pickedLayersMap = {}; // section -> picked layer
+    let pickedLayersMap = {};
 
-    // 1. Background (required)
     let bgPool = filterByGender(sectionLayerOrder['Background'] || [], gender);
     if (bgPool.length) pickedLayersMap['Background'] = bgPool[Math.floor(Math.random() * bgPool.length)];
 
-    // 2. Base (required)
     let basePool = filterByGender(sectionLayerOrder['Base'] || [], gender);
     if (basePool.length) {
       pickedLayersMap['Base'] = basePool[Math.floor(Math.random() * basePool.length)];
@@ -764,7 +734,6 @@ async function startMint() {
 
     let baseValue = pickedLayersMap['Base'] ? pickedLayersMap['Base'].value : null;
 
-    // 3. Other sections - probabilistic
     for (let section of SECTIONS_ORDER) {
       if (section === 'Background' || section === 'Base') continue;
       if (isSectionBlockedForBase(section, baseValue)) continue;
@@ -778,14 +747,6 @@ async function startMint() {
       }
     }
 
-    // Reconstruct layers in the original global selection order
-    // (preserves compositing order as user selected)
-    let nftLayers = allSelectedByOrder
-      .filter(l => pickedLayersMap[l.section] && pickedLayersMap[l.section].layerId === l.layerId)
-      .map(l => ({ section: l.section, value: l.value, imageUrl: l.imageUrl, selectionOrder: l.selectionOrder }));
-
-    // Make sure Background and Base are included even if their selectionOrder differs
-    // Build final ordered layer list: use selectionOrder
     let finalLayers = [];
     for (let section of Object.keys(pickedLayersMap)) {
       let picked = pickedLayersMap[section];
@@ -813,7 +774,7 @@ async function startMint() {
   nfts.push(...newNFTs);
   await updateNFTsInFirebase();
   renderCollection();
-  showToast(`✅ ${order.length}টি NFT MINTED!`);
+  showToast(`✅ ${order.length} NFTs MINTED!`);
   btn.disabled = false;
   progWrap.classList.add('hidden');
   if (isIndexLoaded) updateAllMatchBadges();
@@ -871,7 +832,7 @@ function searchNFTs() {
 function clearSearch() { filteredNFTs = null; document.getElementById('search-range').value = ''; renderCollection(); }
 
 async function deleteAllNFTs() {
-  if (confirm('⚠️ সব NFT DELETE করবেন?')) {
+  if (confirm('⚠️ Delete ALL NFTs?')) {
     nfts = [];
     await updateNFTsInFirebase();
     renderCollection();
@@ -880,7 +841,7 @@ async function deleteAllNFTs() {
 }
 
 async function deleteSingleNFT(id) {
-  if (confirm('এই NFT DELETE করবেন?')) {
+  if (confirm('Delete this NFT?')) {
     nfts = nfts.filter(x => x.id != id);
     await updateNFTsInFirebase();
     renderCollection();
@@ -888,10 +849,9 @@ async function deleteSingleNFT(id) {
   }
 }
 
-// Download all PNG files (1.png, 2.png, ...)
 async function downloadAllPNG() {
-  if (!nfts.length) { showToast('কোনো NFT নেই!'); return; }
-  showToast(`⬇ ${nfts.length}টি PNG ডাউনলোড হচ্ছে...`);
+  if (!nfts.length) { showToast('No NFTs found!'); return; }
+  showToast(`⬇ Downloading ${nfts.length} PNGs...`);
   for (let i = 0; i < nfts.length; i++) {
     let a = document.createElement('a');
     a.href = nfts[i].image;
@@ -901,13 +861,12 @@ async function downloadAllPNG() {
     document.body.removeChild(a);
     await new Promise(r => setTimeout(r, 80));
   }
-  showToast(`✅ ${nfts.length} PNG ডাউনলোড শুরু!`);
+  showToast(`✅ ${nfts.length} PNG download started!`);
 }
 
-// Download all JSON files (1.json, 2.json, ...)
 async function downloadAllJSON() {
-  if (!nfts.length) { showToast('কোনো NFT নেই!'); return; }
-  showToast(`⬇ ${nfts.length}টি JSON ডাউনলোড হচ্ছে...`);
+  if (!nfts.length) { showToast('No NFTs found!'); return; }
+  showToast(`⬇ Downloading ${nfts.length} JSONs...`);
   for (let i = 0; i < nfts.length; i++) {
     let meta = { name: nfts[i].name, description: nfts[i].description, attributes: nfts[i].attributes };
     let blob = new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' });
@@ -921,13 +880,12 @@ async function downloadAllJSON() {
     URL.revokeObjectURL(url);
     await new Promise(r => setTimeout(r, 80));
   }
-  showToast(`✅ ${nfts.length} JSON ডাউনলোড শুরু!`);
+  showToast(`✅ ${nfts.length} JSON download started!`);
 }
 
-// Download all PNG + JSON
 async function downloadAllAsZip() {
-  if (!nfts.length) { showToast('কোনো NFT নেই!'); return; }
-  showToast(`⬇ ${nfts.length} PNG + JSON ডাউনলোড হচ্ছে...`);
+  if (!nfts.length) { showToast('No NFTs found!'); return; }
+  showToast(`⬇ Downloading ${nfts.length} PNG + JSON...`);
   for (let i = 0; i < nfts.length; i++) {
     let serial = i + 1;
     let a = document.createElement('a');
@@ -950,7 +908,7 @@ async function downloadAllAsZip() {
     URL.revokeObjectURL(url);
     await new Promise(r => setTimeout(r, 40));
   }
-  showToast('✅ ডাউনলোড শুরু!');
+  showToast('✅ Download started!');
 }
 
 function downloadSingleImage(id, serial) {
