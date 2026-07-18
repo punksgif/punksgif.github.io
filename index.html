@@ -306,23 +306,29 @@ async function loadIndexJSON() {
 
     // Diagnostic: index.json এ ব্যবহৃত প্রতিটি value লাইব্রেরির কোনো না কোনো ফোল্ডারে আছে কিনা চেক করা হচ্ছে
     let allValues = new Set();
+    let baseOnlyValues = new Set();
     for (const td of Object.values(data)) {
       if (!td || !td.attributes) continue;
       for (const a of td.attributes) {
         let rawType = a && (a.trait_type || a.traitType || a.type);
         if (rawType && String(rawType).toLowerCase().trim() === 'attribute count') continue;
-        if (a && a.value !== undefined && a.value !== null && a.value !== '') {
-          let vLower = String(a.value).toLowerCase().trim();
-          if (vLower === 'male' || vLower === 'female') continue; // gender flag, not a layer
-          allValues.add(String(a.value));
-        }
+        if (!a || a.value === undefined || a.value === null || a.value === '') continue;
+        let typeTrim = String(rawType || '').trim();
+        let isBrokenType = typeTrim === '' || /^[^a-zA-Z0-9]+$/.test(typeTrim);
+        if (isBrokenType) baseOnlyValues.add(String(a.value));
+        else allValues.add(String(a.value));
       }
     }
     let missingValues = [...allValues].filter(v => !findLayerByValueAnySection(v));
+    let missingBaseValues = [...baseOnlyValues].filter(v => !findLayerForTrait('Base', v));
     let statsHtml = `🎯 ${totalTokens} tokens indexed — EXACT MINT এর জন্য প্রস্তুত (মিলানো হচ্ছে VALUE দিয়ে, trait_type নাম দিয়ে না)`;
     if (missingValues.length) {
       let shown = missingValues.slice(0, 30).map(escapeHtml).join(', ');
       statsHtml += `<br><span style="color:#aa0000;">⚠️ এই ${missingValues.length} টি ভ্যালু কোনো ফোল্ডারেই পাওয়া যায়নি: ${shown}${missingValues.length>30?' ...':''}</span>`;
+    }
+    if (missingBaseValues.length) {
+      let shownB = missingBaseValues.slice(0, 30).map(escapeHtml).join(', ');
+      statsHtml += `<br><span style="color:#aa0000;">⚠️ এই Base ভ্যালুগুলো Base ফোল্ডারে পাওয়া যায়নি: ${shownB}${missingBaseValues.length>30?' ...':''}</span>`;
     }
     document.getElementById('index-stats').innerHTML = statsHtml;
     updateAllMatchBadges();
@@ -769,10 +775,20 @@ async function startMint() {
       if (attr.value === undefined || attr.value === null || attr.value === '') continue;
       if (String(rawType).toLowerCase().trim() === 'attribute count') continue;
 
-      let valLower = String(attr.value).toLowerCase().trim();
-      // "Male"/"Female" একটা লেয়ার না, এটা টোকেনের gender flag — লাইব্রেরিতে না খুঁজে সরাসরি gender সেট করা হচ্ছে
-      if (valLower === 'male' || valLower === 'female') {
-        tokenGender = valLower;
+      let typeTrim = String(rawType).trim();
+      // index.json এ এই ধরনের attribute এর trait_type ভাঙা/অক্ষর ছাড়া (যেমন ",") — এটা আসলে Base ভ্যালু
+      // (Male / Female / Ape / Zombie / Alien) বোঝায়, তাই সরাসরি Base ফোল্ডারে খোঁজা হচ্ছে
+      let isBrokenType = typeTrim === '' || /^[^a-zA-Z0-9]+$/.test(typeTrim);
+
+      if (isBrokenType) {
+        let valLower = String(attr.value).toLowerCase().trim();
+        if (valLower === 'male' || valLower === 'female') tokenGender = valLower;
+        let baseLayer = findLayerForTrait('Base', attr.value);
+        if (baseLayer) {
+          finalLayers.push({ section: 'Base', value: baseLayer.value, imageUrl: baseLayer.imageUrl, selectionOrder: 0 });
+        } else {
+          missingReport.push(`#${tokenId}: Base value "${attr.value}" লাইব্রেরির Base ফোল্ডারে পাওয়া যায়নি`);
+        }
         continue;
       }
 
