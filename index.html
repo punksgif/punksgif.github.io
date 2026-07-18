@@ -99,7 +99,6 @@
               <select id="layer-section" class="win95-select flex-1">
                 <option value="Background">Background</option>
                 <option value="Base">Base (Type)</option>
-                <option value="Accessory">Accessory</option>
                 <option value="Head">Head</option>
                 <option value="Eyes">Eyes</option>
                 <option value="Mouth">Mouth</option>
@@ -108,6 +107,7 @@
                 <option value="Neck">Neck</option>
                 <option value="Ear">Ear</option>
                 <option value="Beard">Beard</option>
+                <option value="Accessory">Accessory</option>
               </select>
             </div>
             <div class="flex gap-4 mb-3">
@@ -126,9 +126,11 @@
         <div class="win95-window" style="margin-bottom: 16px;">
           <div class="win95-titlebar" style="background: #808080;">📜 HOW IT WORKS</div>
           <div class="win95-content">
-            <div class="info-text">✓ Index.json এর প্রতিটি Token ID অনুযায়ী হুবহু লেয়ার কম্বিনেশন দিয়ে NFT তৈরি হবে</div>
-            <div class="info-text">✓ Index.json এ "Type" = Base, "Accessory 1/2/3..." = Accessory</div>
-            <div class="info-text">✓ Base কারেক্টার: Male, Female, Ape, Zombie, Alien</div>
+            <div class="info-text">✓ Each NFT is built to exactly match its Token ID in index.json</div>
+            <div class="info-text">✓ In index.json, "Type" = Base (Male / Female / Ape / Zombie / Alien)</div>
+            <div class="info-text">✓ Every other trait ("Accessory 1", "Accessory 2"...) is matched by VALUE only, in any folder</div>
+            <div class="info-text">✓ Layers are placed in your saved folder order, with Accessory folder layers always drawn LAST (on top)</div>
+            <div class="info-text">✓ Gender-tagged layers are preferred to match the token's Male/Female Type</div>
             <div class="info-text">✓ MAX 10,000 NFTs</div>
           </div>
         </div>
@@ -218,7 +220,7 @@
         <div class="win95-window" style="margin-bottom: 16px; overflow: hidden;">
           <div class="win95-titlebar match-engine-header">
             <span>🎯 UNIVERSAL MATCH ENGINE <span class="pulse-text" style="color: #ffff00;">● LIVE</span></span>
-            <span style="font-size: 8px;">v9.0</span>
+            <span style="font-size: 8px;">v10.0</span>
           </div>
           <div class="win95-content" style="background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -311,15 +313,18 @@ async function loadIndexJSON() {
     for (const td of Object.values(data)) {
       if (!td || !td.attributes) continue;
       for (const a of td.attributes) {
+        let rawType = a && (a.trait_type || a.traitType || a.type);
+        if (rawType && String(rawType).toLowerCase().trim() === 'attribute count') continue;
+        if (rawType && String(rawType).toLowerCase().trim() === 'type') continue;
         if (!a || a.value === undefined || a.value === null || a.value === '') continue;
         allValues.add(String(a.value));
       }
     }
     let missingValues = [...allValues].filter(v => !findLayerByValueAnySection(v));
-    let statsHtml = `🎯 ${totalTokens} tokens indexed — EXACT MINT এর জন্য প্রস্তুত`;
+    let statsHtml = `🎯 ${totalTokens} tokens indexed — ready for EXACT MINT`;
     if (missingValues.length) {
       let shown = missingValues.slice(0, 30).map(escapeHtml).join(', ');
-      statsHtml += `<br><span style="color:#aa0000;">⚠️ এই ${missingValues.length} টি ভ্যালু কোনো ফোল্ডারেই পাওয়া যায়নি: ${shown}${missingValues.length>30?' ...':''}</span>`;
+      statsHtml += `<br><span style="color:#aa0000;">⚠️ ${missingValues.length} value(s) not found in any layer folder: ${shown}${missingValues.length>30?' ...':''}</span>`;
     }
     document.getElementById('index-stats').innerHTML = statsHtml;
     updateAllMatchBadges();
@@ -387,7 +392,7 @@ async function deleteAllMatched() {
 // ============================================================
 // MAIN APP
 // ============================================================
-const SECTIONS_ORDER = ["Background", "Base", "Accessory", "Head", "Eyes", "Mouth", "Nose", "Face", "Neck", "Ear", "Beard"];
+const SECTIONS_ORDER = ["Background", "Base", "Head", "Eyes", "Mouth", "Nose", "Face", "Neck", "Ear", "Beard", "Accessory"];
 const MAX_NFT_LIMIT = 10000;
 
 const firebaseConfig = {
@@ -661,45 +666,30 @@ async function compositeFromLayers(layers, w = 512, h = 512) {
 }
 
 // ============================================================
-// BUILD NFT ATTRIBUTES - EXACTLY LIKE INDEX.JSON
+// BUILD NFT ATTRIBUTES - EXACTLY LIKE INDEX.JSON (Type + Accessory N + Attribute Count)
 // ============================================================
 function buildNFTAttributes(layers) {
   let attrs = [];
   let baseValue = null;
+
+  for (let l of layers) {
+    if (l.section === "Base") { baseValue = l.value; break; }
+  }
+  if (baseValue) attrs.push({ trait_type: "Type", value: baseValue });
+
   let accessoryIndex = 1;
-  
-  // Find Base (Type)
   for (let l of layers) {
-    if (l.section === "Base") { 
-      baseValue = l.value; 
-      break; 
-    }
+    if (l.section === "Background" || l.section === "Base") continue;
+    attrs.push({ trait_type: `Accessory ${accessoryIndex}`, value: l.value });
+    accessoryIndex++;
   }
-  
-  // Add Type first (like index.json)
-  if (baseValue) {
-    attrs.push({ trait_type: "Type", value: baseValue });
-  }
-  
-  // Add all Accessories as Accessory 1, Accessory 2, etc.
-  for (let l of layers) {
-    if (l.section === "Accessory") {
-      attrs.push({ trait_type: `Accessory ${accessoryIndex}`, value: l.value });
-      accessoryIndex++;
-    }
-  }
-  
-  // Add other sections (Head, Eyes, Mouth, etc.) - they keep their section names
-  for (let l of layers) {
-    if (l.section === "Background" || l.section === "Base" || l.section === "Accessory") continue;
-    attrs.push({ trait_type: l.section, value: l.value });
-  }
-  
+
+  attrs.push({ trait_type: "Attribute Count", value: String(accessoryIndex - 1) });
   return attrs;
 }
 
 // ============================================================
-// FIND LAYER HELPERS
+// FIND LAYER HELPERS (value-based, gender-aware)
 // ============================================================
 function findLayerForTrait(section, value) {
   if (!value) return null;
@@ -708,9 +698,20 @@ function findLayerForTrait(section, value) {
   return pool.find(l => String(l.value).toLowerCase().trim() === target) || null;
 }
 
-function findLayerByValueAnySection(value) {
+// Ignores index.json's trait_type label entirely — searches every folder by VALUE only.
+// If a gender is given, a layer tagged for that gender (or 'both') is preferred first;
+// falls back to any matching layer if no gender-specific version exists.
+function findLayerByValueAnySection(value, gender) {
   if (value === undefined || value === null || value === '') return null;
   const target = String(value).toLowerCase().trim();
+
+  if (gender) {
+    for (const section of SECTIONS_ORDER) {
+      const pool = layersBySection[section] || [];
+      const layer = pool.find(l => String(l.value).toLowerCase().trim() === target && (l.gender === gender || l.gender === 'both'));
+      if (layer) return { section, layer };
+    }
+  }
   for (const section of SECTIONS_ORDER) {
     const pool = layersBySection[section] || [];
     const layer = pool.find(l => String(l.value).toLowerCase().trim() === target);
@@ -723,12 +724,6 @@ function isTypeTrait(traitType) {
   if (!traitType) return false;
   const t = String(traitType).toLowerCase().trim();
   return t === 'type';
-}
-
-function isAccessoryTrait(traitType) {
-  if (!traitType) return false;
-  const t = String(traitType).toLowerCase().trim();
-  return t.startsWith('accessory');
 }
 
 function isBaseCharacter(value) {
@@ -747,17 +742,23 @@ function getGenderFromType(value) {
 
 // ============================================================
 // EXACT-MATCH MINT ENGINE
+// Every trait besides "Type" and "Attribute Count" is matched purely by VALUE,
+// searched across ALL your layer folders (gender-aware), and placed in whichever
+// folder it's actually found in — so your saved layer/folder organization decides
+// the visual category, not the generic "Accessory N" label from index.json.
+// Folder order stays fixed (Background -> Base -> Head -> Eyes -> Mouth -> Nose ->
+// Face -> Neck -> Ear -> Beard -> Accessory), so Accessory-folder layers always render last (on top).
 // ============================================================
 async function startMint() {
   if (!isIndexLoaded || !indexTokenIdsSorted.length) {
-    showToast('⚠️ প্রথমে Index.json লোড করুন (RELOAD বাটন চাপুন)');
+    showToast('⚠️ Please load index.json first (press RELOAD)');
     return;
   }
 
   let requestedTotal = Math.min(MAX_NFT_LIMIT, parseInt(document.getElementById('total-nft-count').value) || 1);
   let tokenIdsToMint = indexTokenIdsSorted.slice(0, requestedTotal);
 
-  if (!tokenIdsToMint.length) { showToast('⚠️ INDEX.JSON এ কোনো টোকেন পাওয়া যায়নি'); return; }
+  if (!tokenIdsToMint.length) { showToast('⚠️ No tokens found in index.json'); return; }
 
   let prefix = document.getElementById('name-prefix').value.trim() || "PUNK#";
   let desc = document.getElementById('nft-description').value;
@@ -795,21 +796,18 @@ async function startMint() {
     let finalLayers = [];
     let tokenGender = '';
     let baseValue = null;
-    let usedSections = new Set();
 
-    // STEP 1: Find Type (Base)
+    // STEP 1: Find "Type" -> Base
     for (let attr of attrs) {
       if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
       let traitType = attr.trait_type || attr.traitType || attr.type || '';
-      
       if (isTypeTrait(traitType)) {
         baseValue = String(attr.value);
         tokenGender = getGenderFromType(baseValue);
         break;
       }
     }
-
-    // If no Type found, check if any value is a base character
+    // Fallback: some records may miss a proper "Type" label but still carry a Male/Female/Ape/Zombie/Alien value
     if (!baseValue) {
       for (let attr of attrs) {
         if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
@@ -820,90 +818,45 @@ async function startMint() {
         }
       }
     }
-
-    // Add Base layer
     if (baseValue) {
       let baseLayer = findLayerForTrait('Base', baseValue);
       if (baseLayer) {
         finalLayers.push({ section: 'Base', value: baseLayer.value, imageUrl: baseLayer.imageUrl });
-        usedSections.add('Base');
       } else {
-        missingReport.push(`#${tokenId}: Base value "${baseValue}" লাইব্রেরির Base ফোল্ডারে পাওয়া যায়নি`);
+        missingReport.push(`#${tokenId}: Base value "${baseValue}" not found in the Base folder`);
       }
     }
 
-    // STEP 2: Process Accessories and other traits
+    // STEP 2: Every remaining attribute (Accessory 1, Accessory 2, ...) — match by VALUE only,
+    // use whichever folder it's actually found in (gender-aware), keep every match (no dedupe)
     for (let attr of attrs) {
       if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
       let traitType = attr.trait_type || attr.traitType || attr.type || '';
-      
       if (String(traitType).toLowerCase().trim() === 'attribute count') continue;
-      
-      // Skip Type (already processed)
       if (isTypeTrait(traitType)) continue;
-      
-      // Skip if this is a base character value and we already added base
-      if (isBaseCharacter(attr.value) && usedSections.has('Base')) continue;
+      if (baseValue && String(attr.value).toLowerCase().trim() === baseValue.toLowerCase().trim()) continue;
 
-      // Handle Accessory traits
-      if (isAccessoryTrait(traitType)) {
-        let found = findLayerByValueAnySection(attr.value);
-        if (found) {
-          // Use Accessory section
-          finalLayers.push({ 
-            section: 'Accessory', 
-            value: found.layer.value, 
-            imageUrl: found.layer.imageUrl 
-          });
-          usedSections.add('Accessory');
-        } else {
-          missingReport.push(`#${tokenId}: Accessory value "${attr.value}" লাইব্রেরিতে পাওয়া যায়নি`);
-        }
+      let found = findLayerByValueAnySection(attr.value, tokenGender);
+      if (!found) {
+        missingReport.push(`#${tokenId}: value "${attr.value}" (index trait_type: "${traitType}") not found in any folder`);
         continue;
       }
-      
-      // Handle other traits (Head, Eyes, Mouth, etc.)
-      let found = findLayerByValueAnySection(attr.value);
-      if (found) {
-        if (found.section === 'Base') continue; // Skip if Base
-        
-        // Check if we already have this section
-        if (!usedSections.has(found.section)) {
-          finalLayers.push({ 
-            section: found.section, 
-            value: found.layer.value, 
-            imageUrl: found.layer.imageUrl 
-          });
-          usedSections.add(found.section);
-        }
-      } else {
-        missingReport.push(`#${tokenId}: value "${attr.value}" (trait_type: "${traitType}") কোনো ফোল্ডারে পাওয়া যায়নি`);
-      }
+      if (found.section === 'Base') continue;
+      finalLayers.push({ section: found.section, value: found.layer.value, imageUrl: found.layer.imageUrl });
     }
 
-    // Add Background if not present
-    if (!usedSections.has('Background')) {
+    // Every punk needs a Background even though index.json doesn't track it as a trait
+    if (!finalLayers.some(l => l.section === 'Background')) {
       let bgPool = layersBySection['Background'] || [];
-      if (bgPool.length) {
-        let bg = bgPool[0];
-        finalLayers.push({ section: 'Background', value: bg.value, imageUrl: bg.imageUrl });
-        usedSections.add('Background');
-      }
+      let bg = tokenGender
+        ? (bgPool.find(l => l.gender === tokenGender || l.gender === 'both') || bgPool[0])
+        : bgPool[0];
+      if (bg) finalLayers.push({ section: 'Background', value: bg.value, imageUrl: bg.imageUrl });
     }
 
-    // Sort layers in correct compositing order
+    // Fixed compositing order, Accessory folder always last (top)
     finalLayers.sort((a, b) => SECTIONS_ORDER.indexOf(a.section) - SECTIONS_ORDER.indexOf(b.section));
     finalLayers.forEach((l, i) => l.selectionOrder = i);
-
-    // If gender wasn't set, try to detect from Base
-    if (!tokenGender) {
-      for (let l of finalLayers) {
-        if (l.section === 'Base') {
-          tokenGender = getGenderFromType(l.value);
-          break;
-        }
-      }
-    }
 
     let imgData = await compositeFromLayers(finalLayers);
     let attributes = buildNFTAttributes(finalLayers);
@@ -929,9 +882,9 @@ async function startMint() {
 
   if (missingReport.length) {
     console.warn('404PUNKS - Missing layers in library:', missingReport);
-    showToast(`✅ ${newNFTs.length} NFT তৈরি হয়েছে! ⚠️ ${missingReport.length} লেয়ার লাইব্রেরিতে পাওয়া যায়নি (Console এ দেখুন)`);
+    showToast(`✅ ${newNFTs.length} NFTs created! ⚠️ ${missingReport.length} value(s) missing from the library (see console)`);
   } else {
-    showToast(`✅ ${newNFTs.length} NFT হুবহু Index.json অনুযায়ী তৈরি হয়েছে!`);
+    showToast(`✅ ${newNFTs.length} NFTs created — exact match with index.json!`);
   }
 
   btn.disabled = false;
@@ -1112,16 +1065,16 @@ function switchTab(tab) {
 async function viewNFTDetails(id) {
  try {
   let nft = nfts.find(n => n.id === id);
-  if (!nft) { showToast('⚠️ NFT পাওয়া যায়নি'); return; }
+  if (!nft) { showToast('⚠️ NFT not found'); return; }
   if (!nft.layers) nft.layers = [];
-  
+
   let existingModal = document.getElementById('nft-modal-' + id);
   if (existingModal) existingModal.remove();
 
   let modal = document.createElement('div');
   modal.id = 'nft-modal-' + id;
   modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;overflow:auto;padding:20px;';
-  
+
   let layersHtml = nft.layers.map((l, idx) =>
     `<div class="layer-row"><span>${idx+1}. <strong>${l.section}</strong>: ${escapeHtml(l.value)}</span>
     <div>
@@ -1134,7 +1087,7 @@ async function viewNFTDetails(id) {
   let libraryOptionsHtml = `<option value="">-- SELECT LAYER TO ADD --</option>`;
   SECTIONS_ORDER.forEach(s => {
     let available = layersBySection[s] || [];
-    let genderFiltered = available.filter(l => l.gender === 'both' || l.gender === nft.gender);
+    let genderFiltered = available.filter(l => l.gender === 'both' || l.gender === nft.gender || !nft.gender);
     if(genderFiltered.length > 0) {
       libraryOptionsHtml += `<optgroup label="📂 ${s}">`;
       genderFiltered.forEach(l => {
@@ -1148,7 +1101,7 @@ async function viewNFTDetails(id) {
   const matchHtml = matches.length > 0
     ? `<div style="background:#006400;color:#ffff00;border:2px solid #ffff00;padding:8px;margin-bottom:10px;font-family:'Press Start 2P',monospace;font-size:8px;text-align:center;">🎯 MATCHES TOKEN ID: ${matches.map(n=>'#'+n).join(', ')}</div>`
     : (isIndexLoaded ? `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#aa0000;background:#333;padding:6px;text-align:center;margin-bottom:8px;">❌ NO MATCH IN INDEX.JSON</div>` : `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#666;margin-bottom:8px;">💡 Load index first</div>`);
-  
+
   modal.innerHTML = `<div class="win95-window" style="width:100%;max-width:500px;max-height:90vh;overflow:auto;">
     <div class="win95-titlebar"><span>✏️ EDIT: ${escapeHtml(nft.name)}</span><button onclick="document.getElementById('nft-modal-${id}').remove()">✕</button></div>
     <div class="win95-content">
@@ -1156,7 +1109,7 @@ async function viewNFTDetails(id) {
         <img src="${nft.image}" style="width:200px;height:200px;object-fit:contain;border:3px outset #808080;background:#fff;">
       </div>
       ${matchHtml}
-      
+
       <div class="text-pixel text-[8px] mb-2" style="color:#000080;">➕ ADD LAYER FROM LIBRARY</div>
       <select id="add-layer-select-${id}" class="win95-select w-full mb-4" onchange="App.addLayerToNFT('${id}', this.value)">
         ${libraryOptionsHtml}
@@ -1164,7 +1117,7 @@ async function viewNFTDetails(id) {
 
       <div class="text-pixel text-[8px] mb-2">CURRENT LAYERS (Bottom → Top)</div>
       <div style="max-height:200px;overflow:auto;background:#a0a0a0;padding:6px;border:2px inset #808080;">${layersHtml || '<div class="text-center text-pixel text-[8px] py-4">[ NO LAYERS ]</div>'}</div>
-      
+
       <div class="flex gap-3 mt-4">
         <button onclick="App.downloadSingleImage('${id}');document.getElementById('nft-modal-${id}').remove()" class="win95-btn flex-1">📸 PNG</button>
         <button onclick="App.downloadSingleJSON('${id}');document.getElementById('nft-modal-${id}').remove()" class="win95-btn flex-1">📄 JSON</button>
@@ -1173,7 +1126,7 @@ async function viewNFTDetails(id) {
   document.body.appendChild(modal);
  } catch(err) {
    console.error('viewNFTDetails error:', err);
-   showToast('❌ EDIT খুলতে সমস্যা হয়েছে: ' + err.message);
+   showToast('❌ Could not open EDIT: ' + err.message);
  }
 }
 
@@ -1181,21 +1134,21 @@ async function addLayerToNFT(nftId, combinedValue) {
   if (!combinedValue) return;
   let nft = nfts.find(n => n.id === nftId);
   if (!nft) return;
-  
+
   let [section, value, imageUrl] = combinedValue.split('|||');
   if (!nft.layers) nft.layers = [];
-  
+
   nft.layers.push({
     section,
     value,
     imageUrl,
     selectionOrder: nft.layers.length
   });
-  
+
   let imgData = await compositeFromLayers(nft.layers);
   nft.image = imgData;
   nft.attributes = buildNFTAttributes(nft.layers);
-  
+
   await updateNFTsInFirebase();
   renderCollection();
   showToast('LAYER ADDED SUCCESSFULLY');
