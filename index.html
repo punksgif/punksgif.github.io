@@ -384,7 +384,7 @@ async function deleteAllMatched() {
 // ============================================================
 // MAIN APP
 // ============================================================
-const SECTIONS_ORDER = ["Background","Base","Nose","Neck","Face","Ear","Beard","Mouth","Head","Accessory","Eyes"];
+const SECTIONS_ORDER = ["Background","Base","Nose","Neck","Face","Ear","Beard","Mouth","Accessory","Head","Eyes"];
 const MAX_NFT_LIMIT = 10000;
 const BLOCKED_SECTIONS_FOR_ALIEN_APE = ["Nose", "Face", "Neck", "Beard"];
 const ALIEN_APE_BASES = ["Alien", "Ape"];
@@ -702,18 +702,18 @@ function findLayerByValueAnySection(value) {
   return null;
 }
 
-// Check if a value is a gender (Male/Female)
-function isGenderValue(value) {
-  if (!value) return false;
-  const v = String(value).toLowerCase().trim();
-  return v === 'male' || v === 'female';
-}
-
 // Check if a value is a base character type (Male, Female, Ape, Zombie, Alien)
 function isBaseCharacterValue(value) {
   if (!value) return false;
   const v = String(value).toLowerCase().trim();
   return v === 'male' || v === 'female' || v === 'ape' || v === 'zombie' || v === 'alien';
+}
+
+// Check if trait_type is empty or just punctuation (like "," or "")
+function isBrokenTraitType(traitType) {
+  if (!traitType) return true;
+  const trimmed = String(traitType).trim();
+  return trimmed === '' || /^[^a-zA-Z0-9]+$/.test(trimmed);
 }
 
 // Extract gender from base value
@@ -772,26 +772,23 @@ async function startMint() {
     let finalLayers = [];
     let tokenGender = '';
     let baseFound = false;
-
-    // First, find the base character value
     let baseValue = null;
+
+    // First pass: Find the Base character value
     for (let attr of attrs) {
       if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
-      let rawType = attr.trait_type || attr.traitType || attr.type || '';
-      let typeTrim = String(rawType).trim();
-      let isBrokenType = typeTrim === '' || /^[^a-zA-Z0-9]+$/.test(typeTrim);
       
-      // If it's a broken type or the value itself is a base character
-      if (isBrokenType || isBaseCharacterValue(attr.value)) {
-        if (isBaseCharacterValue(attr.value)) {
-          baseValue = String(attr.value);
-          tokenGender = getGenderFromBase(baseValue);
-          break;
-        }
+      let traitType = attr.trait_type || attr.traitType || attr.type || '';
+      
+      // Check if this is a Base attribute (trait_type is empty or punctuation, and value is Male/Female/Ape/Zombie/Alien)
+      if (isBrokenTraitType(traitType) && isBaseCharacterValue(attr.value)) {
+        baseValue = String(attr.value);
+        tokenGender = getGenderFromBase(baseValue);
+        break;
       }
     }
 
-    // If no base found in attributes, try to find from any value
+    // If still no base found, check all values
     if (!baseValue) {
       for (let attr of attrs) {
         if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
@@ -803,7 +800,7 @@ async function startMint() {
       }
     }
 
-    // Add Base layer first
+    // Add Base layer
     if (baseValue) {
       let baseLayer = findLayerForTrait('Base', baseValue);
       if (baseLayer) {
@@ -814,59 +811,62 @@ async function startMint() {
       }
     }
 
-    // Process other attributes
+    // Second pass: Process other attributes
+    let usedSections = new Set(['Base']);
+    
     for (let attr of attrs) {
       if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
-      let rawType = attr.trait_type || attr.traitType || attr.type || '';
-      if (String(rawType).toLowerCase().trim() === 'attribute count') continue;
       
-      // Skip if this is a base value and we already added it
-      if (isBaseCharacterValue(attr.value) && baseFound) continue;
-
-      let typeTrim = String(rawType).trim();
-      let isBrokenType = typeTrim === '' || /^[^a-zA-Z0-9]+$/.test(typeTrim);
-
-      // For broken types that are not base characters, try to find them in other sections
-      if (isBrokenType && !isBaseCharacterValue(attr.value)) {
-        let found = findLayerByValueAnySection(attr.value);
-        if (found && found.section !== 'Base') {
-          // Make sure we don't add duplicate sections
-          if (!finalLayers.some(l => l.section === found.section && l.value === found.layer.value)) {
-            finalLayers.push({ section: found.section, value: found.layer.value, imageUrl: found.layer.imageUrl, selectionOrder: 0 });
-          }
-        } else if (!found) {
-          missingReport.push(`#${tokenId}: value "${attr.value}" কোনো ফোল্ডারে পাওয়া যায়নি`);
-        }
+      let traitType = attr.trait_type || attr.traitType || attr.type || '';
+      if (String(traitType).toLowerCase().trim() === 'attribute count') continue;
+      
+      // Skip if this is the Base attribute we already processed
+      if (isBrokenTraitType(traitType) && isBaseCharacterValue(attr.value) && baseFound) {
         continue;
       }
 
-      // For valid trait types, find by value
-      if (!isBrokenType && !isBaseCharacterValue(attr.value)) {
-        let found = findLayerByValueAnySection(attr.value);
-        if (found && found.section !== 'Base') {
-          if (!finalLayers.some(l => l.section === found.section && l.value === found.layer.value)) {
-            finalLayers.push({ section: found.section, value: found.layer.value, imageUrl: found.layer.imageUrl, selectionOrder: 0 });
-          }
-        } else if (!found) {
-          missingReport.push(`#${tokenId}: value "${attr.value}" (trait_type: "${rawType}") কোনো ফোল্ডারে পাওয়া যায়নি`);
+      // Skip if this is a base character value and we already have base
+      if (isBaseCharacterValue(attr.value) && baseFound) {
+        continue;
+      }
+
+      // Try to find the layer by value in any section
+      let found = findLayerByValueAnySection(attr.value);
+      
+      if (found) {
+        // Skip if we already have this section
+        if (usedSections.has(found.section)) continue;
+        
+        // Only add if it's not Base (we already added Base)
+        if (found.section !== 'Base') {
+          finalLayers.push({ 
+            section: found.section, 
+            value: found.layer.value, 
+            imageUrl: found.layer.imageUrl, 
+            selectionOrder: 0 
+          });
+          usedSections.add(found.section);
         }
+      } else {
+        missingReport.push(`#${tokenId}: value "${attr.value}" (trait_type: "${traitType}") কোনো ফোল্ডারে পাওয়া যায়নি`);
       }
     }
 
     // Add Background if not present
-    if (!finalLayers.some(l => l.section === 'Background')) {
+    if (!usedSections.has('Background')) {
       let bgPool = layersBySection['Background'] || [];
       if (bgPool.length) {
         let bg = bgPool[0];
         finalLayers.push({ section: 'Background', value: bg.value, imageUrl: bg.imageUrl, selectionOrder: 0 });
+        usedSections.add('Background');
       }
     }
 
-    // Sort layers in correct compositing order: Background -> Base -> Nose -> Neck -> Face -> Ear -> Beard -> Mouth -> Accessory -> Head -> Eyes
+    // Sort layers in correct compositing order
     finalLayers.sort((a, b) => SECTIONS_ORDER.indexOf(a.section) - SECTIONS_ORDER.indexOf(b.section));
     finalLayers.forEach((l, i) => l.selectionOrder = i);
 
-    // If gender wasn't set from base, try to detect from layers
+    // If gender wasn't set, try to detect from layers
     if (!tokenGender) {
       for (let l of finalLayers) {
         if (l.section === 'Base') {
