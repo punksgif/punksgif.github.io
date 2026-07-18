@@ -101,7 +101,7 @@
               <input id="layer-value" placeholder="[ VALUE ]" class="win95-input flex-1">
               <select id="layer-section" class="win95-select flex-1">
                 <option value="Background">Background</option>
-                <option value="Base">Base (Skin Tone)</option>
+                <option value="Base">Base (Skin Tone / Type)</option>
                 <option value="Face">Face</option>
                 <option value="Beard">Beard</option>
                 <option value="Mouth">Mouth</option>
@@ -129,13 +129,12 @@
         <div class="win95-window" style="margin-bottom: 16px;">
           <div class="win95-titlebar" style="background: #808080;">📜 HOW IT WORKS - CSV ONLY</div>
           <div class="win95-content">
-            <div class="info-text">✓ NFTs are generated from cryptopunk.csv ONLY (no index.json needed)</div>
+            <div class="info-text">✓ NFTs are generated from cryptopunk.csv ONLY</div>
             <div class="info-text">✓ CSV columns: id, type, gender, skin tone, count, accessories</div>
-            <div class="info-text">✓ Skin Tone = Base (Medium, Dark, Light, Albino)</div>
+            <div class="info-text">✓ If skin tone exists → used as Base (Medium/Dark/Light/Albino)</div>
+            <div class="info-text">✓ If no skin tone → type is used as Base (Zombie/Ape/Alien)</div>
             <div class="info-text">✓ Accessories are matched by VALUE in your layer library</div>
             <div class="info-text">✓ Gender-matched layers are used (Male/Female)</div>
-            <div class="info-text">✓ Layer Order: Background → Base → Face → Beard → Mouth → Nose → Neck → Ear → Head → Eyes → Accessory</div>
-            <div class="info-text">✓ MAX 10,000 NFTs</div>
           </div>
         </div>
 
@@ -183,7 +182,7 @@
           <div class="win95-content">
             <div class="flex gap-3 mb-3 flex-wrap">
               <div class="flex-1">
-                <div class="text-pixel text-[8px] mb-1">TOTAL NFTs (MAX CSV length)</div>
+                <div class="text-pixel text-[8px] mb-1">TOTAL NFTs</div>
                 <input type="number" id="total-nft-count" min="1" max="10000" value="10" class="qty-input w-full">
               </div>
               <div class="flex-1">
@@ -278,7 +277,6 @@ async function loadCSVOnly() {
     csvDataMap.clear();
     const lines = csvText.split('\n').filter(line => line.trim());
     
-    // Parse header
     let startIndex = 0;
     if (lines[0].toLowerCase().includes('id')) {
       startIndex = 1;
@@ -289,10 +287,8 @@ async function loadCSVOnly() {
       previewLines.push(lines[i]);
     }
     
-    // Show preview
     document.getElementById('csv-preview-container').innerHTML = previewLines.join('\n') + (lines.length > startIndex + 20 ? '\n... and more' : '');
     
-    // Parse all data
     for (let i = startIndex; i < lines.length; i++) {
       const parts = lines[i].split(',').map(s => s.trim());
       if (parts.length < 6) continue;
@@ -320,13 +316,23 @@ async function loadCSVOnly() {
     
     isCSVLoaded = true;
     document.getElementById('csv-count').innerHTML = `📊 ${csvData.length} entries loaded`;
-    document.getElementById('csv-preview-container').innerHTML = 
-      `✅ CSV LOADED: ${csvData.length} entries\n\n` +
-      `Sample (first 5):\n` +
-      csvData.slice(0, 5).map(d => 
-        `#${d.id} | ${d.type} | ${d.gender} | Skin: ${d.skinTone} | ${d.count} accessories`
-      ).join('\n');
     
+    // Show summary with type distribution
+    let typeCount = {};
+    csvData.forEach(d => {
+      typeCount[d.type] = (typeCount[d.type] || 0) + 1;
+    });
+    let summary = `✅ CSV LOADED: ${csvData.length} entries\n\n`;
+    summary += `📊 Type Distribution:\n`;
+    for (let [type, count] of Object.entries(typeCount)) {
+      summary += `  ${type}: ${count}\n`;
+    }
+    summary += `\n📝 Sample (first 5):\n`;
+    summary += csvData.slice(0, 5).map(d => 
+      `#${d.id} | ${d.type} | ${d.gender} | Skin: ${d.skinTone || 'N/A'} | ${d.count} acc`
+    ).join('\n');
+    
+    document.getElementById('csv-preview-container').innerHTML = summary;
     showToast(`✅ CSV Loaded: ${csvData.length} entries`);
   } catch(err) {
     document.getElementById('csv-preview-container').innerHTML = `❌ FAILED: ${err.message}`;
@@ -635,9 +641,6 @@ function buildNFTAttributes(layers) {
   return attrs;
 }
 
-// ============================================================
-// FIND LAYER HELPERS
-// ============================================================
 function findLayerForTrait(section, value, gender) {
   if (!value) return null;
   const pool = layersBySection[section] || [];
@@ -679,7 +682,7 @@ function getGenderFromType(value) {
 }
 
 // ============================================================
-// MINT FROM CSV - NO INDEX.JSON NEEDED!
+// MINT FROM CSV - WITH APE/ZOMBIE/ALIEN SUPPORT
 // ============================================================
 async function startMintFromCSV() {
   if (!isCSVLoaded || !csvData.length) {
@@ -690,7 +693,6 @@ async function startMintFromCSV() {
   let requestedTotal = Math.min(MAX_NFT_LIMIT, parseInt(document.getElementById('total-nft-count').value) || 1);
   let startTokenId = parseInt(document.getElementById('start-token-id').value) || 1;
   
-  // Filter CSV data from startTokenId
   let availableTokens = csvData.filter(d => d.id >= startTokenId);
   
   if (!availableTokens.length) {
@@ -728,28 +730,43 @@ async function startMintFromCSV() {
       progEta.innerText = `⏱ ETA: ${Math.round(remaining)}s`;
     }
 
-    progText.innerText = `🎯 TOKEN #${tokenId} (${percent}%) - ${csvEntry.gender} | ${csvEntry.skinTone}`;
+    let tokenGender = csvEntry.gender || '';
+    let baseValue = null;
+    let baseType = '';
+
+    // ============================================================
+    // IMPORTANT: Determine Base value
+    // ============================================================
+    // Rule 1: If skin tone exists → use it as Base
+    // Rule 2: If no skin tone → use type (Zombie/Ape/Alien) as Base
+    // ============================================================
+    if (csvEntry.skinTone && csvEntry.skinTone.trim()) {
+      baseValue = csvEntry.skinTone;
+      baseType = 'skin tone';
+    } else if (csvEntry.type && csvEntry.type.trim()) {
+      baseValue = csvEntry.type;
+      baseType = 'type';
+    }
+
+    progText.innerText = `🎯 #${tokenId} | ${csvEntry.type} | ${tokenGender} | Base: ${baseValue} (${baseType})`;
     progCounter.innerText = `${idx+1}/${tokensToMint.length}`;
     progFill.style.width = `${percent}%`;
 
     let finalLayers = [];
-    let tokenGender = csvEntry.gender || '';
     
-    // STEP 1: Add Base (Skin Tone from CSV)
-    let skinTone = csvEntry.skinTone;
-    if (skinTone) {
-      let baseLayer = findLayerForTrait('Base', skinTone, tokenGender);
+    // STEP 1: Add Base
+    if (baseValue) {
+      let baseLayer = findLayerForTrait('Base', baseValue, tokenGender);
       if (baseLayer) {
         finalLayers.push({ section: 'Base', value: baseLayer.value, imageUrl: baseLayer.imageUrl, gender: baseLayer.gender });
       } else {
-        missingReport.push(`#${tokenId}: Skin tone "${skinTone}" not found in Base folder`);
+        missingReport.push(`#${tokenId}: Base "${baseValue}" not found in Base folder (from ${baseType})`);
       }
     }
 
     // STEP 2: Add Accessories from CSV
     let accessories = csvEntry.accessories || '';
     if (accessories) {
-      // Split by " / " (space slash space)
       let accessoryList = accessories.split(' / ').map(a => a.trim()).filter(a => a);
       
       for (let acc of accessoryList) {
@@ -758,7 +775,7 @@ async function startMintFromCSV() {
           if (found.section === 'Base') continue;
           finalLayers.push({ section: found.section, value: found.layer.value, imageUrl: found.layer.imageUrl, gender: found.layer.gender });
         } else {
-          missingReport.push(`#${tokenId}: Accessory "${acc}" not found in any folder`);
+          missingReport.push(`#${tokenId}: Accessory "${acc}" not found`);
         }
       }
     }
@@ -774,7 +791,6 @@ async function startMintFromCSV() {
       if (bg) finalLayers.push({ section: 'Background', value: bg.value, imageUrl: bg.imageUrl, gender: bg.gender });
     }
 
-    // Sort layers in correct order
     finalLayers.sort((a, b) => SECTIONS_ORDER.indexOf(a.section) - SECTIONS_ORDER.indexOf(b.section));
     finalLayers.forEach((l, i) => l.selectionOrder = i);
 
@@ -790,8 +806,10 @@ async function startMintFromCSV() {
       layers: finalLayers,
       gender: tokenGender,
       tokenIdRef: tokenId,
-      skinTone: skinTone || null,
+      skinTone: csvEntry.skinTone || null,
       csvType: csvEntry.type || null,
+      baseUsed: baseValue,
+      baseFrom: baseType,
       createdAt: new Date().toISOString()
     });
 
@@ -805,7 +823,7 @@ async function startMintFromCSV() {
   let msg = `✅ ${newNFTs.length} NFTs created from CSV!`;
   if (missingReport.length) {
     console.warn('Missing layers:', missingReport);
-    msg += ` ⚠️ ${missingReport.length} value(s) missing from library (see console)`;
+    msg += ` ⚠️ ${missingReport.length} value(s) missing (see console)`;
   }
   showToast(msg);
 
@@ -830,7 +848,7 @@ function renderCollection() {
         <img src="${nft.image}" style="width:100%;height:100%;object-fit:contain;">
       </div>
       <div class="text-pixel text-[8px] text-center">${escapeHtml(nft.name)}</div>
-      <div class="text-pixel text-[7px] text-center" style="color:#808080;">${nft.gender || ''} ${nft.skinTone ? '🎨 '+nft.skinTone : ''}</div>
+      <div class="text-pixel text-[7px] text-center" style="color:#808080;">${nft.gender || ''} ${nft.baseUsed ? '🎨 '+nft.baseUsed : ''}</div>
       <div style="display:flex; gap:5px; margin-top:8px;">
         <button onclick="App.viewNFTDetails('${nft.id}')" class="win95-btn" style="padding:4px; font-size:7px; flex:1;">📝 EDIT</button>
         <button onclick="App.downloadSingleImage('${nft.id}', ${idx+1})" class="win95-btn" style="padding:4px; font-size:7px; flex:1;">PNG</button>
