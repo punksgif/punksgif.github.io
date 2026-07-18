@@ -8,6 +8,9 @@
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <!-- JSZip for ZIP downloads -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -19,6 +22,7 @@
     .win95-content { padding: 16px; background: #c0c0c0; }
     .win95-btn { background: #c0c0c0; border: 3px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 8px 16px; font-family: 'Press Start 2P', monospace; font-size: 10px; cursor: pointer; }
     .win95-btn:active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; transform: translate(1px, 1px); }
+    .win95-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .win95-input { background: #ffffff; border: 2px inset #808080; padding: 8px 12px; font-family: 'VT323', monospace; font-size: 14px; width: 100%; outline: none; }
     .win95-select { background: #ffffff; border: 2px inset #808080; padding: 8px 12px; font-family: 'VT323', monospace; font-size: 14px; cursor: pointer; }
     .layer-item { background: #d4d0c8; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; cursor: pointer; padding: 8px; }
@@ -74,6 +78,9 @@
     }
     .csv-preview {
       background: #d4d0c8; border: 2px inset #808080; padding: 10px; max-height: 300px; overflow: auto; font-family: 'VT323', monospace; font-size: 14px; white-space: pre-wrap;
+    }
+    .download-progress {
+      background: #000080; color: #ffffff; padding: 4px 10px; font-family: 'Press Start 2P', monospace; font-size: 8px; display: inline-block;
     }
   </style>
 </head>
@@ -213,9 +220,9 @@
           <div class="win95-content">
             <div class="flex gap-3 flex-wrap">
               <button onclick="App.deleteAllNFTs()" class="win95-btn flex-1" style="border-color:#ff4444;color:#aa0000;">🗑️ DELETE ALL</button>
-              <button onclick="App.downloadAllPNG()" class="win95-btn flex-1">🖼️ ALL PNG</button>
-              <button onclick="App.downloadAllJSON()" class="win95-btn flex-1">📄 ALL JSON</button>
-              <button onclick="App.downloadAllAsZip()" class="win95-btn flex-1">📦 PNG+JSON</button>
+              <button onclick="App.downloadAllPNG()" class="win95-btn flex-1">🖼️ ALL PNG (ZIP)</button>
+              <button onclick="App.downloadAllJSON()" class="win95-btn flex-1">📄 ALL JSON (ZIP)</button>
+              <button onclick="App.downloadAllAsZip()" class="win95-btn flex-1">📦 PNG+JSON (ZIP)</button>
             </div>
           </div>
         </div>
@@ -317,7 +324,6 @@ async function loadCSVOnly() {
     isCSVLoaded = true;
     document.getElementById('csv-count').innerHTML = `📊 ${csvData.length} entries loaded`;
     
-    // Show summary with type distribution
     let typeCount = {};
     csvData.forEach(d => {
       typeCount[d.type] = (typeCount[d.type] || 0) + 1;
@@ -734,12 +740,6 @@ async function startMintFromCSV() {
     let baseValue = null;
     let baseType = '';
 
-    // ============================================================
-    // IMPORTANT: Determine Base value
-    // ============================================================
-    // Rule 1: If skin tone exists → use it as Base
-    // Rule 2: If no skin tone → use type (Zombie/Ape/Alien) as Base
-    // ============================================================
     if (csvEntry.skinTone && csvEntry.skinTone.trim()) {
       baseValue = csvEntry.skinTone;
       baseType = 'skin tone';
@@ -754,7 +754,6 @@ async function startMintFromCSV() {
 
     let finalLayers = [];
     
-    // STEP 1: Add Base
     if (baseValue) {
       let baseLayer = findLayerForTrait('Base', baseValue, tokenGender);
       if (baseLayer) {
@@ -764,7 +763,6 @@ async function startMintFromCSV() {
       }
     }
 
-    // STEP 2: Add Accessories from CSV
     let accessories = csvEntry.accessories || '';
     if (accessories) {
       let accessoryList = accessories.split(' / ').map(a => a.trim()).filter(a => a);
@@ -780,7 +778,6 @@ async function startMintFromCSV() {
       }
     }
 
-    // STEP 3: Add Background
     if (!finalLayers.some(l => l.section === 'Background')) {
       let bgPool = layersBySection['Background'] || [];
       let bg = null;
@@ -829,6 +826,147 @@ async function startMintFromCSV() {
 
   btn.disabled = false;
   progWrap.classList.add('hidden');
+}
+
+// ============================================================
+// ZIP DOWNLOAD FUNCTIONS
+// ============================================================
+function dataURLtoBlob(dataURL) {
+  const arr = dataURL.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
+}
+
+async function downloadAllPNG() {
+  if (!nfts.length) { showToast('No NFTs found!'); return; }
+  
+  const btn = document.querySelector('button[onclick*="downloadAllPNG"]');
+  btn.disabled = true;
+  btn.textContent = '📦 ZIPPING...';
+  
+  try {
+    const zip = new JSZip();
+    const folder = zip.folder('nfts_png');
+    
+    showToast(`📦 Zipping ${nfts.length} PNGs...`);
+    
+    for (let i = 0; i < nfts.length; i++) {
+      const nft = nfts[i];
+      const fileName = `${i + 1}.png`;
+      const blob = dataURLtoBlob(nft.image);
+      folder.file(fileName, blob);
+      
+      if (i % 50 === 0) {
+        btn.textContent = `📦 ${i+1}/${nfts.length}`;
+        await new Promise(r => setTimeout(r, 10));
+      }
+    }
+    
+    const content = await zip.generateAsync({ type: 'blob' });
+    saveAs(content, `nfts_png_${Date.now()}.zip`);
+    showToast(`✅ ${nfts.length} PNGs downloaded as ZIP!`);
+  } catch(err) {
+    console.error(err);
+    showToast('❌ ZIP creation failed: ' + err.message);
+  }
+  
+  btn.disabled = false;
+  btn.textContent = '🖼️ ALL PNG (ZIP)';
+}
+
+async function downloadAllJSON() {
+  if (!nfts.length) { showToast('No NFTs found!'); return; }
+  
+  const btn = document.querySelector('button[onclick*="downloadAllJSON"]');
+  btn.disabled = true;
+  btn.textContent = '📦 ZIPPING...';
+  
+  try {
+    const zip = new JSZip();
+    const folder = zip.folder('nfts_json');
+    
+    showToast(`📦 Zipping ${nfts.length} JSONs...`);
+    
+    for (let i = 0; i < nfts.length; i++) {
+      const nft = nfts[i];
+      const fileName = `${i + 1}.json`;
+      const meta = { 
+        name: nft.name, 
+        description: nft.description, 
+        attributes: nft.attributes 
+      };
+      folder.file(fileName, JSON.stringify(meta, null, 2));
+      
+      if (i % 50 === 0) {
+        btn.textContent = `📦 ${i+1}/${nfts.length}`;
+        await new Promise(r => setTimeout(r, 10));
+      }
+    }
+    
+    const content = await zip.generateAsync({ type: 'blob' });
+    saveAs(content, `nfts_json_${Date.now()}.zip`);
+    showToast(`✅ ${nfts.length} JSONs downloaded as ZIP!`);
+  } catch(err) {
+    console.error(err);
+    showToast('❌ ZIP creation failed: ' + err.message);
+  }
+  
+  btn.disabled = false;
+  btn.textContent = '📄 ALL JSON (ZIP)';
+}
+
+async function downloadAllAsZip() {
+  if (!nfts.length) { showToast('No NFTs found!'); return; }
+  
+  const btn = document.querySelector('button[onclick*="downloadAllAsZip"]');
+  btn.disabled = true;
+  btn.textContent = '📦 ZIPPING...';
+  
+  try {
+    const zip = new JSZip();
+    const pngFolder = zip.folder('png');
+    const jsonFolder = zip.folder('json');
+    
+    showToast(`📦 Zipping ${nfts.length} PNG + JSON...`);
+    
+    for (let i = 0; i < nfts.length; i++) {
+      const nft = nfts[i];
+      const fileName = `${i + 1}`;
+      
+      // PNG
+      const pngBlob = dataURLtoBlob(nft.image);
+      pngFolder.file(`${fileName}.png`, pngBlob);
+      
+      // JSON
+      const meta = { 
+        name: nft.name, 
+        description: nft.description, 
+        attributes: nft.attributes 
+      };
+      jsonFolder.file(`${fileName}.json`, JSON.stringify(meta, null, 2));
+      
+      if (i % 25 === 0) {
+        btn.textContent = `📦 ${i+1}/${nfts.length}`;
+        await new Promise(r => setTimeout(r, 10));
+      }
+    }
+    
+    const content = await zip.generateAsync({ type: 'blob' });
+    saveAs(content, `nfts_png_json_${Date.now()}.zip`);
+    showToast(`✅ ${nfts.length} PNG + JSON downloaded as ZIP!`);
+  } catch(err) {
+    console.error(err);
+    showToast('❌ ZIP creation failed: ' + err.message);
+  }
+  
+  btn.disabled = false;
+  btn.textContent = '📦 PNG+JSON (ZIP)';
 }
 
 function renderCollection() {
@@ -892,68 +1030,6 @@ async function deleteSingleNFT(id) {
     renderCollection();
     showToast('NFT DELETED');
   }
-}
-
-async function downloadAllPNG() {
-  if (!nfts.length) { showToast('No NFTs found!'); return; }
-  showToast(`⬇ Downloading ${nfts.length} PNGs...`);
-  for (let i = 0; i < nfts.length; i++) {
-    let a = document.createElement('a');
-    a.href = nfts[i].image;
-    a.download = `${i + 1}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    await new Promise(r => setTimeout(r, 80));
-  }
-  showToast(`✅ ${nfts.length} PNG download started!`);
-}
-
-async function downloadAllJSON() {
-  if (!nfts.length) { showToast('No NFTs found!'); return; }
-  showToast(`⬇ Downloading ${nfts.length} JSONs...`);
-  for (let i = 0; i < nfts.length; i++) {
-    let meta = { name: nfts[i].name, description: nfts[i].description, attributes: nfts[i].attributes };
-    let blob = new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' });
-    let url = URL.createObjectURL(blob);
-    let a = document.createElement('a');
-    a.href = url;
-    a.download = `${i + 1}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    await new Promise(r => setTimeout(r, 80));
-  }
-  showToast(`✅ ${nfts.length} JSON download started!`);
-}
-
-async function downloadAllAsZip() {
-  if (!nfts.length) { showToast('No NFTs found!'); return; }
-  showToast(`⬇ Downloading ${nfts.length} PNG + JSON...`);
-  for (let i = 0; i < nfts.length; i++) {
-    let serial = i + 1;
-    let a = document.createElement('a');
-    a.href = nfts[i].image;
-    a.download = `${serial}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    await new Promise(r => setTimeout(r, 40));
-
-    let meta = { name: nfts[i].name, description: nfts[i].description, attributes: nfts[i].attributes };
-    let blob = new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' });
-    let url = URL.createObjectURL(blob);
-    let b = document.createElement('a');
-    b.href = url;
-    b.download = `${serial}.json`;
-    document.body.appendChild(b);
-    b.click();
-    document.body.removeChild(b);
-    URL.revokeObjectURL(url);
-    await new Promise(r => setTimeout(r, 40));
-  }
-  showToast('✅ Download started!');
 }
 
 function downloadSingleImage(id, serial) {
