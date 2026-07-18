@@ -98,11 +98,11 @@
               <input id="layer-value" placeholder="[ VALUE ]" class="win95-input flex-1">
               <select id="layer-section" class="win95-select flex-1">
                 <option value="Background">Background</option><option value="Base">Base</option>
-                <option value="Nose">Nose</option><option value="Face">Face</option>
-                <option value="Accessory">Accessory</option><option value="Mouth">Mouth</option>
-                <option value="Eyes">Eyes</option><option value="Head">Head</option>
-                <option value="Neck">Neck</option>
-                <option value="Ear">Ear</option><option value="Beard">Beard</option>
+                <option value="Nose">Nose</option><option value="Neck">Neck</option>
+                <option value="Face">Face</option><option value="Ear">Ear</option>
+                <option value="Beard">Beard</option><option value="Mouth">Mouth</option>
+                <option value="Accessory">Accessory</option><option value="Head">Head</option>
+                <option value="Eyes">Eyes</option>
               </select>
             </div>
             <div class="flex gap-4 mb-3">
@@ -121,17 +121,18 @@
         <div class="win95-window" style="margin-bottom: 16px;">
           <div class="win95-titlebar" style="background: #808080;">📜 HOW IT WORKS</div>
           <div class="win95-content">
-            <div class="info-text">✓ One layer will be randomly selected from each Section</div>
-            <div class="info-text">✓ Layer selection order = compositing order (first selected = bottom)</div>
-            <div class="info-text">✓ Every NFT will have Background + Base</div>
-            <div class="info-text">✓ Male layer only on Male base, Female layer only on Female base</div>
+            <div class="info-text">✓ Index.json এর প্রতিটি Token ID অনুযায়ী হুবহু লেয়ার কম্বিনেশন দিয়ে NFT তৈরি হবে</div>
+            <div class="info-text">✓ Compositing Order (Bottom → Top): Background → Base → Nose → Neck → Face → Ear → Beard → Mouth → Accessory → Head → Eyes</div>
+            <div class="info-text">✓ Token ID #1 এর লেয়ার কম্বিনেশন = আপনার তৈরি হওয়া #1 নাম্বার NFT এর লেয়ার (হুবহু মিল)</div>
+            <div class="info-text">✓ লাইব্রেরিতে অবশ্যই index.json এ ব্যবহৃত সব লেয়ার ভ্যালু যুক্ত থাকতে হবে</div>
+            <div class="info-text">✓ তৈরি হওয়ার পর প্রতিটি NFT এডিট করে লেয়ার পরিবর্তন / উপর-নিচ করা যাবে</div>
             <div class="info-text">✓ MAX 10,000 NFTs</div>
           </div>
         </div>
 
         <!-- Section Selection with probability -->
         <div class="win95-window" style="margin-bottom:16px;">
-          <div class="win95-titlebar" style="background:#808080;">🎲 SECTION PROBABILITY (0% = skip, 100% = always)</div>
+          <div class="win95-titlebar" style="background:#808080;">🎲 SECTION PROBABILITY (ম্যানুয়াল প্রিভিউ / টেস্টের জন্য — বাল্ক মিন্ট এখন Index.json থেকে হুবহু হয়)</div>
           <div class="win95-content">
             <div id="create-sections-container" class="space-y-3"></div>
           </div>
@@ -157,11 +158,11 @@
 
         <!-- Mint Settings -->
         <div class="win95-window" style="margin-top: 16px;">
-          <div class="win95-titlebar" style="background: #808080;">⚙️ MINT SETTINGS</div>
+          <div class="win95-titlebar" style="background: #808080;">⚙️ MINT SETTINGS (EXACT MATCH FROM INDEX.JSON)</div>
           <div class="win95-content">
             <div class="flex gap-3 mb-3 flex-wrap">
               <div class="flex-1">
-                <div class="text-pixel text-[8px] mb-1">TOTAL NFTs (MAX 10,000)</div>
+                <div class="text-pixel text-[8px] mb-1">TOTAL NFTs (Index.json এর ক্রম অনুযায়ী, MAX 10,000)</div>
                 <input type="number" id="total-nft-count" min="1" max="10000" value="10" class="qty-input w-full">
               </div>
               <div class="flex-1">
@@ -170,7 +171,7 @@
               </div>
             </div>
             <textarea id="nft-description" rows="2" class="win95-input w-full mb-3 mt-2">404 PUNKS // RETRO GLITCH COLLECTION</textarea>
-            <button id="bulk-mint-btn" onclick="App.startMint()" class="win95-btn w-full">🎮 MINT NFTs</button>
+            <button id="bulk-mint-btn" onclick="App.startMint()" class="win95-btn w-full">🎯 EXACT MINT FROM INDEX.JSON</button>
             <div id="progress-wrap" class="hidden mt-3">
               <div class="flex justify-between text-pixel text-[8px] mb-1">
                 <span id="progress-text">MINTING...</span>
@@ -253,6 +254,8 @@
 // ============================================================
 const FIXED_INDEX_URL = "https://raw.githubusercontent.com/punksgif/punksgif.github.io/main/index.json";
 let matchIndexMap = new Map();
+let indexRawData = {};
+let indexTokenIdsSorted = [];
 let isIndexLoaded = false;
 
 function showToast(m) {
@@ -283,6 +286,7 @@ async function loadIndexJSON() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     matchIndexMap.clear();
+    indexRawData = data;
     let totalTokens = 0;
     for (const [tokenId, tokenData] of Object.entries(data)) {
       if (!tokenData.attributes) continue;
@@ -292,9 +296,14 @@ async function loadIndexJSON() {
         totalTokens++;
       }
     }
+    indexTokenIdsSorted = Object.keys(indexRawData)
+      .filter(id => indexRawData[id] && indexRawData[id].attributes)
+      .map(id => Number(id))
+      .filter(n => !isNaN(n))
+      .sort((a, b) => a - b);
     isIndexLoaded = true;
     document.getElementById('index-status').innerHTML = `<span style="color:#006400;">✅ INDEX LOADED!</span>`;
-    document.getElementById('index-stats').innerHTML = `🎯 ${totalTokens} tokens indexed`;
+    document.getElementById('index-stats').innerHTML = `🎯 ${totalTokens} tokens indexed — EXACT MINT এর জন্য প্রস্তুত`;
     updateAllMatchBadges();
   } catch(err) {
     document.getElementById('index-status').innerHTML = `<span style="color:#aa0000;">❌ FAILED: ${err.message}</span>`;
@@ -360,7 +369,7 @@ async function deleteAllMatched() {
 // ============================================================
 // MAIN APP
 // ============================================================
-const SECTIONS_ORDER = ["Background","Base","Nose","Face","Neck","Mouth","Eyes","Ear","Beard","Accessory","Head"];
+const SECTIONS_ORDER = ["Background","Base","Nose","Neck","Face","Ear","Beard","Mouth","Accessory","Head","Eyes"];
 const MAX_NFT_LIMIT = 10000;
 const BLOCKED_SECTIONS_FOR_ALIEN_APE = ["Nose", "Face", "Neck", "Beard"];
 const ALIEN_APE_BASES = ["Alien", "Ape"];
@@ -657,15 +666,25 @@ function buildNFTAttributes(layers) {
 }
 
 // ============================================================
-// GENERATIVE MINT ENGINE
+// EXACT-MATCH MINT ENGINE (bulids NFTs identical to index.json, token by token)
 // ============================================================
-async function startMint() {
-  let total = Math.min(MAX_NFT_LIMIT, parseInt(document.getElementById('total-nft-count').value) || 1);
+function findLayerForTrait(section, value) {
+  if (!value) return null;
+  const pool = layersBySection[section] || [];
+  const target = String(value).toLowerCase().trim();
+  return pool.find(l => String(l.value).toLowerCase().trim() === target) || null;
+}
 
-  let bgLayers = selectedLayersPerSection['Background'] || [];
-  let baseLayers = selectedLayersPerSection['Base'] || [];
-  if (!bgLayers.length) { showToast('⚠️ Please select Background layer!'); return; }
-  if (!baseLayers.length) { showToast('⚠️ Please select Base layer!'); return; }
+async function startMint() {
+  if (!isIndexLoaded || !indexTokenIdsSorted.length) {
+    showToast('⚠️ প্রথমে Index.json লোড করুন (RELOAD বাটন চাপুন)');
+    return;
+  }
+
+  let requestedTotal = Math.min(MAX_NFT_LIMIT, parseInt(document.getElementById('total-nft-count').value) || 1);
+  let tokenIdsToMint = indexTokenIdsSorted.slice(0, requestedTotal);
+
+  if (!tokenIdsToMint.length) { showToast('⚠️ INDEX.JSON এ কোনো টোকেন পাওয়া যায়নি'); return; }
 
   let prefix = document.getElementById('name-prefix').value.trim() || "PUNK#";
   let desc = document.getElementById('nft-description').value;
@@ -679,82 +698,58 @@ async function startMint() {
   let progText = document.getElementById('progress-text');
   let progEta = document.getElementById('progress-eta');
 
-  let maleCount = Math.ceil(total / 2);
-  let femaleCount = Math.floor(total / 2);
-  let order = [...Array(maleCount).fill('male'), ...Array(femaleCount).fill('female')];
-  for (let i = order.length - 1; i > 0; i--) {
-    let j = Math.floor(Math.random() * (i + 1));
-    [order[i], order[j]] = [order[j], order[i]];
-  }
-
-  let allSelectedByOrder = getAllSelectedLayersInOrder();
-  let sectionLayerOrder = {};
-  allSelectedByOrder.forEach(l => {
-    if (!sectionLayerOrder[l.section]) sectionLayerOrder[l.section] = [];
-    sectionLayerOrder[l.section].push(l);
-  });
-
   let newNFTs = [];
   let startTime = Date.now();
+  let missingReport = [];
 
-  for (let idx = 0; idx < order.length; idx++) {
-    let gender = order[idx];
-    let percent = Math.round(((idx + 1) / order.length) * 100);
+  for (let idx = 0; idx < tokenIdsToMint.length; idx++) {
+    let tokenId = tokenIdsToMint[idx];
+    let tokenData = indexRawData[String(tokenId)];
+    let percent = Math.round(((idx + 1) / tokenIdsToMint.length) * 100);
 
     if (idx > 0) {
       let elapsed = (Date.now() - startTime) / 1000;
       let rate = idx / elapsed;
-      let remaining = (order.length - idx) / rate;
+      let remaining = (tokenIdsToMint.length - idx) / rate;
       progEta.innerText = `⏱ ETA: ${Math.round(remaining)}s`;
     }
 
-    progText.innerText = `${gender === 'male' ? '♂ MALE' : '♀ FEMALE'} #${idx+1} (${percent}%)`;
-    progCounter.innerText = `${idx+1}/${order.length}`;
+    progText.innerText = `🎯 TOKEN #${tokenId} (${percent}%)`;
+    progCounter.innerText = `${idx+1}/${tokenIdsToMint.length}`;
     progFill.style.width = `${percent}%`;
 
-    let pickedLayersMap = {};
-
-    let bgPool = filterByGender(sectionLayerOrder['Background'] || [], gender);
-    if (bgPool.length) pickedLayersMap['Background'] = bgPool[Math.floor(Math.random() * bgPool.length)];
-
-    let basePool = filterByGender(sectionLayerOrder['Base'] || [], gender);
-    if (basePool.length) {
-      pickedLayersMap['Base'] = basePool[Math.floor(Math.random() * basePool.length)];
-    }
-
-    let baseValue = pickedLayersMap['Base'] ? pickedLayersMap['Base'].value : null;
-
-    for (let section of SECTIONS_ORDER) {
-      if (section === 'Background' || section === 'Base') continue;
-      if (isSectionBlockedForBase(section, baseValue)) continue;
-
-      let pool = filterByGender(sectionLayerOrder[section] || [], gender);
-      if (!pool.length) continue;
-
-      let prob = sectionProbability[section] !== undefined ? sectionProbability[section] : 50;
-      if (Math.random() * 100 < prob) {
-        pickedLayersMap[section] = pool[Math.floor(Math.random() * pool.length)];
-      }
-    }
-
+    let attrs = (tokenData && tokenData.attributes) || [];
     let finalLayers = [];
-    for (let section of Object.keys(pickedLayersMap)) {
-      let picked = pickedLayersMap[section];
-      finalLayers.push({ section, value: picked.value, imageUrl: picked.imageUrl, selectionOrder: picked.selectionOrder });
+
+    for (let attr of attrs) {
+      if (!attr.trait_type || !attr.value) continue;
+      if (attr.trait_type.toLowerCase() === 'attribute count') continue;
+      let section = attr.trait_type;
+      if (!SECTIONS_ORDER.includes(section)) continue;
+      let layer = findLayerForTrait(section, attr.value);
+      if (!layer) {
+        missingReport.push(`#${tokenId}: ${section} = "${attr.value}"`);
+        continue;
+      }
+      finalLayers.push({ section, value: layer.value, imageUrl: layer.imageUrl, selectionOrder: 0 });
     }
-    finalLayers.sort((a, b) => a.selectionOrder - b.selectionOrder);
+
+    // Force fixed compositing order: Background(bottom) -> ... -> Eyes(top)
+    finalLayers.sort((a, b) => SECTIONS_ORDER.indexOf(a.section) - SECTIONS_ORDER.indexOf(b.section));
+    finalLayers.forEach((l, i) => l.selectionOrder = i);
 
     let imgData = await compositeFromLayers(finalLayers);
     let attributes = buildNFTAttributes(finalLayers);
 
     newNFTs.push({
       id: Date.now() + '_' + Math.random().toString(36).substr(2, 8) + '_' + idx,
-      name: `${prefix}${idx + 1}`,
+      name: `${prefix}${tokenId}`,
       description: desc,
       image: imgData,
       attributes: attributes,
       layers: finalLayers,
-      gender: gender,
+      gender: '',
+      tokenIdRef: tokenId,
       createdAt: new Date().toISOString()
     });
 
@@ -764,7 +759,14 @@ async function startMint() {
   nfts.push(...newNFTs);
   await updateNFTsInFirebase();
   renderCollection();
-  showToast(`✅ ${order.length} NFTs MINTED!`);
+
+  if (missingReport.length) {
+    console.warn('404PUNKS - Missing layers in library:', missingReport);
+    showToast(`✅ ${newNFTs.length} NFT তৈরি হয়েছে! ⚠️ ${missingReport.length} লেয়ার লাইব্রেরিতে পাওয়া যায়নি (Console এ দেখুন)`);
+  } else {
+    showToast(`✅ ${newNFTs.length} NFT হুবহু Index.json অনুযায়ী তৈরি হয়েছে!`);
+  }
+
   btn.disabled = false;
   progWrap.classList.add('hidden');
   if (isIndexLoaded) updateAllMatchBadges();
