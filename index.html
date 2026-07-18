@@ -204,6 +204,7 @@
 
 <script>
 const CSV_URL = "https://raw.githubusercontent.com/punksgif/punksgif.github.io/main/cryptopunk.csv";
+const MAX_NFT_LIMIT = 10000;
 
 let csvDataList = []; 
 let csvSkinToneMap = new Map();
@@ -245,7 +246,7 @@ async function loadCSVData() {
       const parts = line.split(',').map(s => s.trim());
       if (parts.length >= 2) {
         const tokenId = parseInt(parts[0]);
-        const skinTone = parts[1]; // Raw Tone name or Type description
+        const skinTone = parts[1]; 
         if (!isNaN(tokenId) && skinTone) {
           csvSkinToneMap.set(tokenId, skinTone);
           csvDataList.push({ id: tokenId, skin: skinTone });
@@ -253,7 +254,6 @@ async function loadCSVData() {
       }
     }
     
-    // Sort array safely by ID
     csvDataList.sort((a,b) => a.id - b.id);
     
     isCSVLoaded = true;
@@ -396,11 +396,9 @@ function findLayerForTrait(section, value, gender) {
   const pool = layersBySection[section] || [];
   const target = String(value).toLowerCase().trim();
   
-  // Strict Gender Search
   let found = pool.find(l => String(l.value).toLowerCase().trim() === target && String(l.gender).toLowerCase() === String(gender).toLowerCase());
   if (found) return found;
 
-  // Fallback to Universal both
   return pool.find(l => String(l.value).toLowerCase().trim() === target && (l.gender === 'both' || !l.gender)) || null;
 }
 
@@ -428,14 +426,13 @@ async function startMint() {
   let newNFTs = [];
   let startTime = Date.now();
 
-  // Get common background asset
   let bgPool = layersBySection['Background'] || [];
   let standardBg = bgPool[0] || null;
 
   for (let idx = 0; idx < requestedTotal; idx++) {
     let row = csvDataList[idx];
     let tokenId = row.id;
-    let skinToneValue = row.skin; // e.g. "Male Dark", "Female Light"
+    let skinToneValue = row.skin; 
     
     let tokenGender = getGenderFromType(skinToneValue);
     let percent = Math.round(((idx + 1) / requestedTotal) * 100);
@@ -465,10 +462,8 @@ async function startMint() {
       if (section === 'Background' || section === 'Base') continue;
       let pool = layersBySection[section] || [];
       
-      // Filter layer options that match this gender trait track
       let genderSpecificPool = pool.filter(l => String(l.gender).toLowerCase() === tokenGender || l.gender === 'both');
       if (genderSpecificPool.length > 0) {
-        // Pseudo-random matching allocation consistent to token index state
         let chosen = genderSpecificPool[tokenId % genderSpecificPool.length];
         finalLayers.push({ section, value: chosen.value, imageUrl: chosen.imageUrl, gender: chosen.gender });
       }
@@ -479,12 +474,10 @@ async function startMint() {
       finalLayers.push({ section: 'Background', value: standardBg.value, imageUrl: standardBg.imageUrl, gender: standardBg.gender });
     }
 
-    // Sort Layer Pipeline Sequence Order Stack
     finalLayers.sort((a, b) => SECTIONS_ORDER.indexOf(a.section) - SECTIONS_ORDER.indexOf(b.section));
 
     let imgData = await compositeFromLayers(finalLayers);
 
-    // Build standard attributes mapping metadata arrays
     let attributes = [{ trait_type: "Type", value: skinToneValue }];
     finalLayers.forEach(l => {
       if(l.section !== 'Background' && l.section !== 'Base') {
