@@ -304,19 +304,25 @@ async function loadIndexJSON() {
     isIndexLoaded = true;
     document.getElementById('index-status').innerHTML = `<span style="color:#006400;">✅ INDEX LOADED!</span>`;
 
-    // Diagnostic: detect any trait_type names in index.json that don't match our SECTIONS_ORDER
-    let allTraitTypes = new Set();
+    // Diagnostic: index.json এ ব্যবহৃত প্রতিটি value লাইব্রেরির কোনো না কোনো ফোল্ডারে আছে কিনা চেক করা হচ্ছে
+    let allValues = new Set();
     for (const td of Object.values(data)) {
       if (!td || !td.attributes) continue;
       for (const a of td.attributes) {
         let rawType = a && (a.trait_type || a.traitType || a.type);
-        if (rawType && String(rawType).toLowerCase().trim() !== 'attribute count') allTraitTypes.add(String(rawType));
+        if (rawType && String(rawType).toLowerCase().trim() === 'attribute count') continue;
+        if (a && a.value !== undefined && a.value !== null && a.value !== '') {
+          let vLower = String(a.value).toLowerCase().trim();
+          if (vLower === 'male' || vLower === 'female') continue; // gender flag, not a layer
+          allValues.add(String(a.value));
+        }
       }
     }
-    let unmapped = [...allTraitTypes].filter(t => !normalizeSectionName(t));
-    let statsHtml = `🎯 ${totalTokens} tokens indexed — EXACT MINT এর জন্য প্রস্তুত`;
-    if (unmapped.length) {
-      statsHtml += `<br><span style="color:#aa0000;">⚠️ এই trait_type নামগুলো SECTIONS_ORDER-এ নেই, তাই ওই layer গুলো মিন্টে যুক্ত হবে না: ${unmapped.map(escapeHtml).join(', ')}</span>`;
+    let missingValues = [...allValues].filter(v => !findLayerByValueAnySection(v));
+    let statsHtml = `🎯 ${totalTokens} tokens indexed — EXACT MINT এর জন্য প্রস্তুত (মিলানো হচ্ছে VALUE দিয়ে, trait_type নাম দিয়ে না)`;
+    if (missingValues.length) {
+      let shown = missingValues.slice(0, 30).map(escapeHtml).join(', ');
+      statsHtml += `<br><span style="color:#aa0000;">⚠️ এই ${missingValues.length} টি ভ্যালু কোনো ফোল্ডারেই পাওয়া যায়নি: ${shown}${missingValues.length>30?' ...':''}</span>`;
     }
     document.getElementById('index-stats').innerHTML = statsHtml;
     updateAllMatchBadges();
@@ -697,6 +703,19 @@ function normalizeSectionName(name) {
   return SECTIONS_ORDER.find(s => s.toLowerCase() === target) || null;
 }
 
+// Index.json এর trait_type নামের উপর ভরসা না করে, শুধু VALUE দিয়ে লাইব্রেরির সব ফোল্ডার (section) খুঁজে
+// সেই layer টা কোন ফোল্ডারে আছে বের করে। নতুন NFT এর metadata-তে trait_type হবে সেই ফোল্ডারের নাম (আমাদের SECTIONS_ORDER থেকে), index.json এর trait_type নাম না।
+function findLayerByValueAnySection(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const target = String(value).toLowerCase().trim();
+  for (const section of SECTIONS_ORDER) {
+    const pool = layersBySection[section] || [];
+    const layer = pool.find(l => String(l.value).toLowerCase().trim() === target);
+    if (layer) return { section, layer };
+  }
+  return null;
+}
+
 async function startMint() {
   if (!isIndexLoaded || !indexTokenIdsSorted.length) {
     showToast('⚠️ প্রথমে Index.json লোড করুন (RELOAD বাটন চাপুন)');
@@ -742,23 +761,29 @@ async function startMint() {
 
     let attrs = (tokenData && tokenData.attributes) || [];
     let finalLayers = [];
+    let tokenGender = '';
 
     for (let attr of attrs) {
       if (!attr) continue;
       let rawType = attr.trait_type || attr.traitType || attr.type || '';
       if (attr.value === undefined || attr.value === null || attr.value === '') continue;
       if (String(rawType).toLowerCase().trim() === 'attribute count') continue;
-      let section = normalizeSectionName(rawType);
-      if (!section) {
-        missingReport.push(`#${tokenId}: অজানা সেকশন নাম "${rawType}" (value: "${attr.value}") — SECTIONS_ORDER এ নেই`);
+
+      let valLower = String(attr.value).toLowerCase().trim();
+      // "Male"/"Female" একটা লেয়ার না, এটা টোকেনের gender flag — লাইব্রেরিতে না খুঁজে সরাসরি gender সেট করা হচ্ছে
+      if (valLower === 'male' || valLower === 'female') {
+        tokenGender = valLower;
         continue;
       }
-      let layer = findLayerForTrait(section, attr.value);
-      if (!layer) {
-        missingReport.push(`#${tokenId}: ${section} = "${attr.value}" লাইব্রেরিতে পাওয়া যায়নি`);
+
+      // trait_type নামের সাথে মিলানো হচ্ছে না — শুধু value দিয়ে লাইব্রেরির সব ফোল্ডারে খোঁজা হচ্ছে
+      let found = findLayerByValueAnySection(attr.value);
+      if (!found) {
+        missingReport.push(`#${tokenId}: value "${attr.value}" (index এর trait_type: "${rawType}") কোনো ফোল্ডারে পাওয়া যায়নি`);
         continue;
       }
-      finalLayers.push({ section, value: layer.value, imageUrl: layer.imageUrl, selectionOrder: 0 });
+      // trait_type হবে আমাদের লাইব্রেরির ফোল্ডারের নাম (found.section), index.json এর নাম না
+      finalLayers.push({ section: found.section, value: found.layer.value, imageUrl: found.layer.imageUrl, selectionOrder: 0 });
     }
 
     // Index.json সাধারণত Background কে distinguishing trait হিসেবে রাখে না, তাই সেটা আলাদাভাবে যোগ করা হচ্ছে
@@ -784,7 +809,7 @@ async function startMint() {
       image: imgData,
       attributes: attributes,
       layers: finalLayers,
-      gender: '',
+      gender: tokenGender,
       tokenIdRef: tokenId,
       createdAt: new Date().toISOString()
     });
