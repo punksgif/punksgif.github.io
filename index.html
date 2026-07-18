@@ -99,14 +99,14 @@
               <select id="layer-section" class="win95-select flex-1">
                 <option value="Background">Background</option>
                 <option value="Base">Base (Type)</option>
-                <option value="Head">Head</option>
-                <option value="Eyes">Eyes</option>
+                <option value="Face">Face</option>
+                <option value="Beard">Beard</option>
                 <option value="Mouth">Mouth</option>
                 <option value="Nose">Nose</option>
-                <option value="Face">Face</option>
                 <option value="Neck">Neck</option>
                 <option value="Ear">Ear</option>
-                <option value="Beard">Beard</option>
+                <option value="Head">Head</option>
+                <option value="Eyes">Eyes</option>
                 <option value="Accessory">Accessory</option>
               </select>
             </div>
@@ -128,9 +128,8 @@
           <div class="win95-content">
             <div class="info-text">✓ Each NFT is built to exactly match its Token ID in index.json</div>
             <div class="info-text">✓ In index.json, "Type" = Base (Male / Female / Ape / Zombie / Alien)</div>
-            <div class="info-text">✓ Every other trait ("Accessory 1", "Accessory 2"...) is matched by VALUE only, in any folder</div>
-            <div class="info-text">✓ Layers are placed in your saved folder order, with Accessory folder layers always drawn LAST (on top)</div>
-            <div class="info-text">✓ Gender-tagged layers are preferred to match the token's Male/Female Type</div>
+            <div class="info-text">✓ Gender-matched layers are used (Male layers for Male tokens, Female layers for Female tokens)</div>
+            <div class="info-text">✓ Layer Order: Background → Base → Face → Beard → Mouth → Nose → Neck → Ear → Head → Eyes → Accessory</div>
             <div class="info-text">✓ MAX 10,000 NFTs</div>
           </div>
         </div>
@@ -220,7 +219,7 @@
         <div class="win95-window" style="margin-bottom: 16px; overflow: hidden;">
           <div class="win95-titlebar match-engine-header">
             <span>🎯 UNIVERSAL MATCH ENGINE <span class="pulse-text" style="color: #ffff00;">● LIVE</span></span>
-            <span style="font-size: 8px;">v10.0</span>
+            <span style="font-size: 8px;">v11.0</span>
           </div>
           <div class="win95-content" style="background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -392,7 +391,8 @@ async function deleteAllMatched() {
 // ============================================================
 // MAIN APP
 // ============================================================
-const SECTIONS_ORDER = ["Background", "Base", "Head", "Eyes", "Mouth", "Nose", "Face", "Neck", "Ear", "Beard", "Accessory"];
+// NEW ORDER: Background → Base → Face → Beard → Mouth → Nose → Neck → Ear → Head → Eyes → Accessory
+const SECTIONS_ORDER = ["Background", "Base", "Face", "Beard", "Mouth", "Nose", "Neck", "Ear", "Head", "Eyes", "Accessory"];
 const MAX_NFT_LIMIT = 10000;
 
 const firebaseConfig = {
@@ -666,7 +666,7 @@ async function compositeFromLayers(layers, w = 512, h = 512) {
 }
 
 // ============================================================
-// BUILD NFT ATTRIBUTES - EXACTLY LIKE INDEX.JSON (Type + Accessory N + Attribute Count)
+// BUILD NFT ATTRIBUTES - Type + Accessory N + Attribute Count
 // ============================================================
 function buildNFTAttributes(layers) {
   let attrs = [];
@@ -689,18 +689,24 @@ function buildNFTAttributes(layers) {
 }
 
 // ============================================================
-// FIND LAYER HELPERS (value-based, gender-aware)
+// FIND LAYER HELPERS - GENDER AWARE!
 // ============================================================
-function findLayerForTrait(section, value) {
+function findLayerForTrait(section, value, gender) {
   if (!value) return null;
   const pool = layersBySection[section] || [];
   const target = String(value).toLowerCase().trim();
+  
+  // First try: match gender-specific (male/female) or 'both'
+  if (gender) {
+    let found = pool.find(l => String(l.value).toLowerCase().trim() === target && (l.gender === gender || l.gender === 'both'));
+    if (found) return found;
+  }
+  
+  // Second try: any gender
   return pool.find(l => String(l.value).toLowerCase().trim() === target) || null;
 }
 
-// Ignores index.json's trait_type label entirely — searches every folder by VALUE only.
-// If a gender is given, a layer tagged for that gender (or 'both') is preferred first;
-// falls back to any matching layer if no gender-specific version exists.
+// Searches every folder by VALUE only, with gender preference
 function findLayerByValueAnySection(value, gender) {
   if (value === undefined || value === null || value === '') return null;
   const target = String(value).toLowerCase().trim();
@@ -741,13 +747,7 @@ function getGenderFromType(value) {
 }
 
 // ============================================================
-// EXACT-MATCH MINT ENGINE
-// Every trait besides "Type" and "Attribute Count" is matched purely by VALUE,
-// searched across ALL your layer folders (gender-aware), and placed in whichever
-// folder it's actually found in — so your saved layer/folder organization decides
-// the visual category, not the generic "Accessory N" label from index.json.
-// Folder order stays fixed (Background -> Base -> Head -> Eyes -> Mouth -> Nose ->
-// Face -> Neck -> Ear -> Beard -> Accessory), so Accessory-folder layers always render last (on top).
+// EXACT-MATCH MINT ENGINE - GENDER AWARE!
 // ============================================================
 async function startMint() {
   if (!isIndexLoaded || !indexTokenIdsSorted.length) {
@@ -818,17 +818,18 @@ async function startMint() {
         }
       }
     }
+    
+    // Add Base layer with gender matching
     if (baseValue) {
-      let baseLayer = findLayerForTrait('Base', baseValue);
+      let baseLayer = findLayerForTrait('Base', baseValue, tokenGender);
       if (baseLayer) {
-        finalLayers.push({ section: 'Base', value: baseLayer.value, imageUrl: baseLayer.imageUrl });
+        finalLayers.push({ section: 'Base', value: baseLayer.value, imageUrl: baseLayer.imageUrl, gender: baseLayer.gender });
       } else {
-        missingReport.push(`#${tokenId}: Base value "${baseValue}" not found in the Base folder`);
+        missingReport.push(`#${tokenId}: Base value "${baseValue}" not found in Base folder (gender: ${tokenGender || 'any'})`);
       }
     }
 
-    // STEP 2: Every remaining attribute (Accessory 1, Accessory 2, ...) — match by VALUE only,
-    // use whichever folder it's actually found in (gender-aware), keep every match (no dedupe)
+    // STEP 2: Every remaining attribute - match by VALUE only with GENDER PREFERENCE
     for (let attr of attrs) {
       if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
       let traitType = attr.trait_type || attr.traitType || attr.type || '';
@@ -836,25 +837,28 @@ async function startMint() {
       if (isTypeTrait(traitType)) continue;
       if (baseValue && String(attr.value).toLowerCase().trim() === baseValue.toLowerCase().trim()) continue;
 
+      // Find layer by value with gender preference
       let found = findLayerByValueAnySection(attr.value, tokenGender);
       if (!found) {
-        missingReport.push(`#${tokenId}: value "${attr.value}" (index trait_type: "${traitType}") not found in any folder`);
+        missingReport.push(`#${tokenId}: value "${attr.value}" (index trait_type: "${traitType}") not found in any folder (gender: ${tokenGender || 'any'})`);
         continue;
       }
       if (found.section === 'Base') continue;
-      finalLayers.push({ section: found.section, value: found.layer.value, imageUrl: found.layer.imageUrl });
+      finalLayers.push({ section: found.section, value: found.layer.value, imageUrl: found.layer.imageUrl, gender: found.layer.gender });
     }
 
-    // Every punk needs a Background even though index.json doesn't track it as a trait
+    // Add Background with gender preference
     if (!finalLayers.some(l => l.section === 'Background')) {
       let bgPool = layersBySection['Background'] || [];
-      let bg = tokenGender
-        ? (bgPool.find(l => l.gender === tokenGender || l.gender === 'both') || bgPool[0])
-        : bgPool[0];
-      if (bg) finalLayers.push({ section: 'Background', value: bg.value, imageUrl: bg.imageUrl });
+      let bg = null;
+      if (tokenGender) {
+        bg = bgPool.find(l => l.gender === tokenGender || l.gender === 'both');
+      }
+      if (!bg) bg = bgPool[0];
+      if (bg) finalLayers.push({ section: 'Background', value: bg.value, imageUrl: bg.imageUrl, gender: bg.gender });
     }
 
-    // Fixed compositing order, Accessory folder always last (top)
+    // Sort layers in correct order: Background → Base → Face → Beard → Mouth → Nose → Neck → Ear → Head → Eyes → Accessory
     finalLayers.sort((a, b) => SECTIONS_ORDER.indexOf(a.section) - SECTIONS_ORDER.indexOf(b.section));
     finalLayers.forEach((l, i) => l.selectionOrder = i);
 
