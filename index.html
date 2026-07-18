@@ -128,14 +128,13 @@
           <div class="win95-content">
             <div class="info-text">✓ Index.json এর প্রতিটি Token ID অনুযায়ী হুবহু লেয়ার কম্বিনেশন দিয়ে NFT তৈরি হবে</div>
             <div class="info-text">✓ Index.json এ "Type" = Base, "Accessory 1/2/3..." = Accessory</div>
-            <div class="info-text">✓ Compositing Order (Bottom → Top): Background → Base (Type) → Accessory → Head → Eyes → Mouth → Nose → Face → Neck → Ear → Beard</div>
-            <div class="info-text">✓ Token ID #1 এর লেয়ার কম্বিনেশন = আপনার তৈরি হওয়া #1 নাম্বার NFT এর লেয়ার (হুবহু মিল)</div>
-            <div class="info-text">✓ লাইব্রেরিতে অবশ্যই index.json এ ব্যবহৃত সব লেয়ার ভ্যালু যুক্ত থাকতে হবে</div>
+            <div class="info-text">✓ Base কারেক্টার: Male, Female, Ape, Zombie, Alien</div>
+            <div class="info-text">✓ Compositing Order: Background → Base → Accessory → Head → Eyes → Mouth → Nose → Face → Neck → Ear → Beard</div>
             <div class="info-text">✓ MAX 10,000 NFTs</div>
           </div>
         </div>
 
-        <!-- Section Selection with probability -->
+        <!-- Section Selection -->
         <div class="win95-window" style="margin-bottom:16px;">
           <div class="win95-titlebar" style="background:#808080;">🎲 SECTION PROBABILITY</div>
           <div class="win95-content">
@@ -666,7 +665,9 @@ function buildNFTAttributes(layers) {
   let attrs = [];
   let baseValue = null;
   let accessoryCount = 0;
+  let accessoryIndex = 1;
   
+  // First, find Base
   for (let l of layers) {
     if (l.section === "Base") { 
       baseValue = l.value; 
@@ -674,18 +675,23 @@ function buildNFTAttributes(layers) {
     }
   }
   
-  // Add Base (Type) first
+  // Add Type (Base) if exists
   if (baseValue) {
     attrs.push({ trait_type: "Type", value: baseValue });
   }
   
-  // Add all Accessories
-  let accessoryIndex = 1;
+  // Count accessories
+  for (let l of layers) {
+    if (l.section === "Accessory") {
+      accessoryCount++;
+    }
+  }
+  
+  // Add Accessories in order (Accessory 1, Accessory 2, etc.)
   for (let l of layers) {
     if (l.section === "Accessory") {
       attrs.push({ trait_type: `Accessory ${accessoryIndex}`, value: l.value });
       accessoryIndex++;
-      accessoryCount++;
     }
   }
   
@@ -695,7 +701,9 @@ function buildNFTAttributes(layers) {
     attrs.push({ trait_type: l.section, value: l.value });
   }
   
-  attrs.push({ trait_type: "Attribute Count", value: attrs.length.toString() });
+  // Don't add Attribute Count - let it be as in original
+  // attrs.push({ trait_type: "Attribute Count", value: attrs.length.toString() });
+  
   return attrs;
 }
 
@@ -730,6 +738,12 @@ function isAccessoryTrait(traitType) {
   if (!traitType) return false;
   const t = String(traitType).toLowerCase().trim();
   return t.startsWith('accessory');
+}
+
+function isBaseCharacter(value) {
+  if (!value) return false;
+  const v = String(value).toLowerCase().trim();
+  return v === 'male' || v === 'female' || v === 'ape' || v === 'zombie' || v === 'alien';
 }
 
 function getGenderFromType(value) {
@@ -788,17 +802,31 @@ async function startMint() {
     let tokenGender = '';
     let baseFound = false;
     let baseValue = null;
-    let accessoryIndex = 1;
+    let accessoryValues = [];
+    let otherTraits = [];
 
     // First pass: Find Type (Base)
     for (let attr of attrs) {
       if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
       let traitType = attr.trait_type || attr.traitType || attr.type || '';
       
+      // Check if this is Type
       if (isTypeTrait(traitType)) {
         baseValue = String(attr.value);
         tokenGender = getGenderFromType(baseValue);
         break;
+      }
+    }
+
+    // If no Type found, check if any value is a base character
+    if (!baseValue) {
+      for (let attr of attrs) {
+        if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
+        if (isBaseCharacter(attr.value)) {
+          baseValue = String(attr.value);
+          tokenGender = getGenderFromType(baseValue);
+          break;
+        }
       }
     }
 
@@ -809,11 +837,25 @@ async function startMint() {
         finalLayers.push({ section: 'Base', value: baseLayer.value, imageUrl: baseLayer.imageUrl, selectionOrder: 1 });
         baseFound = true;
       } else {
-        missingReport.push(`#${tokenId}: Type value "${baseValue}" লাইব্রেরির Base ফোল্ডারে পাওয়া যায়নি`);
+        missingReport.push(`#${tokenId}: Base value "${baseValue}" লাইব্রেরির Base ফোল্ডারে পাওয়া যায়নি`);
+      }
+    } else {
+      // If no base found, try to get from any value
+      for (let attr of attrs) {
+        if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
+        let found = findLayerByValueAnySection(attr.value);
+        if (found && found.section === 'Base') {
+          finalLayers.push({ section: 'Base', value: found.layer.value, imageUrl: found.layer.imageUrl, selectionOrder: 1 });
+          baseFound = true;
+          tokenGender = getGenderFromType(found.layer.value);
+          break;
+        }
       }
     }
 
     // Second pass: Process Accessories and other traits
+    let usedSections = new Set(['Base']);
+    
     for (let attr of attrs) {
       if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
       let traitType = attr.trait_type || attr.traitType || attr.type || '';
@@ -823,24 +865,25 @@ async function startMint() {
       // Skip Type (already processed)
       if (isTypeTrait(traitType)) continue;
       
+      // Skip if this is a base character value
+      if (isBaseCharacter(attr.value) && baseFound) continue;
+      
       // Handle Accessory traits
       if (isAccessoryTrait(traitType)) {
         let found = findLayerByValueAnySection(attr.value);
-        if (found && found.section === 'Accessory') {
+        if (found) {
+          // If found in Base, skip (already have base)
+          if (found.section === 'Base') continue;
+          
+          // Use Accessory section if found, otherwise use the section it's found in
+          let sectionToUse = found.section === 'Accessory' ? 'Accessory' : found.section;
           finalLayers.push({ 
-            section: 'Accessory', 
+            section: sectionToUse, 
             value: found.layer.value, 
             imageUrl: found.layer.imageUrl, 
             selectionOrder: 0 
           });
-        } else if (found) {
-          // If value found in another section, use that
-          finalLayers.push({ 
-            section: found.section, 
-            value: found.layer.value, 
-            imageUrl: found.layer.imageUrl, 
-            selectionOrder: 0 
-          });
+          usedSections.add(sectionToUse);
         } else {
           missingReport.push(`#${tokenId}: Accessory value "${attr.value}" লাইব্রেরিতে পাওয়া যায়নি`);
         }
@@ -850,15 +893,17 @@ async function startMint() {
       // Handle other traits (Head, Eyes, Mouth, etc.)
       let found = findLayerByValueAnySection(attr.value);
       if (found) {
+        if (found.section === 'Base') continue; // Skip if Base
+        
         // Check if we already have this section
-        let existing = finalLayers.find(l => l.section === found.section);
-        if (!existing) {
+        if (!usedSections.has(found.section)) {
           finalLayers.push({ 
             section: found.section, 
             value: found.layer.value, 
             imageUrl: found.layer.imageUrl, 
             selectionOrder: 0 
           });
+          usedSections.add(found.section);
         }
       } else {
         missingReport.push(`#${tokenId}: value "${attr.value}" (trait_type: "${traitType}") কোনো ফোল্ডারে পাওয়া যায়নি`);
@@ -866,11 +911,12 @@ async function startMint() {
     }
 
     // Add Background if not present
-    if (!finalLayers.some(l => l.section === 'Background')) {
+    if (!usedSections.has('Background')) {
       let bgPool = layersBySection['Background'] || [];
       if (bgPool.length) {
         let bg = bgPool[0];
         finalLayers.push({ section: 'Background', value: bg.value, imageUrl: bg.imageUrl, selectionOrder: 0 });
+        usedSections.add('Background');
       }
     }
 
