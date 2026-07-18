@@ -97,12 +97,17 @@
             <div class="flex gap-2 mb-2 flex-wrap">
               <input id="layer-value" placeholder="[ VALUE ]" class="win95-input flex-1">
               <select id="layer-section" class="win95-select flex-1">
-                <option value="Background">Background</option><option value="Base">Base</option>
-                <option value="Nose">Nose</option><option value="Neck">Neck</option>
-                <option value="Face">Face</option><option value="Ear">Ear</option>
-                <option value="Beard">Beard</option><option value="Mouth">Mouth</option>
-                <option value="Accessory">Accessory</option><option value="Head">Head</option>
+                <option value="Background">Background</option>
+                <option value="Base">Base (Type)</option>
+                <option value="Accessory">Accessory</option>
+                <option value="Head">Head</option>
                 <option value="Eyes">Eyes</option>
+                <option value="Mouth">Mouth</option>
+                <option value="Nose">Nose</option>
+                <option value="Face">Face</option>
+                <option value="Neck">Neck</option>
+                <option value="Ear">Ear</option>
+                <option value="Beard">Beard</option>
               </select>
             </div>
             <div class="flex gap-4 mb-3">
@@ -122,17 +127,17 @@
           <div class="win95-titlebar" style="background: #808080;">📜 HOW IT WORKS</div>
           <div class="win95-content">
             <div class="info-text">✓ Index.json এর প্রতিটি Token ID অনুযায়ী হুবহু লেয়ার কম্বিনেশন দিয়ে NFT তৈরি হবে</div>
-            <div class="info-text">✓ Compositing Order (Bottom → Top): Background → Base → Nose → Neck → Face → Ear → Beard → Mouth → Accessory → Head → Eyes</div>
+            <div class="info-text">✓ Index.json এ "Type" = Base, "Accessory 1/2/3..." = Accessory</div>
+            <div class="info-text">✓ Compositing Order (Bottom → Top): Background → Base (Type) → Accessory → Head → Eyes → Mouth → Nose → Face → Neck → Ear → Beard</div>
             <div class="info-text">✓ Token ID #1 এর লেয়ার কম্বিনেশন = আপনার তৈরি হওয়া #1 নাম্বার NFT এর লেয়ার (হুবহু মিল)</div>
             <div class="info-text">✓ লাইব্রেরিতে অবশ্যই index.json এ ব্যবহৃত সব লেয়ার ভ্যালু যুক্ত থাকতে হবে</div>
-            <div class="info-text">✓ তৈরি হওয়ার পর প্রতিটি NFT এডিট করে লেয়ার পরিবর্তন / উপর-নিচ করা যাবে</div>
             <div class="info-text">✓ MAX 10,000 NFTs</div>
           </div>
         </div>
 
         <!-- Section Selection with probability -->
         <div class="win95-window" style="margin-bottom:16px;">
-          <div class="win95-titlebar" style="background:#808080;">🎲 SECTION PROBABILITY (ম্যানুয়াল প্রিভিউ / টেস্টের জন্য — বাল্ক মিন্ট এখন Index.json থেকে হুবহু হয়)</div>
+          <div class="win95-titlebar" style="background:#808080;">🎲 SECTION PROBABILITY</div>
           <div class="win95-content">
             <div id="create-sections-container" class="space-y-3"></div>
           </div>
@@ -140,13 +145,13 @@
 
         <!-- Layer Order Preview -->
         <div class="win95-window" style="margin-bottom:16px;">
-          <div class="win95-titlebar" style="background: #808080;">🔢 LAYER COMPOSITING ORDER (First selected = Bottom)</div>
+          <div class="win95-titlebar" style="background: #808080;">🔢 LAYER COMPOSITING ORDER</div>
           <div class="win95-content">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
               <div style="flex:1;">
-                <div class="text-pixel text-[8px] mb-2" style="color:#000080;">⬇ BOTTOM (Bottom)</div>
+                <div class="text-pixel text-[8px] mb-2" style="color:#000080;">⬇ BOTTOM</div>
                 <div id="order-preview-list"></div>
-                <div class="text-pixel text-[8px] mt-2" style="color:#000080;">⬆ TOP (Top)</div>
+                <div class="text-pixel text-[8px] mt-2" style="color:#000080;">⬆ TOP</div>
               </div>
               <div style="text-align:center;">
                 <div class="text-pixel text-[8px] mb-2">LIVE PREVIEW</div>
@@ -158,11 +163,11 @@
 
         <!-- Mint Settings -->
         <div class="win95-window" style="margin-top: 16px;">
-          <div class="win95-titlebar" style="background: #808080;">⚙️ MINT SETTINGS (EXACT MATCH FROM INDEX.JSON)</div>
+          <div class="win95-titlebar" style="background: #808080;">⚙️ MINT SETTINGS</div>
           <div class="win95-content">
             <div class="flex gap-3 mb-3 flex-wrap">
               <div class="flex-1">
-                <div class="text-pixel text-[8px] mb-1">TOTAL NFTs (Index.json এর ক্রম অনুযায়ী, MAX 10,000)</div>
+                <div class="text-pixel text-[8px] mb-1">TOTAL NFTs (MAX 10,000)</div>
                 <input type="number" id="total-nft-count" min="1" max="10000" value="10" class="qty-input w-full">
               </div>
               <div class="flex-1">
@@ -215,7 +220,7 @@
         <div class="win95-window" style="margin-bottom: 16px; overflow: hidden;">
           <div class="win95-titlebar match-engine-header">
             <span>🎯 UNIVERSAL MATCH ENGINE <span class="pulse-text" style="color: #ffff00;">● LIVE</span></span>
-            <span style="font-size: 8px;">v7.0</span>
+            <span style="font-size: 8px;">v8.0</span>
           </div>
           <div class="win95-content" style="background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -384,10 +389,8 @@ async function deleteAllMatched() {
 // ============================================================
 // MAIN APP
 // ============================================================
-const SECTIONS_ORDER = ["Background","Base","Nose","Neck","Face","Ear","Beard","Mouth","Accessory","Head","Eyes"];
+const SECTIONS_ORDER = ["Background", "Base", "Accessory", "Head", "Eyes", "Mouth", "Nose", "Face", "Neck", "Ear", "Beard"];
 const MAX_NFT_LIMIT = 10000;
-const BLOCKED_SECTIONS_FOR_ALIEN_APE = ["Nose", "Face", "Neck", "Beard"];
-const ALIEN_APE_BASES = ["Alien", "Ape"];
 
 const firebaseConfig = {
   apiKey: "AIzaSyAzyWZLtzpysvn6nxk8pN96gLsfMS2oL2M",
@@ -659,29 +662,45 @@ async function compositeFromLayers(layers, w = 512, h = 512) {
   return canvas.toDataURL('image/png');
 }
 
-function isSectionBlockedForBase(section, baseValue) {
-  if (!baseValue) return false;
-  for (let fb of ALIEN_APE_BASES) {
-    if (baseValue.toLowerCase().includes(fb.toLowerCase()) && BLOCKED_SECTIONS_FOR_ALIEN_APE.includes(section)) return true;
-  }
-  return false;
-}
-
 function buildNFTAttributes(layers) {
   let attrs = [];
   let baseValue = null;
-  for (let l of layers) { if (l.section === "Base") { baseValue = l.value; break; } }
-  if (baseValue) attrs.push({ trait_type: "Base", value: baseValue });
+  let accessoryCount = 0;
+  
   for (let l of layers) {
-    if (l.section === "Background" || l.section === "Base") continue;
+    if (l.section === "Base") { 
+      baseValue = l.value; 
+      break; 
+    }
+  }
+  
+  // Add Base (Type) first
+  if (baseValue) {
+    attrs.push({ trait_type: "Type", value: baseValue });
+  }
+  
+  // Add all Accessories
+  let accessoryIndex = 1;
+  for (let l of layers) {
+    if (l.section === "Accessory") {
+      attrs.push({ trait_type: `Accessory ${accessoryIndex}`, value: l.value });
+      accessoryIndex++;
+      accessoryCount++;
+    }
+  }
+  
+  // Add other sections
+  for (let l of layers) {
+    if (l.section === "Background" || l.section === "Base" || l.section === "Accessory") continue;
     attrs.push({ trait_type: l.section, value: l.value });
   }
+  
   attrs.push({ trait_type: "Attribute Count", value: attrs.length.toString() });
   return attrs;
 }
 
 // ============================================================
-// EXACT-MATCH MINT ENGINE (builds NFTs identical to index.json, token by token)
+// EXACT-MATCH MINT ENGINE
 // ============================================================
 function findLayerForTrait(section, value) {
   if (!value) return null;
@@ -690,7 +709,6 @@ function findLayerForTrait(section, value) {
   return pool.find(l => String(l.value).toLowerCase().trim() === target) || null;
 }
 
-// Find layer by value in any section
 function findLayerByValueAnySection(value) {
   if (value === undefined || value === null || value === '') return null;
   const target = String(value).toLowerCase().trim();
@@ -702,26 +720,23 @@ function findLayerByValueAnySection(value) {
   return null;
 }
 
-// Check if a value is a base character type (Male, Female, Ape, Zombie, Alien)
-function isBaseCharacterValue(value) {
-  if (!value) return false;
-  const v = String(value).toLowerCase().trim();
-  return v === 'male' || v === 'female' || v === 'ape' || v === 'zombie' || v === 'alien';
+function isTypeTrait(traitType) {
+  if (!traitType) return false;
+  const t = String(traitType).toLowerCase().trim();
+  return t === 'type';
 }
 
-// Check if trait_type is empty or just punctuation (like "," or "")
-function isBrokenTraitType(traitType) {
-  if (!traitType) return true;
-  const trimmed = String(traitType).trim();
-  return trimmed === '' || /^[^a-zA-Z0-9]+$/.test(trimmed);
+function isAccessoryTrait(traitType) {
+  if (!traitType) return false;
+  const t = String(traitType).toLowerCase().trim();
+  return t.startsWith('accessory');
 }
 
-// Extract gender from base value
-function getGenderFromBase(value) {
+function getGenderFromType(value) {
   if (!value) return '';
   const v = String(value).toLowerCase().trim();
-  if (v === 'male') return 'male';
-  if (v === 'female') return 'female';
+  if (v === 'male' || v === 'man') return 'male';
+  if (v === 'female' || v === 'woman') return 'female';
   return '';
 }
 
@@ -773,30 +788,17 @@ async function startMint() {
     let tokenGender = '';
     let baseFound = false;
     let baseValue = null;
+    let accessoryIndex = 1;
 
-    // First pass: Find the Base character value
+    // First pass: Find Type (Base)
     for (let attr of attrs) {
       if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
-      
       let traitType = attr.trait_type || attr.traitType || attr.type || '';
       
-      // Check if this is a Base attribute (trait_type is empty or punctuation, and value is Male/Female/Ape/Zombie/Alien)
-      if (isBrokenTraitType(traitType) && isBaseCharacterValue(attr.value)) {
+      if (isTypeTrait(traitType)) {
         baseValue = String(attr.value);
-        tokenGender = getGenderFromBase(baseValue);
+        tokenGender = getGenderFromType(baseValue);
         break;
-      }
-    }
-
-    // If still no base found, check all values
-    if (!baseValue) {
-      for (let attr of attrs) {
-        if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
-        if (isBaseCharacterValue(attr.value)) {
-          baseValue = String(attr.value);
-          tokenGender = getGenderFromBase(baseValue);
-          break;
-        }
       }
     }
 
@@ -807,45 +809,56 @@ async function startMint() {
         finalLayers.push({ section: 'Base', value: baseLayer.value, imageUrl: baseLayer.imageUrl, selectionOrder: 1 });
         baseFound = true;
       } else {
-        missingReport.push(`#${tokenId}: Base value "${baseValue}" লাইব্রেরির Base ফোল্ডারে পাওয়া যায়নি`);
+        missingReport.push(`#${tokenId}: Type value "${baseValue}" লাইব্রেরির Base ফোল্ডারে পাওয়া যায়নি`);
       }
     }
 
-    // Second pass: Process other attributes
-    let usedSections = new Set(['Base']);
-    
+    // Second pass: Process Accessories and other traits
     for (let attr of attrs) {
       if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
-      
       let traitType = attr.trait_type || attr.traitType || attr.type || '';
+      
       if (String(traitType).toLowerCase().trim() === 'attribute count') continue;
       
-      // Skip if this is the Base attribute we already processed
-      if (isBrokenTraitType(traitType) && isBaseCharacterValue(attr.value) && baseFound) {
-        continue;
-      }
-
-      // Skip if this is a base character value and we already have base
-      if (isBaseCharacterValue(attr.value) && baseFound) {
-        continue;
-      }
-
-      // Try to find the layer by value in any section
-      let found = findLayerByValueAnySection(attr.value);
+      // Skip Type (already processed)
+      if (isTypeTrait(traitType)) continue;
       
-      if (found) {
-        // Skip if we already have this section
-        if (usedSections.has(found.section)) continue;
-        
-        // Only add if it's not Base (we already added Base)
-        if (found.section !== 'Base') {
+      // Handle Accessory traits
+      if (isAccessoryTrait(traitType)) {
+        let found = findLayerByValueAnySection(attr.value);
+        if (found && found.section === 'Accessory') {
+          finalLayers.push({ 
+            section: 'Accessory', 
+            value: found.layer.value, 
+            imageUrl: found.layer.imageUrl, 
+            selectionOrder: 0 
+          });
+        } else if (found) {
+          // If value found in another section, use that
           finalLayers.push({ 
             section: found.section, 
             value: found.layer.value, 
             imageUrl: found.layer.imageUrl, 
             selectionOrder: 0 
           });
-          usedSections.add(found.section);
+        } else {
+          missingReport.push(`#${tokenId}: Accessory value "${attr.value}" লাইব্রেরিতে পাওয়া যায়নি`);
+        }
+        continue;
+      }
+      
+      // Handle other traits (Head, Eyes, Mouth, etc.)
+      let found = findLayerByValueAnySection(attr.value);
+      if (found) {
+        // Check if we already have this section
+        let existing = finalLayers.find(l => l.section === found.section);
+        if (!existing) {
+          finalLayers.push({ 
+            section: found.section, 
+            value: found.layer.value, 
+            imageUrl: found.layer.imageUrl, 
+            selectionOrder: 0 
+          });
         }
       } else {
         missingReport.push(`#${tokenId}: value "${attr.value}" (trait_type: "${traitType}") কোনো ফোল্ডারে পাওয়া যায়নি`);
@@ -853,12 +866,11 @@ async function startMint() {
     }
 
     // Add Background if not present
-    if (!usedSections.has('Background')) {
+    if (!finalLayers.some(l => l.section === 'Background')) {
       let bgPool = layersBySection['Background'] || [];
       if (bgPool.length) {
         let bg = bgPool[0];
         finalLayers.push({ section: 'Background', value: bg.value, imageUrl: bg.imageUrl, selectionOrder: 0 });
-        usedSections.add('Background');
       }
     }
 
@@ -866,11 +878,11 @@ async function startMint() {
     finalLayers.sort((a, b) => SECTIONS_ORDER.indexOf(a.section) - SECTIONS_ORDER.indexOf(b.section));
     finalLayers.forEach((l, i) => l.selectionOrder = i);
 
-    // If gender wasn't set, try to detect from layers
+    // If gender wasn't set, try to detect from Base
     if (!tokenGender) {
       for (let l of finalLayers) {
         if (l.section === 'Base') {
-          tokenGender = getGenderFromBase(l.value);
+          tokenGender = getGenderFromType(l.value);
           break;
         }
       }
@@ -908,10 +920,6 @@ async function startMint() {
   btn.disabled = false;
   progWrap.classList.add('hidden');
   if (isIndexLoaded) updateAllMatchBadges();
-}
-
-function filterByGender(layers, gender) {
-  return layers.filter(l => l.gender === 'both' || l.gender === gender);
 }
 
 function renderCollection() {
