@@ -304,31 +304,19 @@ async function loadIndexJSON() {
     isIndexLoaded = true;
     document.getElementById('index-status').innerHTML = `<span style="color:#006400;">✅ INDEX LOADED!</span>`;
 
-    // Diagnostic: index.json এ ব্যবহৃত প্রতিটি value লাইব্রেরির কোনো না কোনো ফোল্ডারে আছে কিনা চেক করা হচ্ছে
     let allValues = new Set();
-    let baseOnlyValues = new Set();
     for (const td of Object.values(data)) {
       if (!td || !td.attributes) continue;
       for (const a of td.attributes) {
-        let rawType = a && (a.trait_type || a.traitType || a.type);
-        if (rawType && String(rawType).toLowerCase().trim() === 'attribute count') continue;
         if (!a || a.value === undefined || a.value === null || a.value === '') continue;
-        let typeTrim = String(rawType || '').trim();
-        let isBrokenType = typeTrim === '' || /^[^a-zA-Z0-9]+$/.test(typeTrim);
-        if (isBrokenType) baseOnlyValues.add(String(a.value));
-        else allValues.add(String(a.value));
+        allValues.add(String(a.value));
       }
     }
     let missingValues = [...allValues].filter(v => !findLayerByValueAnySection(v));
-    let missingBaseValues = [...baseOnlyValues].filter(v => !findLayerForTrait('Base', v));
-    let statsHtml = `🎯 ${totalTokens} tokens indexed — EXACT MINT এর জন্য প্রস্তুত (মিলানো হচ্ছে VALUE দিয়ে, trait_type নাম দিয়ে না)`;
+    let statsHtml = `🎯 ${totalTokens} tokens indexed — EXACT MINT এর জন্য প্রস্তুত`;
     if (missingValues.length) {
       let shown = missingValues.slice(0, 30).map(escapeHtml).join(', ');
       statsHtml += `<br><span style="color:#aa0000;">⚠️ এই ${missingValues.length} টি ভ্যালু কোনো ফোল্ডারেই পাওয়া যায়নি: ${shown}${missingValues.length>30?' ...':''}</span>`;
-    }
-    if (missingBaseValues.length) {
-      let shownB = missingBaseValues.slice(0, 30).map(escapeHtml).join(', ');
-      statsHtml += `<br><span style="color:#aa0000;">⚠️ এই Base ভ্যালুগুলো Base ফোল্ডারে পাওয়া যায়নি: ${shownB}${missingBaseValues.length>30?' ...':''}</span>`;
     }
     document.getElementById('index-stats').innerHTML = statsHtml;
     updateAllMatchBadges();
@@ -396,7 +384,7 @@ async function deleteAllMatched() {
 // ============================================================
 // MAIN APP
 // ============================================================
-const SECTIONS_ORDER = ["Background","Base","Nose","Neck","Face","Ear","Beard","Mouth","Accessory","Head","Eyes"];
+const SECTIONS_ORDER = ["Background","Base","Nose","Neck","Face","Ear","Beard","Mouth","Head","Accessory","Eyes"];
 const MAX_NFT_LIMIT = 10000;
 const BLOCKED_SECTIONS_FOR_ALIEN_APE = ["Nose", "Face", "Neck", "Beard"];
 const ALIEN_APE_BASES = ["Alien", "Ape"];
@@ -693,7 +681,7 @@ function buildNFTAttributes(layers) {
 }
 
 // ============================================================
-// EXACT-MATCH MINT ENGINE (bulids NFTs identical to index.json, token by token)
+// EXACT-MATCH MINT ENGINE (builds NFTs identical to index.json, token by token)
 // ============================================================
 function findLayerForTrait(section, value) {
   if (!value) return null;
@@ -702,15 +690,7 @@ function findLayerForTrait(section, value) {
   return pool.find(l => String(l.value).toLowerCase().trim() === target) || null;
 }
 
-// Maps any trait_type spelling/case from index.json to our canonical SECTIONS_ORDER name
-function normalizeSectionName(name) {
-  if (!name) return null;
-  const target = String(name).trim().toLowerCase();
-  return SECTIONS_ORDER.find(s => s.toLowerCase() === target) || null;
-}
-
-// Index.json এর trait_type নামের উপর ভরসা না করে, শুধু VALUE দিয়ে লাইব্রেরির সব ফোল্ডার (section) খুঁজে
-// সেই layer টা কোন ফোল্ডারে আছে বের করে। নতুন NFT এর metadata-তে trait_type হবে সেই ফোল্ডারের নাম (আমাদের SECTIONS_ORDER থেকে), index.json এর trait_type নাম না।
+// Find layer by value in any section
 function findLayerByValueAnySection(value) {
   if (value === undefined || value === null || value === '') return null;
   const target = String(value).toLowerCase().trim();
@@ -720,6 +700,29 @@ function findLayerByValueAnySection(value) {
     if (layer) return { section, layer };
   }
   return null;
+}
+
+// Check if a value is a gender (Male/Female)
+function isGenderValue(value) {
+  if (!value) return false;
+  const v = String(value).toLowerCase().trim();
+  return v === 'male' || v === 'female';
+}
+
+// Check if a value is a base character type (Male, Female, Ape, Zombie, Alien)
+function isBaseCharacterValue(value) {
+  if (!value) return false;
+  const v = String(value).toLowerCase().trim();
+  return v === 'male' || v === 'female' || v === 'ape' || v === 'zombie' || v === 'alien';
+}
+
+// Extract gender from base value
+function getGenderFromBase(value) {
+  if (!value) return '';
+  const v = String(value).toLowerCase().trim();
+  if (v === 'male') return 'male';
+  if (v === 'female') return 'female';
+  return '';
 }
 
 async function startMint() {
@@ -768,52 +771,110 @@ async function startMint() {
     let attrs = (tokenData && tokenData.attributes) || [];
     let finalLayers = [];
     let tokenGender = '';
+    let baseFound = false;
 
+    // First, find the base character value
+    let baseValue = null;
     for (let attr of attrs) {
-      if (!attr) continue;
+      if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
       let rawType = attr.trait_type || attr.traitType || attr.type || '';
-      if (attr.value === undefined || attr.value === null || attr.value === '') continue;
+      let typeTrim = String(rawType).trim();
+      let isBrokenType = typeTrim === '' || /^[^a-zA-Z0-9]+$/.test(typeTrim);
+      
+      // If it's a broken type or the value itself is a base character
+      if (isBrokenType || isBaseCharacterValue(attr.value)) {
+        if (isBaseCharacterValue(attr.value)) {
+          baseValue = String(attr.value);
+          tokenGender = getGenderFromBase(baseValue);
+          break;
+        }
+      }
+    }
+
+    // If no base found in attributes, try to find from any value
+    if (!baseValue) {
+      for (let attr of attrs) {
+        if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
+        if (isBaseCharacterValue(attr.value)) {
+          baseValue = String(attr.value);
+          tokenGender = getGenderFromBase(baseValue);
+          break;
+        }
+      }
+    }
+
+    // Add Base layer first
+    if (baseValue) {
+      let baseLayer = findLayerForTrait('Base', baseValue);
+      if (baseLayer) {
+        finalLayers.push({ section: 'Base', value: baseLayer.value, imageUrl: baseLayer.imageUrl, selectionOrder: 1 });
+        baseFound = true;
+      } else {
+        missingReport.push(`#${tokenId}: Base value "${baseValue}" লাইব্রেরির Base ফোল্ডারে পাওয়া যায়নি`);
+      }
+    }
+
+    // Process other attributes
+    for (let attr of attrs) {
+      if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
+      let rawType = attr.trait_type || attr.traitType || attr.type || '';
       if (String(rawType).toLowerCase().trim() === 'attribute count') continue;
+      
+      // Skip if this is a base value and we already added it
+      if (isBaseCharacterValue(attr.value) && baseFound) continue;
 
       let typeTrim = String(rawType).trim();
-      // index.json এ এই ধরনের attribute এর trait_type ভাঙা/অক্ষর ছাড়া (যেমন ",") — এটা আসলে Base ভ্যালু
-      // (Male / Female / Ape / Zombie / Alien) বোঝায়, তাই সরাসরি Base ফোল্ডারে খোঁজা হচ্ছে
       let isBrokenType = typeTrim === '' || /^[^a-zA-Z0-9]+$/.test(typeTrim);
 
-      if (isBrokenType) {
-        let valLower = String(attr.value).toLowerCase().trim();
-        if (valLower === 'male' || valLower === 'female') tokenGender = valLower;
-        let baseLayer = findLayerForTrait('Base', attr.value);
-        if (baseLayer) {
-          finalLayers.push({ section: 'Base', value: baseLayer.value, imageUrl: baseLayer.imageUrl, selectionOrder: 0 });
-        } else {
-          missingReport.push(`#${tokenId}: Base value "${attr.value}" লাইব্রেরির Base ফোল্ডারে পাওয়া যায়নি`);
+      // For broken types that are not base characters, try to find them in other sections
+      if (isBrokenType && !isBaseCharacterValue(attr.value)) {
+        let found = findLayerByValueAnySection(attr.value);
+        if (found && found.section !== 'Base') {
+          // Make sure we don't add duplicate sections
+          if (!finalLayers.some(l => l.section === found.section && l.value === found.layer.value)) {
+            finalLayers.push({ section: found.section, value: found.layer.value, imageUrl: found.layer.imageUrl, selectionOrder: 0 });
+          }
+        } else if (!found) {
+          missingReport.push(`#${tokenId}: value "${attr.value}" কোনো ফোল্ডারে পাওয়া যায়নি`);
         }
         continue;
       }
 
-      // trait_type নামের সাথে মিলানো হচ্ছে না — শুধু value দিয়ে লাইব্রেরির সব ফোল্ডারে খোঁজা হচ্ছে
-      let found = findLayerByValueAnySection(attr.value);
-      if (!found) {
-        missingReport.push(`#${tokenId}: value "${attr.value}" (index এর trait_type: "${rawType}") কোনো ফোল্ডারে পাওয়া যায়নি`);
-        continue;
+      // For valid trait types, find by value
+      if (!isBrokenType && !isBaseCharacterValue(attr.value)) {
+        let found = findLayerByValueAnySection(attr.value);
+        if (found && found.section !== 'Base') {
+          if (!finalLayers.some(l => l.section === found.section && l.value === found.layer.value)) {
+            finalLayers.push({ section: found.section, value: found.layer.value, imageUrl: found.layer.imageUrl, selectionOrder: 0 });
+          }
+        } else if (!found) {
+          missingReport.push(`#${tokenId}: value "${attr.value}" (trait_type: "${rawType}") কোনো ফোল্ডারে পাওয়া যায়নি`);
+        }
       }
-      // trait_type হবে আমাদের লাইব্রেরির ফোল্ডারের নাম (found.section), index.json এর নাম না
-      finalLayers.push({ section: found.section, value: found.layer.value, imageUrl: found.layer.imageUrl, selectionOrder: 0 });
     }
 
-    // Index.json সাধারণত Background কে distinguishing trait হিসেবে রাখে না, তাই সেটা আলাদাভাবে যোগ করা হচ্ছে
+    // Add Background if not present
     if (!finalLayers.some(l => l.section === 'Background')) {
       let bgPool = layersBySection['Background'] || [];
       if (bgPool.length) {
         let bg = bgPool[0];
-        finalLayers.push({ section: 'Background', value: bg.value, imageUrl: bg.imageUrl, selectionOrder: -1 });
+        finalLayers.push({ section: 'Background', value: bg.value, imageUrl: bg.imageUrl, selectionOrder: 0 });
       }
     }
 
-    // Force fixed compositing order: Background(bottom) -> ... -> Eyes(top)
+    // Sort layers in correct compositing order: Background -> Base -> Nose -> Neck -> Face -> Ear -> Beard -> Mouth -> Accessory -> Head -> Eyes
     finalLayers.sort((a, b) => SECTIONS_ORDER.indexOf(a.section) - SECTIONS_ORDER.indexOf(b.section));
     finalLayers.forEach((l, i) => l.selectionOrder = i);
+
+    // If gender wasn't set from base, try to detect from layers
+    if (!tokenGender) {
+      for (let l of finalLayers) {
+        if (l.section === 'Base') {
+          tokenGender = getGenderFromBase(l.value);
+          break;
+        }
+      }
+    }
 
     let imgData = await compositeFromLayers(finalLayers);
     let attributes = buildNFTAttributes(finalLayers);
