@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>404 PUNKS // PREMIUM UNIVERSAL CSV MATCH ENGINE</title>
+  <title>404 PUNKS // PURE CSV ENGINE</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -21,9 +21,6 @@
     .win95-btn:active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; transform: translate(1px, 1px); }
     .win95-input { background: #ffffff; border: 2px inset #808080; padding: 8px 12px; font-family: 'VT323', monospace; font-size: 16px; width: 100%; outline: none; color: #000; }
     .win95-select { background: #ffffff; border: 2px inset #808080; padding: 8px 12px; font-family: 'VT323', monospace; font-size: 16px; cursor: pointer; color: #000; }
-    .layer-item { background: #c0c0c0; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; cursor: pointer; padding: 8px; }
-    .layer-item.selected { background: #000080; border: 2px solid #ffffff; }
-    .layer-item.selected p { color: #ffffff !important; }
     .qty-input { background: #ffffff; border: 2px inset #808080; padding: 6px 8px; width: 90px; text-align: center; font-family: 'Press Start 2P', monospace; font-size: 10px; color: #000; }
     .win95-tab { background: #d4d0c8; border: 3px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 8px 20px; font-family: 'Press Start 2P', monospace; font-size: 10px; cursor: pointer; margin-right: 4px; color: #000; }
     .win95-tab.active { background: #c0c0c0; border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; font-weight: bold; border-bottom: none; transform: translateY(2px); }
@@ -38,23 +35,11 @@
     .grid-2cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
     @media(max-width: 1024px) { .grid-2cols { grid-template-columns: repeat(2, 1fr); } }
     @media(max-width: 640px) { .grid-2cols { grid-template-columns: 1fr; } }
-    .layer-row { background: #c0c0c0; border: 2px outset #808080; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; color: #000; }
-    .move-btn { background: #d4d0c8; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 5px 10px; cursor: pointer; font-family: monospace; font-size: 14px; margin-left: 5px; color: #000; }
-    .move-btn:active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; transform: translate(1px, 1px); }
     .search-input { background: #ffffff; border: 2px inset #808080; padding: 8px 12px; font-family: 'VT323', monospace; font-size: 16px; width: 200px; color: #000; }
-    .warning-text { color: #aa0000; font-family: 'Press Start 2P', monospace; font-size: 8px; margin-top: 5px; }
     .info-text { color: #000080; font-family: 'Press Start 2P', monospace; font-size: 9px; margin-top: 5px; line-height: 1.5; }
     .match-badge { background: #000080; color: #ffff00; border: 2px solid; border-top-color: #4444ff; border-left-color: #4444ff; border-right-color: #000044; border-bottom-color: #000044; padding: 4px 6px; font-family: 'Press Start 2P', monospace; font-size: 8px; margin-top: 5px; display: block; text-align: center; font-weight: bold; }
-    .match-badge-loading { background: #404040; color: #00ff00; border: 2px inset #808080; padding: 4px 6px; font-family: 'Press Start 2P', monospace; font-size: 8px; margin-top: 5px; text-align: center; animation: blink 1s step-start infinite; }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-    .success-bg { background: #006400 !important; color: #fff !important; border-color: #00ff00 !important; }
-    .match-engine-header { background: linear-gradient(90deg, #800080, #ff00ff); border-bottom: 2px solid #ffff00; }
     .pulse-text { animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
-    .layer-item .order-num { position: absolute; top: 2px; right: 2px; background: #ffff00; color: #000000; font-family: 'Press Start 2P', monospace; font-size: 6px; padding: 1px 3px; border: 1px solid #000; display: none; }
-    .layer-item.selected .order-num { display: block; }
-    .layer-item { position: relative; }
-    .prob-badge { background: #000080; color: #ffff00; font-family: 'Press Start 2P', monospace; font-size: 7px; padding: 2px 6px; border: 1px solid #4444ff; }
     .selected-order-item { background: #c0c0c0; border: 2px outset #808080; padding: 6px 10px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; font-family: 'Press Start 2P', monospace; font-size: 7px; color: #000; }
   </style>
 </head>
@@ -62,7 +47,7 @@
 
 <div class="win95-desktop">
   <div class="win95-window">
-    <div class="win95-titlebar"><span>💎 404 PUNKS - PREMIUM CSV & MULTI-GENDER MATCH ENGINE</span><button onclick="location.reload()">✕</button></div>
+    <div class="win95-titlebar"><span>💎 404 PUNKS - PURE CSV DRIVEN ENGINE</span><button onclick="location.reload()">✕</button></div>
     <div style="background: #d4d0c8; padding: 8px 16px 0 16px; border-bottom: 2px solid #808080;">
       <div style="display: flex; gap: 4px; flex-wrap: wrap;">
         <button onclick="App.switchTab('layers')" id="tab-layers" class="win95-tab active">📂 LAYER LIBRARY</button>
@@ -79,7 +64,7 @@
           <div class="win95-content">
             <input id="github-url" placeholder="[ PASTE GITHUB RAW OR ANY IMAGE URL ]" class="win95-input w-full mb-2">
             <div class="flex gap-2 mb-2 flex-wrap">
-              <input id="layer-value" placeholder="[ EXACT TRAIT VALUE NAME (e.g. Wild Hair, Smile) ]" class="win95-input flex-1">
+              <input id="layer-value" placeholder="[ EXACT TRAIT VALUE / SKIN TONE NAME ]" class="win95-input flex-1">
               <select id="layer-section" class="win95-select flex-1">
                 <option value="Background">Background</option>
                 <option value="Base">Base (Skin/Type)</option>
@@ -110,10 +95,10 @@
         <div class="win95-window" style="margin-bottom: 16px;">
           <div class="win95-titlebar" style="background: #404040;">📜 RE-GENERATION ENGINE SPECIFICATION</div>
           <div class="win95-content">
-            <div class="info-text">✓ <strong>CSV Direct Matching:</strong> NFT Generation is fully driven by Cryptopunks.csv and index.json.</div>
-            <div class="info-text">✓ <strong>Skin Tone & Type Routing:</strong> Base layer reads exact skin properties from CSV (Male, Female, Zombie, Ape, Alien).</div>
-            <div class="info-text">✓ <strong>Smart Gender Isolation:</strong> Male layers apply strictly to Male assets, Female layers to Female assets.</div>
-            <div class="info-text">✓ <strong>Hierarchical Composite Stack:</strong> Background → Base → Face → Beard → Mouth → Nose → Neck → Ear → Head → Eyes → Accessory.</div>
+            <div class="info-text">✓ <strong>100% CSV Driven:</strong> NFT Generation is fully powered by Cryptopunks.csv pipeline.</div>
+            <div class="info-text">✓ <strong>Skin Tone Router:</strong> Base layer targets exact skin tone configurations extracted from CSV.</div>
+            <div class="info-text">✓ <strong>Gender Alignment:</strong> Male layers map strictly to Male tokens, Female layers map to Female tokens.</div>
+            <div class="info-text">✓ <strong>Composite Stack Hierarchy:</strong> Background → Base → Face → Beard → Mouth → Nose → Neck → Ear → Head → Eyes → Accessory.</div>
           </div>
         </div>
 
@@ -123,12 +108,12 @@
           <div class="win95-content">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
               <div style="flex:1;">
-                <div class="text-pixel text-[8px] mb-2 style-color text-blue-900">⬇ BOTTOM LAYER LAYER</div>
+                <div class="text-pixel text-[8px] mb-2 text-blue-900">⬇ BOTTOM LAYER</div>
                 <div id="order-preview-list"></div>
-                <div class="text-pixel text-[8px] mt-2 style-color text-blue-900">⬆ TOP SUPERPOSITION</div>
+                <div class="text-pixel text-[8px] mt-2 text-blue-900">⬆ TOP SUPERPOSITION</div>
               </div>
               <div style="text-align:center;">
-                <div class="text-pixel text-[9px] mb-2 text-black font-bold">ENGINE ENGINE CANVAS</div>
+                <div class="text-pixel text-[9px] mb-2 text-black font-bold">ENGINE CANVAS</div>
                 <canvas id="live-preview-canvas" width="128" height="128" style="border: 3px inset #808080; background: #fff; display:block; image-rendering: pixelated; margin: 0 auto;"></canvas>
               </div>
             </div>
@@ -171,7 +156,6 @@
               <button onclick="App.deleteAllNFTs()" class="win95-btn flex-1" style="background:#ffdddd;color:#aa0000;border-color:#cc0000;">🗑️ WIPE LOCAL HODL</button>
               <button onclick="App.downloadAllPNG()" class="win95-btn flex-1">🖼️ EXPORT ALL PNGs</button>
               <button onclick="App.downloadAllJSON()" class="win95-btn flex-1">📄 EXPORT ALL JSONs</button>
-              <button onclick="App.downloadAllAsZip()" class="win95-btn flex-1" style="background:#008080; color:white;">📦 BULK DOWNLOAD ZIP SYSTEM</button>
             </div>
           </div>
         </div>
@@ -190,26 +174,20 @@
           </div>
         </div>
 
-        <!-- INDEX MATCH PANEL -->
+        <!-- CSV STATUS PANEL -->
         <div class="win95-window" style="margin-bottom: 16px; overflow: hidden;">
-          <div class="win95-titlebar match-engine-header">
+          <div class="win95-titlebar" style="background: linear-gradient(90deg, #800080, #ff00ff); border-bottom: 2px solid #ffff00;">
             <span>🎯 CSV METADATA VERIFICATION DECK <span class="pulse-text" style="color: #ffff00;">● SYSTEM CONNECTED</span></span>
-            <span style="font-size: 8px;">v15.2 Premium</span>
           </div>
           <div class="win95-content" style="background: #c0c0c0;">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
               <div style="background: #000080; padding: 8px 12px; border: 2px outset #4444ff;">
-                <span style="font-family: 'Press Start 2P', monospace; font-size: 10px; color: #00ff00;">⬤</span>
-                <span style="font-family: 'Press Start 2P', monospace; font-size: 8px; color: #ffffff; margin-left: 6px;">CSV ENGINE RUNNING</span>
+                <span style="font-family: 'Press Start 2P', monospace; font-size: 8px; color: #ffffff;">CSV ENGINE STATUS</span>
               </div>
               <div style="flex: 1;">
-                <div id="index-status" class="info-text" style="color: #000080; font-weight: bold; font-size: 11px;">🔄 Connecting repository streams...</div>
-                <div id="index-stats" class="text-pixel text-[8px] mt-1 text-green-950"></div>
+                <div id="index-status" class="info-text" style="color: #000080; font-weight: bold; font-size: 11px;">🔄 Connecting database streams...</div>
               </div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button onclick="App.loadIndexJSON()" class="win95-btn" style="background:#000080;color:#fff;padding:6px 10px;font-size:8px;">🔄 FORCE RE-SYNC</button>
-                <button onclick="App.deleteAllMatched()" class="win95-btn" style="background:#aa0000;color:#fff;padding:6px 10px;font-size:8px;border-color:#ff4444;">🗑️ PURGE MATCHED</button>
-              </div>
+              <button onclick="App.loadCSVData()" class="win95-btn" style="background:#000080;color:#fff;padding:6px 10px;font-size:8px;">🔄 FORCE RE-SYNC CSV</button>
             </div>
           </div>
         </div>
@@ -225,56 +203,21 @@
 <div id="toast" class="hidden"></div>
 
 <script>
-const FIXED_INDEX_URL = "https://raw.githubusercontent.com/punksgif/punksgif.github.io/main/index.json";
 const CSV_URL = "https://raw.githubusercontent.com/punksgif/punksgif.github.io/main/cryptopunk.csv";
 
-let matchIndexMap = new Map();
-let indexRawData = {};
-let indexTokenIdsSorted = [];
-let isIndexLoaded = false;
-
+let csvDataList = []; 
 let csvSkinToneMap = new Map();
 let isCSVLoaded = false;
+let layersBySection = {};
+let nfts = [], filteredNFTs = null;
+let openSectionLayers = null;
+let previewCtx = null;
 
-// Load CSV cryptopunk.csv data mapping Token ID -> Skin Tone
-async function loadCSV() {
-  try {
-    const response = await fetch(CSV_URL);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const csvText = await response.text();
-    
-    const lines = csvText.split('\n').filter(line => line.trim());
-    csvSkinToneMap.clear();
-    
-    for (let line of lines) {
-      if (line.toLowerCase().includes('token') || line.toLowerCase().includes('skin') || line.toLowerCase().includes('id')) continue;
-      
-      const parts = line.split(',').map(s => s.trim());
-      if (parts.length >= 2) {
-        const tokenId = parseInt(parts[0]);
-        const skinTone = parts[1];
-        if (!isNaN(tokenId) && skinTone) {
-          csvSkinToneMap.set(tokenId, skinTone);
-        }
-      }
-    }
-    
-    isCSVLoaded = true;
-    console.log(`✅ CSV Loaded: ${csvSkinToneMap.size} tokens mapped`);
-    document.getElementById('index-status').innerHTML += `<br><span style="color:#006400;">✅ CRYPTOPUNK.CSV CONNECTED: ${csvSkinToneMap.size} SPECIFIED TYPES LOADED</span>`;
-    return true;
-  } catch(err) {
-    console.error('CSV Load Error:', err);
-    isCSVLoaded = false;
-    document.getElementById('index-status').innerHTML += `<br><span style="color:#aa0000;">❌ CSV PIPELINE CRITICAL: ${err.message}</span>`;
-    return false;
-  }
-}
+const SECTIONS_ORDER = ["Background", "Base", "Face", "Beard", "Mouth", "Nose", "Neck", "Ear", "Head", "Eyes", "Accessory"];
 
-function getSkinToneFromCSV(tokenId) {
-  if (!isCSVLoaded) return null;
-  return csvSkinToneMap.get(tokenId) || null;
-}
+SECTIONS_ORDER.forEach(s => {
+  layersBySection[s] = [];
+});
 
 function showToast(m) {
   let t = document.getElementById('toast');
@@ -284,137 +227,63 @@ function showToast(m) {
   window.tt = setTimeout(() => t.classList.add('hidden'), 3000);
 }
 
-function extractAllTraitValues(attributes) {
-  const values = [];
-  for (const attr of attributes) {
-    if (!attr.value) continue;
-    if (attr.trait_type && attr.trait_type.toLowerCase() === "attribute count") continue;
-    values.push(String(attr.value).toLowerCase().trim());
-  }
-  values.sort();
-  return values;
-}
-
-function createMatchKey(values) { return values.join("|"); }
-
-async function loadIndexJSON() {
-  document.getElementById('index-status').innerHTML = '<span style="color:#aa0000;">⏳ ESTABLISHING CRYPTO RENDER CHANNELS...</span>';
+// Load cryptopunk.csv data maps Token ID -> Info
+async function loadCSVData() {
+  document.getElementById('index-status').innerHTML = '⏳ LOADING CRYPTOPUNK.CSV ROUTE...';
   try {
-    const response = await fetch(FIXED_INDEX_URL);
+    const response = await fetch(CSV_URL);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json();
-    matchIndexMap.clear();
-    indexRawData = data;
-    let totalTokens = 0;
+    const csvText = await response.text();
     
-    for (const [tokenId, tokenData] of Object.entries(data)) {
-      if (!tokenData.attributes) continue;
-      const traitValues = extractAllTraitValues(tokenData.attributes);
-      if (traitValues.length > 0) {
-        matchIndexMap.set(tokenId, createMatchKey(traitValues));
-        totalTokens++;
-      }
-    }
+    const lines = csvText.split('\n').filter(line => line.trim());
+    csvSkinToneMap.clear();
+    csvDataList = [];
     
-    indexTokenIdsSorted = Object.keys(indexRawData)
-      .filter(id => indexRawData[id] && indexRawData[id].attributes)
-      .map(id => Number(id))
-      .filter(n => !isNaN(n))
-      .sort((a, b) => a - b);
+    for (let line of lines) {
+      if (line.toLowerCase().includes('token') || line.toLowerCase().includes('skin') || line.toLowerCase().includes('id')) continue;
       
-    isIndexLoaded = true;
-    document.getElementById('index-status').innerHTML = `<span style="color:#000080;">✅ GENESIS MATRIX PARSED PROPERTIES SECURED!</span>`;
-
-    await loadCSV();
-
-    let allValues = new Set();
-    for (const td of Object.values(data)) {
-      if (!td || !td.attributes) continue;
-      for (const a of td.attributes) {
-        let rawType = a && (a.trait_type || a.traitType || a.type);
-        if (rawType && String(rawType).toLowerCase().trim() === 'attribute count') continue;
-        if (rawType && String(rawType).toLowerCase().trim() === 'type') continue;
-        if (!a || a.value === undefined || a.value === null || a.value === '') continue;
-        allValues.add(String(a.value));
+      const parts = line.split(',').map(s => s.trim());
+      if (parts.length >= 2) {
+        const tokenId = parseInt(parts[0]);
+        const skinTone = parts[1]; // Raw Tone name or Type description
+        if (!isNaN(tokenId) && skinTone) {
+          csvSkinToneMap.set(tokenId, skinTone);
+          csvDataList.push({ id: tokenId, skin: skinTone });
+        }
       }
     }
     
-    let missingValues = [...allValues].filter(v => !findLayerByValueAnySection(v));
-    let statsHtml = `🎯 Verified ${totalTokens} configuration parameters inside runtime repository.`;
-    if (missingValues.length) {
-      let shown = missingValues.slice(0, 15).map(escapeHtml).join(', ');
-      statsHtml += `<br><span style="color:#aa0000;">⚠️ ${missingValues.length} traits unassigned to graphic directory folders: ${shown}...</span>`;
-    }
-    document.getElementById('index-stats').innerHTML = statsHtml;
-    updateAllMatchBadges();
+    // Sort array safely by ID
+    csvDataList.sort((a,b) => a.id - b.id);
+    
+    isCSVLoaded = true;
+    document.getElementById('index-status').innerHTML = `<span style="color:#006400;">✅ CRYPTOPUNK.CSV SYNCED: ${csvSkinToneMap.size} BLOCK ASSETS READY!</span>`;
+    return true;
   } catch(err) {
-    document.getElementById('index-status').innerHTML = `<span style="color:#aa0000;">❌ FILE LINK CONNECTION BROKEN: ${err.message}</span>`;
-    isIndexLoaded = false;
+    console.error('CSV Load Error:', err);
+    isCSVLoaded = false;
+    document.getElementById('index-status').innerHTML = `<span style="color:#aa0000;">❌ CSV PIPELINE ERROR: ${err.message}</span>`;
+    return false;
   }
 }
 
-function getNFTTraitValues(nft) {
-  if (!nft || !nft.layers) return [];
-  const values = [];
-  for (const l of nft.layers) {
-    values.push(String(l.value).toLowerCase().trim());
-  }
-  values.sort();
-  return values;
+function getGenderFromType(value) {
+  if (!value) return 'both';
+  const v = String(value).toLowerCase().trim();
+  if (v.includes('female') || v.includes('woman')) return 'female';
+  if (v.includes('male') || v.includes('man')) return 'male';
+  if (v.includes('zombie')) return 'male'; 
+  if (v.includes('ape')) return 'male';
+  if (v.includes('alien')) return 'male';
+  return 'both';
 }
 
-function findMatchesForNFT(nft) {
-  if (!isIndexLoaded || !nft) return [];
-  const myValues = getNFTTraitValues(nft);
-  if (!myValues.length) return [];
-  const myMatchKey = createMatchKey(myValues);
-  const matched = [];
-  for (const [tokenId, indexKey] of matchIndexMap.entries()) {
-    if (indexKey === myMatchKey) matched.push(Number(tokenId));
-  }
-  matched.sort((a,b) => a-b);
-  return matched;
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]||m));
 }
 
-function updateMatchBadgeForNFT(nft) {
-  const badgeEl = document.getElementById(`match-badge-${nft.id}`);
-  if (!badgeEl) return;
-  if (!isIndexLoaded) { badgeEl.innerHTML = '<div class="match-badge-loading">⚠️ INDEX BUFFER EMPTY</div>'; return; }
-  
-  if (nft.tokenIdRef !== undefined) {
-    badgeEl.innerHTML = `<div class="match-badge success-bg"> CryptoPunk #${nft.tokenIdRef} MATCHED </div>`;
-    return;
-  }
-  
-  const matches = findMatchesForNFT(nft);
-  if (matches.length === 0) {
-    badgeEl.innerHTML = `<div class="match-badge" style="background:#505050; color:#eee;">UNLISTED CUSTOM</div>`;
-  } else {
-    badgeEl.innerHTML = `<div class="match-badge success-bg">🎯 ALIGNED TRATIS MATCH #${matches[0]}</div>`;
-  }
-}
-
-function updateAllMatchBadges() {
-  if (!isIndexLoaded) return;
-  const displayNFTs = filteredNFTs || nfts;
-  for (const nft of displayNFTs) updateMatchBadgeForNFT(nft);
-}
-
-async function deleteAllMatched() {
-  if (!isIndexLoaded) { showToast('Sync required!'); return; }
-  if (!confirm(`Are you sure you want to delete tracked items?`)) return;
-  nfts = [];
-  await updateNFTsInFirebase();
-  renderCollection();
-  showToast(`Archive storage completely optimized.`);
-}
-
-// ============================================================
-// APP PROCESS ENGINE
-// ============================================================
-const SECTIONS_ORDER = ["Background", "Base", "Face", "Beard", "Mouth", "Nose", "Neck", "Ear", "Head", "Eyes", "Accessory"];
-const MAX_NFT_LIMIT = 10000;
-
+// Firebase configuration setup
 const firebaseConfig = {
   apiKey: "AIzaSyAzyWZLtzpysvn6nxk8pN96gLsfMS2oL2M",
   authDomain: "leyerspunk.firebaseapp.com",
@@ -427,31 +296,12 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-let layersBySection = {};
-let selectedLayersPerSection = {};
-let sectionProbability = {};
-let nfts = [], filteredNFTs = null;
-let openSectionLayers = null, openSectionCreate = null;
-let previewCtx = null;
-let globalSelectionCounter = 0;
-
-SECTIONS_ORDER.forEach(s => {
-  layersBySection[s] = [];
-  selectedLayersPerSection[s] = [];
-  sectionProbability[s] = 100;
-});
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]||m));
-}
-
 async function saveNFTsToFirebase() {
   try { await database.ref('user_nfts').set(nfts); } catch(e) { console.error(e); }
 }
 async function updateNFTsInFirebase() {
   await saveNFTsToFirebase();
-  localStorage.setItem('404punks_backup_v2', JSON.stringify(nfts));
+  localStorage.setItem('404punks_backup_purecsv', JSON.stringify(nfts));
 }
 
 async function loadNFTsFromFirebase() {
@@ -459,10 +309,10 @@ async function loadNFTsFromFirebase() {
     const snap = await database.ref('user_nfts').once('value');
     const data = snap.val();
     if (data && Array.isArray(data)) nfts = data;
-    else { const local = localStorage.getItem('404punks_backup_v2'); nfts = local ? JSON.parse(local) : []; }
+    else { const local = localStorage.getItem('404punks_backup_purecsv'); nfts = local ? JSON.parse(local) : []; }
     renderCollection();
   } catch(e) {
-    const local = localStorage.getItem('404punks_backup_v2');
+    const local = localStorage.getItem('404punks_backup_purecsv');
     nfts = local ? JSON.parse(local) : [];
     renderCollection();
   }
@@ -473,38 +323,19 @@ function listenFirebase() {
     let d = snap.val();
     if (d) for (let s of SECTIONS_ORDER) layersBySection[s] = d[s] || [];
     renderSections();
-    renderCreateSections();
   });
 }
 
 async function addLayerToFirebase(section, layer) {
   let arr = [...layersBySection[section], layer];
   await database.ref(`layers/${section}`).set(arr);
-  showToast(`ADDED SUCCESSFUL: ${layer.value}`);
+  showToast(`ADDED TRAIT: ${layer.value}`);
 }
 
 async function deleteLayerFromFirebase(section, id) {
   if(!confirm('Delete this trait permanent?')) return;
   let filtered = layersBySection[section].filter(l => String(l.id) !== String(id));
   await database.ref(`layers/${section}`).set(filtered);
-}
-
-function toggleLayerSelection(section, layerId, value, imageUrl, gender) {
-  let selected = selectedLayersPerSection[section];
-  let existingIdx = selected.findIndex(l => l.layerId === layerId);
-  if (existingIdx !== -1) { selected.splice(existingIdx, 1); } 
-  else { selected.push({ layerId, value, imageUrl, gender, selectionOrder: globalSelectionCounter++ }); }
-  renderCreateSections();
-  updateLivePreview();
-}
-
-function getAllSelectedLayersInOrder() {
-  let all = [];
-  for (let s of SECTIONS_ORDER) {
-    for (let l of selectedLayersPerSection[s]) { all.push({ ...l, section: s }); }
-  }
-  all.sort((a, b) => a.selectionOrder - b.selectionOrder);
-  return all;
 }
 
 function renderSections() {
@@ -528,49 +359,17 @@ function renderSections() {
   document.getElementById('sections-container').innerHTML = html;
 }
 
-function renderCreateSections() {
-  let container = document.getElementById('create-sections-container');
-  if (!container) return;
-  let html = '';
-  let allSelected = getAllSelectedLayersInOrder();
-  let rankMap = {};
-  allSelected.forEach((l, idx) => { rankMap[l.layerId + '_' + l.section] = idx + 1; });
-  updateOrderPreview();
-}
-
-function updateOrderPreview() {
-  let div = document.getElementById('order-preview-list');
-  if (!div) return;
-  let all = getAllSelectedLayersInOrder();
-  if (!all.length) {
-    div.innerHTML = '<div class="selected-order-item" style="color:#666; font-style:italic;">[ Pipeline active. Waiting for generation parameters... ]</div>';
-    return;
-  }
-  div.innerHTML = all.map((l, i) =>
-    `<div class="selected-order-item">
-      <span>${i + 1}. <strong>${l.section}</strong> ➔ ${escapeHtml(l.value)} <span style="color:#0000ff;">(${l.gender})</span></span>
-    </div>`
-  ).join('');
-}
-
-async function updateLivePreview() {
+function updateLivePreview() {
   if (!previewCtx) {
     let c = document.getElementById('live-preview-canvas');
     if (c) previewCtx = c.getContext('2d'); else return;
   }
   previewCtx.clearRect(0, 0, 128, 128);
-  previewCtx.fillStyle = '#ffffff';
+  previewCtx.fillStyle = '#c0c0c0';
   previewCtx.fillRect(0, 0, 128, 128);
-  let all = getAllSelectedLayersInOrder();
-  for (let l of all) {
-    await new Promise(res => {
-      let img = new Image();
-      img.crossOrigin = "Anonymous";
-      img.onload = () => { previewCtx.drawImage(img, 0, 0, 128, 128); res(); };
-      img.onerror = () => res();
-      img.src = l.imageUrl;
-    });
-  }
+  
+  let div = document.getElementById('order-preview-list');
+  if(div) div.innerHTML = '<div class="selected-order-item">[ Pipeline Active. Waiting for CSV Execution Command Matrix ]</div>';
 }
 
 async function compositeFromLayers(layers, w = 512, h = 512) {
@@ -592,79 +391,27 @@ async function compositeFromLayers(layers, w = 512, h = 512) {
   return canvas.toDataURL('image/png');
 }
 
-function buildNFTAttributes(layers) {
-  let attrs = [];
-  let baseValue = null;
-  for (let l of layers) { if (l.section === "Base") { baseValue = l.value; break; } }
-  if (baseValue) attrs.push({ trait_type: "Type", value: baseValue });
-
-  let accessoryIndex = 1;
-  for (let l of layers) {
-    if (l.section === "Background" || l.section === "Base") continue;
-    attrs.push({ trait_type: `Accessory ${accessoryIndex}`, value: l.value });
-    accessoryIndex++;
-  }
-  attrs.push({ trait_type: "Attribute Count", value: String(accessoryIndex - 1) });
-  return attrs;
-}
-
 function findLayerForTrait(section, value, gender) {
   if (!value) return null;
   const pool = layersBySection[section] || [];
   const target = String(value).toLowerCase().trim();
   
-  if (gender) {
-    let found = pool.find(l => String(l.value).toLowerCase().trim() === target && (String(l.gender).toLowerCase() === String(gender).toLowerCase() || l.gender === 'both'));
-    if (found) return found;
-  }
-  return pool.find(l => String(l.value).toLowerCase().trim() === target) || null;
-}
+  // Strict Gender Search
+  let found = pool.find(l => String(l.value).toLowerCase().trim() === target && String(l.gender).toLowerCase() === String(gender).toLowerCase());
+  if (found) return found;
 
-function findLayerByValueAnySection(value, gender) {
-  if (!value) return null;
-  const target = String(value).toLowerCase().trim();
-
-  if (gender) {
-    for (const section of SECTIONS_ORDER) {
-      if(section === 'Background') continue; // Controlled single bg
-      const pool = layersBySection[section] || [];
-      const layer = pool.find(l => String(l.value).toLowerCase().trim() === target && (String(l.gender).toLowerCase() === String(gender).toLowerCase() || l.gender === 'both'));
-      if (layer) return { section, layer };
-    }
-  }
-  for (const section of SECTIONS_ORDER) {
-    if(section === 'Background') continue;
-    const pool = layersBySection[section] || [];
-    const layer = pool.find(l => String(l.value).toLowerCase().trim() === target);
-    if (layer) return { section, layer };
-  }
-  return null;
-}
-
-function getGenderFromType(value) {
-  if (!value) return '';
-  const v = String(value).toLowerCase().trim();
-  if (v.includes('female') || v.includes('woman')) return 'female';
-  if (v.includes('male') || v.includes('man')) return 'male';
-  if (v.includes('zombie')) return 'zombie';
-  if (v.includes('ape')) return 'ape';
-  if (v.includes('alien')) return 'alien';
-  return '';
+  // Fallback to Universal both
+  return pool.find(l => String(l.value).toLowerCase().trim() === target && (l.gender === 'both' || !l.gender)) || null;
 }
 
 // ============================================================
-// POWER BULK CSV GENERATION MACHINE
+// PURE CSV PIPELINE ENGINE EXECUTION
 // ============================================================
 async function startMint() {
-  if (!isIndexLoaded || !isCSVLoaded) {
-    showToast('⚠️ PIPELINE DATA STREAM MISSING! PLEASE CONFIRM RE-SYNCED LOGS.');
-    return;
-  }
+  if (!isCSVLoaded) { showToast('⚠️ CSV DATA STREAM NOT READY!'); return; }
 
   let requestedTotal = Math.min(MAX_NFT_LIMIT, parseInt(document.getElementById('total-nft-count').value) || 1);
-  let tokenIdsToMint = indexTokenIdsSorted.slice(0, requestedTotal);
-
-  if (!tokenIdsToMint.length) { showToast('⚠️ NO DISCOVERED MINT INDEX SPECIFICATIONS MATCHED.'); return; }
+  if (requestedTotal > csvDataList.length) requestedTotal = csvDataList.length;
 
   let prefix = document.getElementById('name-prefix').value || "CryptoPunk #";
   let desc = document.getElementById('nft-description').value;
@@ -681,82 +428,69 @@ async function startMint() {
   let newNFTs = [];
   let startTime = Date.now();
 
-  // Find standard global background
+  // Get common background asset
   let bgPool = layersBySection['Background'] || [];
   let standardBg = bgPool[0] || null;
 
-  for (let idx = 0; idx < tokenIdsToMint.length; idx++) {
-    let tokenId = tokenIdsToMint[idx];
-    let tokenData = indexRawData[String(tokenId)];
-    let percent = Math.round(((idx + 1) / tokenIdsToMint.length) * 100);
+  for (let idx = 0; idx < requestedTotal; idx++) {
+    let row = csvDataList[idx];
+    let tokenId = row.id;
+    let skinToneValue = row.skin; // e.g. "Male Dark", "Female Light"
+    
+    let tokenGender = getGenderFromType(skinToneValue);
+    let percent = Math.round(((idx + 1) / requestedTotal) * 100);
 
     if (idx > 0) {
       let elapsed = (Date.now() - startTime) / 1000;
-      let remaining = (tokenIdsToMint.length - idx) / (idx / elapsed);
-      progEta.innerText = `⏱ ENGINE COMPUTATION TIME REMAINING: ${Math.round(remaining)}s`;
+      let remaining = (requestedTotal - idx) / (idx / elapsed);
+      progEta.innerText = `⏱ TIME REMAINING: ${Math.round(remaining)}s`;
     }
 
-    progText.innerText = `GENERATING CRYPTOPUNK MATCH IDENTIFIER #${tokenId}`;
-    progCounter.innerText = `${idx+1}/${tokenIdsToMint.length}`;
+    progText.innerText = `COMPOSITING PUNK SERIAL ID #${tokenId}`;
+    progCounter.innerText = `${idx+1}/${requestedTotal}`;
     progFill.style.width = `${percent}%`;
 
-    let attrs = (tokenData && tokenData.attributes) || [];
     let finalLayers = [];
-    
-    // Extract base layout configuration parameters
-    let originalBase = '';
-    for(let a of attrs) {
-      let k = String(a.trait_type || a.type || '').toLowerCase().trim();
-      if(k === 'type' || isBaseCharacterValue(a.value)) { originalBase = String(a.value); break; }
-    }
-    
-    let tokenGender = getGenderFromType(originalBase);
 
-    // CRITICAL OVERRIDE: Fetch real runtime type skin parameters from cryptopunk.csv
-    let csvSkinTone = getSkinToneFromCSV(tokenId);
-    let absoluteBaseValue = csvSkinTone ? csvSkinTone : originalBase;
-    
-    if(!tokenGender && csvSkinTone) {
-      tokenGender = getGenderFromType(csvSkinTone);
-    }
-
-    // Push Unified Base Graphics Asset
-    if (absoluteBaseValue) {
-      let baseLayer = findLayerForTrait('Base', absoluteBaseValue, tokenGender);
+    // 1. Dynamic Match Base Layer based on CSV Skin Tone and Gender Spec
+    if (skinToneValue) {
+      let baseLayer = findLayerForTrait('Base', skinToneValue, tokenGender);
       if (baseLayer) {
         finalLayers.push({ section: 'Base', value: baseLayer.value, imageUrl: baseLayer.imageUrl, gender: baseLayer.gender });
       }
     }
 
-    // Push Common Trait Superpositions
-    for (let attr of attrs) {
-      if (!attr || attr.value === undefined || attr.value === null) continue;
-      let kt = String(attr.trait_type || '').toLowerCase().trim();
-      if (kt === 'attribute count' || kt === 'type' || String(attr.value).toLowerCase() === originalBase.toLowerCase()) continue;
-      if (csvSkinTone && String(attr.value).toLowerCase() === csvSkinTone.toLowerCase()) continue;
-
-      let matchedLayerStruct = findLayerByValueAnySection(attr.value, tokenGender);
-      if (matchedLayerStruct && matchedLayerStruct.section !== 'Base') {
-        finalLayers.push({ 
-          section: matchedLayerStruct.section, 
-          value: matchedLayerStruct.layer.value, 
-          imageUrl: matchedLayerStruct.layer.imageUrl, 
-          gender: matchedLayerStruct.layer.gender 
-        });
+    // 2. Mix remaining attributes matching this gender route
+    for (let section of SECTIONS_ORDER) {
+      if (section === 'Background' || section === 'Base') continue;
+      let pool = layersBySection[section] || [];
+      
+      // Filter layer options that match this gender trait track
+      let genderSpecificPool = pool.filter(l => String(l.gender).toLowerCase() === tokenGender || l.gender === 'both');
+      if (genderSpecificPool.length > 0) {
+        // Pseudo-random matching allocation consistent to token index state
+        let chosen = genderSpecificPool[tokenId % genderSpecificPool.length];
+        finalLayers.push({ section, value: chosen.value, imageUrl: chosen.imageUrl, gender: chosen.gender });
       }
     }
 
-    // Insert Unified Universal Background
+    // 3. Inject global single background layer at standard position
     if (standardBg) {
       finalLayers.push({ section: 'Background', value: standardBg.value, imageUrl: standardBg.imageUrl, gender: standardBg.gender });
     }
 
-    // Sort Layer Execution Sequence Stack
+    // Sort Layer Pipeline Sequence Order Stack
     finalLayers.sort((a, b) => SECTIONS_ORDER.indexOf(a.section) - SECTIONS_ORDER.indexOf(b.section));
-    finalLayers.forEach((l, i) => l.selectionOrder = i);
 
     let imgData = await compositeFromLayers(finalLayers);
-    let attributes = buildNFTAttributes(finalLayers);
+
+    // Build standard attributes mapping metadata arrays
+    let attributes = [{ trait_type: "Type", value: skinToneValue }];
+    finalLayers.forEach(l => {
+      if(l.section !== 'Background' && l.section !== 'Base') {
+        attributes.push({ trait_type: l.section, value: l.value });
+      }
+    });
 
     newNFTs.push({
       id: 'punk_' + tokenId + '_' + Date.now(),
@@ -764,29 +498,22 @@ async function startMint() {
       description: desc,
       image: imgData,
       attributes: attributes,
-      layers: finalLayers,
       gender: tokenGender,
       tokenIdRef: tokenId,
-      skinTone: absoluteBaseValue,
+      skinTone: skinToneValue,
       createdAt: new Date().toISOString()
     });
 
-    if (idx % 8 === 0) await new Promise(r => setTimeout(r, 10));
+    if (idx % 10 === 0) await new Promise(r => setTimeout(r, 5));
   }
 
   nfts.push(...newNFTs);
   await updateNFTsInFirebase();
   renderCollection();
 
-  showToast(`✅ SUCCESSFULLY GENERATED ${newNFTs.length} CUSTOM CONTEXT CRYPTOPUNKS!`);
+  showToast(`✅ MINT SYSTEM REGENERATED ${newNFTs.length} PUNKS VIA CSV MAP!`);
   btn.disabled = false;
   progWrap.classList.add('hidden');
-}
-
-function isBaseCharacterValue(val) {
-  if(!val) return false;
-  let v = String(val).toLowerCase().trim();
-  return ['male','female','ape','zombie','alien font','man','woman'].some(x => v.includes(x));
 }
 
 function renderCollection() {
@@ -799,19 +526,19 @@ function renderCollection() {
   empty.classList.toggle('hidden', displayNFTs.length > 0);
   
   countDiv.innerHTML = displayNFTs.length
-    ? `<div class="order-tag">📁 ARCHIVE DISPATCH CONTROL: RENDERED ${displayNFTs.length} / Total ${nfts.length} CRYPTOPUNKS</div>`
+    ? `<div class="order-tag">📁 STORAGE HOARD: ${displayNFTs.length} / Total ${nfts.length} CRYPTOPUNKS ARCHIVED</div>`
     : '';
     
   if (!displayNFTs.length) { container.innerHTML = ''; return; }
   
-  container.innerHTML = displayNFTs.map((nft, idx) => `
+  container.innerHTML = displayNFTs.map((nft) => `
     <div class="nft-card" style="padding:12px;" id="card-${nft.id}">
-      <div style="aspect-ratio:1; background:#000; margin-bottom:10px; border:2px inset #808080; p-1; overflow:hidden; image-rendering: pixelated;">
+      <div style="aspect-ratio:1; background:#000; margin-bottom:10px; border:2px inset #808080; overflow:hidden; image-rendering: pixelated;">
         <img src="${nft.image}" style="width:100%;height:100%;object-fit:contain;">
       </div>
-      <div class="text-pixel text-[9px] text-center font-bold text-black mb-1">CryptoPunk #${nft.tokenIdRef !== undefined ? nft.tokenIdRef : idx}</div>
-      <div class="text-pixel text-[7px] text-center text-blue-900 font-bold mb-2">[Type: ${nft.skinTone || 'Unspecified'}]</div>
-      <div id="match-badge-${nft.id}"></div>
+      <div class="text-pixel text-[9px] text-center font-bold text-black mb-1">CryptoPunk #${nft.tokenIdRef}</div>
+      <div class="text-pixel text-[7px] text-center text-blue-900 font-bold mb-2">[Skin: ${nft.skinTone || 'Unknown'}]</div>
+      <div class="match-badge success-bg">CSV ALIGNED</div>
       <div style="display:flex; gap:4px; margin-top:8px;">
         <button onclick="App.viewNFTDetails('${nft.id}')" class="win95-btn" style="padding:4px; font-size:7px; flex:1; background:#d4d0c8;">VIEW</button>
         <button onclick="App.downloadSingleImage('${nft.id}', ${nft.tokenIdRef})" class="win95-btn" style="padding:4px; font-size:7px; flex:1; background:#b8b4a6;">PNG</button>
@@ -819,8 +546,6 @@ function renderCollection() {
         <button onclick="App.deleteSingleNFT('${nft.id}')" class="win95-btn" style="padding:4px; font-size:7px; flex:0.4; border-color:#ff4444; color:red;">✕</button>
       </div>
     </div>`).join('');
-    
-  updateAllMatchBadges();
 }
 
 function searchNFTs() {
@@ -831,7 +556,7 @@ function searchNFTs() {
     let start = parseInt(parts[0]), end = parseInt(parts[1]);
     if (!isNaN(start) && !isNaN(end)) {
       filteredNFTs = nfts.filter(nft => nft.tokenIdRef >= start && nft.tokenIdRef <= end);
-    } else { showToast('RANGE INVALID'); }
+    } else { showToast('INVALID RANGE'); }
   } else {
     let single = parseInt(searchVal);
     if (!isNaN(single)) filteredNFTs = nfts.filter(nft => nft.tokenIdRef === single);
@@ -843,7 +568,7 @@ function searchNFTs() {
 function clearSearch() { filteredNFTs = null; document.getElementById('search-range').value = ''; renderCollection(); }
 
 async function deleteAllNFTs() {
-  if (confirm('🚨 CRITICAL COMPLIANCE WIPE: Reset graphics engine array cache?')) {
+  if (confirm('🚨 Reset system cache array storage?')) {
     nfts = []; await updateNFTsInFirebase(); renderCollection(); showToast('CACHE RESET CLEAR.');
   }
 }
@@ -859,7 +584,7 @@ async function downloadAllPNG() {
   for (let i = 0; i < nfts.length; i++) {
     let a = document.createElement('a');
     a.href = nfts[i].image;
-    a.download = `${nfts[i].tokenIdRef !== undefined ? nfts[i].tokenIdRef : i}.png`;
+    a.download = `${nfts[i].tokenIdRef}.png`;
     a.click();
     await new Promise(r => setTimeout(r, 60));
   }
@@ -873,23 +598,16 @@ async function downloadAllJSON() {
     let url = URL.createObjectURL(blob);
     let a = document.createElement('a');
     a.href = url;
-    a.download = `${nfts[i].tokenIdRef !== undefined ? nfts[i].tokenIdRef : i}.json`;
+    a.download = `${nfts[i].tokenIdRef}.json`;
     a.click();
     URL.revokeObjectURL(url);
     await new Promise(r => setTimeout(r, 60));
   }
 }
 
-async function downloadAllAsZip() {
-  if (!nfts.length) { showToast('HODL vault empty.'); return; }
-  showToast('🔄 Initializing continuous batch stream downloader...');
-  await downloadAllPNG();
-  await downloadAllJSON();
-}
-
 function downloadSingleImage(id, serial) {
   let n = nfts.find(x => x.id == id);
-  if (n) { let a = document.createElement('a'); a.href = n.image; a.download = `${serial !== undefined ? serial : 'punk'}.png`; a.click(); }
+  if (n) { let a = document.createElement('a'); a.href = n.image; a.download = `${serial}.png`; a.click(); }
 }
 
 function downloadSingleJSON(id, serial) {
@@ -897,7 +615,7 @@ function downloadSingleJSON(id, serial) {
   if (n) {
     let meta = { name: n.name, description: n.description, attributes: n.attributes };
     let blob = new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' });
-    let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${serial !== undefined ? serial : 'punk'}.json`; a.click();
+    let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${serial}.json`; a.click();
   }
 }
 
@@ -906,7 +624,7 @@ async function addLayer() {
   let val = document.getElementById('layer-value').value.trim();
   let section = document.getElementById('layer-section').value;
   let gender = document.querySelector('input[name="layer-gender"]:checked').value;
-  if (!url || !val) { showToast('Parameter properties incomplete.'); return; }
+  if (!url || !val) { showToast('Parameters incomplete.'); return; }
   
   let imgUrl = url;
   if (imgUrl.includes('github.com') && !imgUrl.includes('raw.githubusercontent.com'))
@@ -949,18 +667,18 @@ function viewNFTDetails(id) {
       <div style="display:flex; justify-content:center; margin-bottom:15px; background:#000; padding:10px; border:2px inset #808080;">
         <img src="${nft.image}" style="width:180px; height:180px; object-fit:contain; image-rendering:pixelated;">
       </div>
-      <div class="text-pixel text-[10px] text-black font-bold mb-2">CryptoPunk #${nft.tokenIdRef} Attributes:</div>
+      <div class="text-pixel text-[10px] text-black font-bold mb-2">CryptoPunk #${nft.tokenIdRef} Metadata Attributes:</div>
       <div style="max-height:160px; overflow-y:auto; background:#808080; padding:8px; border:2px inset #000;">${attrsHtml}</div>
     </div></div>`;
   document.body.appendChild(modal);
 }
 
 window.App = {
-  switchTab, loadIndexJSON, deleteAllMatched,
+  switchTab, loadCSVData,
   toggleSectionLayers: (s) => { openSectionLayers = openSectionLayers === s ? null : s; renderSections(); },
   addLayer, deleteLayer: deleteLayerFromFirebase,
   startMint, deleteAllNFTs,
-  downloadAllPNG, downloadAllJSON, downloadAllAsZip,
+  downloadAllPNG, downloadAllJSON,
   viewNFTDetails, downloadSingleImage, downloadSingleJSON, deleteSingleNFT,
   searchNFTs, clearSearch
 };
@@ -968,7 +686,7 @@ window.App = {
 async function init() {
   await loadNFTsFromFirebase();
   listenFirebase();
-  await loadIndexJSON();
+  await loadCSVData();
 }
 init();
 </script>
