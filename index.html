@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>404 PUNKS // UNIVERSAL MATCH ENGINE</title>
+  <title>404 PUNKS // CSV NFT GENERATOR</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -72,13 +72,16 @@
       display: flex; justify-content: space-between; align-items: center;
       font-family: 'Press Start 2P', monospace; font-size: 7px;
     }
+    .csv-preview {
+      background: #d4d0c8; border: 2px inset #808080; padding: 10px; max-height: 300px; overflow: auto; font-family: 'VT323', monospace; font-size: 14px; white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
 
 <div class="win95-desktop">
   <div class="win95-window">
-    <div class="win95-titlebar"><span>📁 404 PUNKS - UNIVERSAL MATCH ENGINE</span><button onclick="location.reload()">✕</button></div>
+    <div class="win95-titlebar"><span>📁 404 PUNKS - CSV NFT GENERATOR</span><button onclick="location.reload()">✕</button></div>
     <div style="background: #c0c0c0; padding: 8px 16px 0 16px;">
       <div style="display: flex; gap: 4px; flex-wrap: wrap;">
         <button onclick="App.switchTab('layers')" id="tab-layers" class="win95-tab active">📂 LAYERS</button>
@@ -124,15 +127,27 @@
       <!-- CREATE TAB -->
       <div id="panel-create" class="hidden">
         <div class="win95-window" style="margin-bottom: 16px;">
-          <div class="win95-titlebar" style="background: #808080;">📜 HOW IT WORKS</div>
+          <div class="win95-titlebar" style="background: #808080;">📜 HOW IT WORKS - CSV ONLY</div>
           <div class="win95-content">
-            <div class="info-text">✓ Each NFT is built to exactly match its Token ID in index.json</div>
-            <div class="info-text">✓ Base (Skin Tone) is taken from cryptopunk.csv based on Token ID and Gender</div>
+            <div class="info-text">✓ NFTs are generated from cryptopunk.csv ONLY (no index.json needed)</div>
             <div class="info-text">✓ CSV columns: id, type, gender, skin tone, count, accessories</div>
-            <div class="info-text">✓ Skin Tone examples: Medium, Dark, Light, Albino</div>
-            <div class="info-text">✓ Gender-matched layers are used (Male layers for Male tokens, Female layers for Female tokens)</div>
+            <div class="info-text">✓ Skin Tone = Base (Medium, Dark, Light, Albino)</div>
+            <div class="info-text">✓ Accessories are matched by VALUE in your layer library</div>
+            <div class="info-text">✓ Gender-matched layers are used (Male/Female)</div>
             <div class="info-text">✓ Layer Order: Background → Base → Face → Beard → Mouth → Nose → Neck → Ear → Head → Eyes → Accessory</div>
             <div class="info-text">✓ MAX 10,000 NFTs</div>
+          </div>
+        </div>
+
+        <!-- CSV Preview -->
+        <div class="win95-window" style="margin-bottom:16px;">
+          <div class="win95-titlebar" style="background:#808080;">📄 CSV PREVIEW</div>
+          <div class="win95-content">
+            <div id="csv-preview-container" class="csv-preview">Loading CSV...</div>
+            <div class="flex gap-3 mt-3 flex-wrap">
+              <button onclick="App.loadCSVOnly()" class="win95-btn">🔄 RELOAD CSV</button>
+              <span id="csv-count" class="text-pixel text-[8px]" style="color:#000080;align-self:center;"></span>
+            </div>
           </div>
         </div>
 
@@ -164,12 +179,16 @@
 
         <!-- Mint Settings -->
         <div class="win95-window" style="margin-top: 16px;">
-          <div class="win95-titlebar" style="background: #808080;">⚙️ MINT SETTINGS</div>
+          <div class="win95-titlebar" style="background: #808080;">⚙️ MINT SETTINGS - FROM CSV</div>
           <div class="win95-content">
             <div class="flex gap-3 mb-3 flex-wrap">
               <div class="flex-1">
-                <div class="text-pixel text-[8px] mb-1">TOTAL NFTs (MAX 10,000)</div>
+                <div class="text-pixel text-[8px] mb-1">TOTAL NFTs (MAX CSV length)</div>
                 <input type="number" id="total-nft-count" min="1" max="10000" value="10" class="qty-input w-full">
+              </div>
+              <div class="flex-1">
+                <div class="text-pixel text-[8px] mb-1">START FROM TOKEN ID</div>
+                <input type="number" id="start-token-id" min="1" max="10000" value="1" class="qty-input w-full">
               </div>
               <div class="flex-1">
                 <div class="text-pixel text-[8px] mb-1">NAME PREFIX</div>
@@ -177,7 +196,7 @@
               </div>
             </div>
             <textarea id="nft-description" rows="2" class="win95-input w-full mb-3 mt-2">404 PUNKS // RETRO GLITCH COLLECTION</textarea>
-            <button id="bulk-mint-btn" onclick="App.startMint()" class="win95-btn w-full">🎯 EXACT MINT FROM INDEX.JSON + CSV</button>
+            <button id="bulk-mint-btn" onclick="App.startMintFromCSV()" class="win95-btn w-full">🎯 MINT FROM CSV</button>
             <div id="progress-wrap" class="hidden mt-3">
               <div class="flex justify-between text-pixel text-[8px] mb-1">
                 <span id="progress-text">MINTING...</span>
@@ -217,33 +236,6 @@
           </div>
         </div>
 
-        <!-- INDEX MATCH PANEL -->
-        <div class="win95-window" style="margin-bottom: 16px; overflow: hidden;">
-          <div class="win95-titlebar match-engine-header">
-            <span>🎯 UNIVERSAL MATCH ENGINE <span class="pulse-text" style="color: #ffff00;">● LIVE</span></span>
-            <span style="font-size: 8px;">v13.0</span>
-          </div>
-          <div class="win95-content" style="background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);">
-            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-              <div style="background: #000080; padding: 8px 12px; border: 2px outset #4444ff;">
-                <span style="font-family: 'Press Start 2P', monospace; font-size: 10px; color: #00ff00;">⬤</span>
-                <span style="font-family: 'Press Start 2P', monospace; font-size: 8px; color: #ffffff; margin-left: 6px;">MATCH MODE</span>
-              </div>
-              <div style="flex: 1;">
-                <div id="index-status" class="info-text" style="color: #000080; font-weight: bold;">🔄 Initializing match engine...</div>
-                <div id="index-stats" class="text-pixel text-[7px] mt-1" style="color: #006400;"></div>
-              </div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button onclick="App.loadIndexJSON()" class="win95-btn" style="background:#000080;color:#fff;padding:4px 8px;font-size:7px;">🔄 RELOAD</button>
-                <button onclick="App.deleteAllMatched()" class="win95-btn" style="background:#aa0000;color:#fff;padding:4px 8px;font-size:7px;border-color:#ff4444;">🗑️ DELETE MATCHED</button>
-              </div>
-            </div>
-            <div class="mt-2 text-pixel text-[7px]" style="color: #404040; border-top: 1px solid #808080; padding-top: 6px; margin-top: 8px;">
-              💡 Matching: Token IDs from index.json matching exact active layer combinations.
-            </div>
-          </div>
-        </div>
-
         <div id="nft-count" class="mb-3"></div>
         <div id="nft-list" class="grid-2cols"></div>
         <p id="nft-empty" class="text-center text-pixel text-xs mt-10 hidden">[ NO NFTS FOUND ]</p>
@@ -256,77 +248,13 @@
 
 <script>
 // ============================================================
-// UNIVERSAL MATCH ENGINE
+// CSV NFT GENERATOR - NO INDEX.JSON NEEDED
 // ============================================================
-const FIXED_INDEX_URL = "https://raw.githubusercontent.com/punksgif/punksgif.github.io/main/index.json";
 const CSV_URL = "https://raw.githubusercontent.com/punksgif/punksgif.github.io/main/cryptopunk.csv";
 
-let matchIndexMap = new Map();
-let indexRawData = {};
-let indexTokenIdsSorted = [];
-let isIndexLoaded = false;
-
-// CSV Data: Token ID -> { gender, skinTone, type, count, accessories }
+let csvData = [];
 let csvDataMap = new Map();
 let isCSVLoaded = false;
-
-// ============================================================
-// CSV LOADER - Load cryptopunk.csv
-// Format: id,type,gender,skin tone,count,accessories
-// ============================================================
-async function loadCSV() {
-  try {
-    const response = await fetch(CSV_URL);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const csvText = await response.text();
-    
-    csvDataMap.clear();
-    const lines = csvText.split('\n').filter(line => line.trim());
-    
-    // Skip header if exists
-    let startIndex = 0;
-    if (lines[0].toLowerCase().includes('id') && lines[0].toLowerCase().includes('type')) {
-      startIndex = 1;
-    }
-    
-    for (let i = startIndex; i < lines.length; i++) {
-      const parts = lines[i].split(',').map(s => s.trim());
-      if (parts.length < 6) continue;
-      
-      const tokenId = parseInt(parts[0]);
-      const type = parts[1] || '';
-      const gender = parts[2] || '';
-      const skinTone = parts[3] || '';
-      const count = parseInt(parts[4]) || 0;
-      const accessories = parts.slice(5).join(',') || '';
-      
-      if (!isNaN(tokenId) && skinTone) {
-        csvDataMap.set(tokenId, {
-          type: type,
-          gender: gender.toLowerCase(),
-          skinTone: skinTone,
-          count: count,
-          accessories: accessories
-        });
-      }
-    }
-    
-    isCSVLoaded = true;
-    console.log(`✅ CSV Loaded: ${csvDataMap.size} entries`);
-    document.getElementById('index-status').innerHTML += `<br><span style="color:#006400;">✅ CSV LOADED: ${csvDataMap.size} entries</span>`;
-    return true;
-  } catch(err) {
-    console.error('CSV Load Error:', err);
-    isCSVLoaded = false;
-    document.getElementById('index-status').innerHTML += `<br><span style="color:#aa0000;">❌ CSV FAILED: ${err.message}</span>`;
-    return false;
-  }
-}
-
-function getCSVData(tokenId) {
-  if (!isCSVLoaded) return null;
-  return csvDataMap.get(tokenId) || null;
-}
 
 function showToast(m) {
   let t = document.getElementById('toast');
@@ -336,125 +264,79 @@ function showToast(m) {
   window.tt = setTimeout(() => t.classList.add('hidden'), 3000);
 }
 
-function extractAllTraitValues(attributes) {
-  const values = [];
-  for (const attr of attributes) {
-    if (!attr.value) continue;
-    if (attr.trait_type && attr.trait_type.toLowerCase() === "attribute count") continue;
-    values.push(String(attr.value).toLowerCase().trim());
-  }
-  values.sort();
-  return values;
-}
-
-function createMatchKey(values) { return values.join("|"); }
-
-async function loadIndexJSON() {
-  document.getElementById('index-status').innerHTML = '<span style="color:#aa0000;">⏳ LOADING...</span>';
+// ============================================================
+// CSV LOADER
+// ============================================================
+async function loadCSVOnly() {
+  document.getElementById('csv-preview-container').innerHTML = '⏳ LOADING CSV...';
   try {
-    const response = await fetch(FIXED_INDEX_URL);
+    const response = await fetch(CSV_URL);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json();
-    matchIndexMap.clear();
-    indexRawData = data;
-    let totalTokens = 0;
-    for (const [tokenId, tokenData] of Object.entries(data)) {
-      if (!tokenData.attributes) continue;
-      const traitValues = extractAllTraitValues(tokenData.attributes);
-      if (traitValues.length > 0) {
-        matchIndexMap.set(tokenId, createMatchKey(traitValues));
-        totalTokens++;
+    const csvText = await response.text();
+    
+    csvData = [];
+    csvDataMap.clear();
+    const lines = csvText.split('\n').filter(line => line.trim());
+    
+    // Parse header
+    let startIndex = 0;
+    if (lines[0].toLowerCase().includes('id')) {
+      startIndex = 1;
+    }
+    
+    let previewLines = [];
+    for (let i = startIndex; i < lines.length && i < startIndex + 20; i++) {
+      previewLines.push(lines[i]);
+    }
+    
+    // Show preview
+    document.getElementById('csv-preview-container').innerHTML = previewLines.join('\n') + (lines.length > startIndex + 20 ? '\n... and more' : '');
+    
+    // Parse all data
+    for (let i = startIndex; i < lines.length; i++) {
+      const parts = lines[i].split(',').map(s => s.trim());
+      if (parts.length < 6) continue;
+      
+      const tokenId = parseInt(parts[0]);
+      const type = parts[1] || '';
+      const gender = parts[2] || '';
+      const skinTone = parts[3] || '';
+      const count = parseInt(parts[4]) || 0;
+      const accessories = parts.slice(5).join(',').trim();
+      
+      if (!isNaN(tokenId)) {
+        const entry = {
+          id: tokenId,
+          type: type,
+          gender: gender.toLowerCase(),
+          skinTone: skinTone,
+          count: count,
+          accessories: accessories
+        };
+        csvData.push(entry);
+        csvDataMap.set(tokenId, entry);
       }
     }
-    indexTokenIdsSorted = Object.keys(indexRawData)
-      .filter(id => indexRawData[id] && indexRawData[id].attributes)
-      .map(id => Number(id))
-      .filter(n => !isNaN(n))
-      .sort((a, b) => a - b);
-    isIndexLoaded = true;
-    document.getElementById('index-status').innerHTML = `<span style="color:#006400;">✅ INDEX LOADED!</span>`;
-
-    // Also load CSV
-    await loadCSV();
-
-    let allValues = new Set();
-    for (const td of Object.values(data)) {
-      if (!td || !td.attributes) continue;
-      for (const a of td.attributes) {
-        let rawType = a && (a.trait_type || a.traitType || a.type);
-        if (rawType && String(rawType).toLowerCase().trim() === 'attribute count') continue;
-        if (rawType && String(rawType).toLowerCase().trim() === 'type') continue;
-        if (!a || a.value === undefined || a.value === null || a.value === '') continue;
-        allValues.add(String(a.value));
-      }
-    }
-    let missingValues = [...allValues].filter(v => !findLayerByValueAnySection(v));
-    let statsHtml = `🎯 ${totalTokens} tokens indexed — ready for EXACT MINT`;
-    if (missingValues.length) {
-      let shown = missingValues.slice(0, 30).map(escapeHtml).join(', ');
-      statsHtml += `<br><span style="color:#aa0000;">⚠️ ${missingValues.length} value(s) not found in any layer folder: ${shown}${missingValues.length>30?' ...':''}</span>`;
-    }
-    document.getElementById('index-stats').innerHTML = statsHtml;
-    updateAllMatchBadges();
+    
+    isCSVLoaded = true;
+    document.getElementById('csv-count').innerHTML = `📊 ${csvData.length} entries loaded`;
+    document.getElementById('csv-preview-container').innerHTML = 
+      `✅ CSV LOADED: ${csvData.length} entries\n\n` +
+      `Sample (first 5):\n` +
+      csvData.slice(0, 5).map(d => 
+        `#${d.id} | ${d.type} | ${d.gender} | Skin: ${d.skinTone} | ${d.count} accessories`
+      ).join('\n');
+    
+    showToast(`✅ CSV Loaded: ${csvData.length} entries`);
   } catch(err) {
-    document.getElementById('index-status').innerHTML = `<span style="color:#aa0000;">❌ FAILED: ${err.message}</span>`;
-    isIndexLoaded = false;
+    document.getElementById('csv-preview-container').innerHTML = `❌ FAILED: ${err.message}`;
+    isCSVLoaded = false;
+    showToast('❌ CSV Load Failed');
   }
 }
 
-function getNFTTraitValues(nft) {
-  if (!nft || !nft.layers) return [];
-  const values = [];
-  for (const l of nft.layers) {
-    values.push(String(l.value).toLowerCase().trim());
-  }
-  values.sort();
-  return values;
-}
-
-function findMatchesForNFT(nft) {
-  if (!isIndexLoaded || !nft) return [];
-  const myValues = getNFTTraitValues(nft);
-  if (!myValues.length) return [];
-  const myMatchKey = createMatchKey(myValues);
-  const matched = [];
-  for (const [tokenId, indexKey] of matchIndexMap.entries()) {
-    if (indexKey === myMatchKey) matched.push(Number(tokenId));
-  }
-  matched.sort((a,b) => a-b);
-  return matched;
-}
-
-function updateMatchBadgeForNFT(nft) {
-  const badgeEl = document.getElementById(`match-badge-${nft.id}`);
-  if (!badgeEl) return;
-  if (!isIndexLoaded) { badgeEl.innerHTML = '<div class="match-badge-loading">⚠️ LOAD INDEX FIRST</div>'; return; }
-  const matches = findMatchesForNFT(nft);
-  if (matches.length === 0) {
-    badgeEl.innerHTML = `<div class="match-badge" style="background:#404040; color:#cccccc;">❌ NO MATCH</div>`;
-  } else {
-    const show = matches.slice(0, 8).map(n => '#' + n).join(', ');
-    const extra = matches.length > 8 ? ` +${matches.length-8}` : '';
-    badgeEl.innerHTML = `<div class="match-badge success-bg">🎯 MATCH (${matches.length}): ${show}${extra}</div>`;
-  }
-}
-
-function updateAllMatchBadges() {
-  if (!isIndexLoaded) return;
-  const displayNFTs = filteredNFTs || nfts;
-  for (const nft of displayNFTs) updateMatchBadgeForNFT(nft);
-}
-
-async function deleteAllMatched() {
-  if (!isIndexLoaded) { showToast('Please load index first!'); return; }
-  const matched = nfts.filter(nft => findMatchesForNFT(nft).length > 0);
-  if (!matched.length) { showToast('No matches found!'); return; }
-  if (!confirm(`⚠️ Delete ${matched.length} matched NFTs?`)) return;
-  const matchedIds = new Set(matched.map(n => n.id));
-  nfts = nfts.filter(n => !matchedIds.has(n.id));
-  await updateNFTsInFirebase();
-  renderCollection();
-  showToast(`🗑️ ${matched.length} matched NFTs deleted!`);
+function getCSVData(tokenId) {
+  return csvDataMap.get(tokenId) || null;
 }
 
 // ============================================================
@@ -733,9 +615,6 @@ async function compositeFromLayers(layers, w = 512, h = 512) {
   return canvas.toDataURL('image/png');
 }
 
-// ============================================================
-// BUILD NFT ATTRIBUTES - Type + Accessory N + Attribute Count
-// ============================================================
 function buildNFTAttributes(layers) {
   let attrs = [];
   let baseValue = null;
@@ -757,7 +636,7 @@ function buildNFTAttributes(layers) {
 }
 
 // ============================================================
-// FIND LAYER HELPERS - GENDER AWARE!
+// FIND LAYER HELPERS
 // ============================================================
 function findLayerForTrait(section, value, gender) {
   if (!value) return null;
@@ -791,18 +670,6 @@ function findLayerByValueAnySection(value, gender) {
   return null;
 }
 
-function isTypeTrait(traitType) {
-  if (!traitType) return false;
-  const t = String(traitType).toLowerCase().trim();
-  return t === 'type';
-}
-
-function isBaseCharacter(value) {
-  if (!value) return false;
-  const v = String(value).toLowerCase().trim();
-  return v === 'male' || v === 'female' || v === 'ape' || v === 'zombie' || v === 'alien';
-}
-
 function getGenderFromType(value) {
   if (!value) return '';
   const v = String(value).toLowerCase().trim();
@@ -812,23 +679,26 @@ function getGenderFromType(value) {
 }
 
 // ============================================================
-// EXACT-MATCH MINT ENGINE - WITH CSV SKIN TONE!
+// MINT FROM CSV - NO INDEX.JSON NEEDED!
 // ============================================================
-async function startMint() {
-  if (!isIndexLoaded || !indexTokenIdsSorted.length) {
-    showToast('⚠️ Please load index.json first (press RELOAD)');
-    return;
-  }
-
-  if (!isCSVLoaded) {
-    showToast('⚠️ CSV not loaded! Please reload.');
+async function startMintFromCSV() {
+  if (!isCSVLoaded || !csvData.length) {
+    showToast('⚠️ Please load CSV first (press RELOAD CSV)');
     return;
   }
 
   let requestedTotal = Math.min(MAX_NFT_LIMIT, parseInt(document.getElementById('total-nft-count').value) || 1);
-  let tokenIdsToMint = indexTokenIdsSorted.slice(0, requestedTotal);
-
-  if (!tokenIdsToMint.length) { showToast('⚠️ No tokens found in index.json'); return; }
+  let startTokenId = parseInt(document.getElementById('start-token-id').value) || 1;
+  
+  // Filter CSV data from startTokenId
+  let availableTokens = csvData.filter(d => d.id >= startTokenId);
+  
+  if (!availableTokens.length) {
+    showToast(`⚠️ No tokens found from ID ${startTokenId}`);
+    return;
+  }
+  
+  let tokensToMint = availableTokens.slice(0, requestedTotal);
 
   let prefix = document.getElementById('name-prefix').value.trim() || "PUNK#";
   let desc = document.getElementById('nft-description').value;
@@ -845,104 +715,55 @@ async function startMint() {
   let newNFTs = [];
   let startTime = Date.now();
   let missingReport = [];
-  let csvMissingReport = [];
 
-  for (let idx = 0; idx < tokenIdsToMint.length; idx++) {
-    let tokenId = tokenIdsToMint[idx];
-    let tokenData = indexRawData[String(tokenId)];
-    let percent = Math.round(((idx + 1) / tokenIdsToMint.length) * 100);
+  for (let idx = 0; idx < tokensToMint.length; idx++) {
+    let csvEntry = tokensToMint[idx];
+    let tokenId = csvEntry.id;
+    let percent = Math.round(((idx + 1) / tokensToMint.length) * 100);
 
     if (idx > 0) {
       let elapsed = (Date.now() - startTime) / 1000;
       let rate = idx / elapsed;
-      let remaining = (tokenIdsToMint.length - idx) / rate;
+      let remaining = (tokensToMint.length - idx) / rate;
       progEta.innerText = `⏱ ETA: ${Math.round(remaining)}s`;
     }
 
-    progText.innerText = `🎯 TOKEN #${tokenId} (${percent}%)`;
-    progCounter.innerText = `${idx+1}/${tokenIdsToMint.length}`;
+    progText.innerText = `🎯 TOKEN #${tokenId} (${percent}%) - ${csvEntry.gender} | ${csvEntry.skinTone}`;
+    progCounter.innerText = `${idx+1}/${tokensToMint.length}`;
     progFill.style.width = `${percent}%`;
 
-    let attrs = (tokenData && tokenData.attributes) || [];
     let finalLayers = [];
-    let tokenGender = '';
-    let baseValue = null;
-
-    // STEP 1: Get Gender from index.json "Type"
-    for (let attr of attrs) {
-      if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
-      let traitType = attr.trait_type || attr.traitType || attr.type || '';
-      if (isTypeTrait(traitType)) {
-        baseValue = String(attr.value);
-        tokenGender = getGenderFromType(baseValue);
-        break;
+    let tokenGender = csvEntry.gender || '';
+    
+    // STEP 1: Add Base (Skin Tone from CSV)
+    let skinTone = csvEntry.skinTone;
+    if (skinTone) {
+      let baseLayer = findLayerForTrait('Base', skinTone, tokenGender);
+      if (baseLayer) {
+        finalLayers.push({ section: 'Base', value: baseLayer.value, imageUrl: baseLayer.imageUrl, gender: baseLayer.gender });
+      } else {
+        missingReport.push(`#${tokenId}: Skin tone "${skinTone}" not found in Base folder`);
       }
     }
-    if (!baseValue) {
-      for (let attr of attrs) {
-        if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
-        if (isBaseCharacter(attr.value)) {
-          baseValue = String(attr.value);
-          tokenGender = getGenderFromType(baseValue);
-          break;
+
+    // STEP 2: Add Accessories from CSV
+    let accessories = csvEntry.accessories || '';
+    if (accessories) {
+      // Split by " / " (space slash space)
+      let accessoryList = accessories.split(' / ').map(a => a.trim()).filter(a => a);
+      
+      for (let acc of accessoryList) {
+        let found = findLayerByValueAnySection(acc, tokenGender);
+        if (found) {
+          if (found.section === 'Base') continue;
+          finalLayers.push({ section: found.section, value: found.layer.value, imageUrl: found.layer.imageUrl, gender: found.layer.gender });
+        } else {
+          missingReport.push(`#${tokenId}: Accessory "${acc}" not found in any folder`);
         }
       }
     }
 
-    // STEP 2: Get CSV data for this token
-    let csvData = getCSVData(tokenId);
-    let skinTone = null;
-    let csvGender = '';
-    
-    if (csvData) {
-      skinTone = csvData.skinTone;
-      csvGender = csvData.gender;
-      
-      // If CSV has gender but we don't have one from index, use CSV gender
-      if (!tokenGender && csvGender) {
-        tokenGender = csvGender;
-      }
-      
-      // If CSV has skin tone, use it as Base (OVERRIDES index.json base)
-      if (skinTone) {
-        baseValue = skinTone;
-      } else {
-        csvMissingReport.push(`#${tokenId}: No skin tone in CSV`);
-      }
-    } else {
-      csvMissingReport.push(`#${tokenId}: Not found in CSV`);
-    }
-
-    // STEP 3: Add Base layer with CSV skin tone (or fallback)
-    if (baseValue) {
-      let baseLayer = findLayerForTrait('Base', baseValue, tokenGender);
-      if (baseLayer) {
-        finalLayers.push({ section: 'Base', value: baseLayer.value, imageUrl: baseLayer.imageUrl, gender: baseLayer.gender });
-      } else {
-        missingReport.push(`#${tokenId}: Base value "${baseValue}" not found in Base folder (gender: ${tokenGender || 'any'})`);
-      }
-    }
-
-    // STEP 4: Every remaining attribute - match by VALUE only with GENDER PREFERENCE
-    for (let attr of attrs) {
-      if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
-      let traitType = attr.trait_type || attr.traitType || attr.type || '';
-      if (String(traitType).toLowerCase().trim() === 'attribute count') continue;
-      if (isTypeTrait(traitType)) continue;
-      
-      // Skip if this value matches the base (to avoid duplicates)
-      if (baseValue && String(attr.value).toLowerCase().trim() === baseValue.toLowerCase().trim()) continue;
-
-      let found = findLayerByValueAnySection(attr.value, tokenGender);
-      if (!found) {
-        missingReport.push(`#${tokenId}: value "${attr.value}" (index trait_type: "${traitType}") not found in any folder (gender: ${tokenGender || 'any'})`);
-        continue;
-      }
-      if (found.section === 'Base') continue;
-      finalLayers.push({ section: found.section, value: found.layer.value, imageUrl: found.layer.imageUrl, gender: found.layer.gender });
-    }
-
-    // Add Background with gender preference
+    // STEP 3: Add Background
     if (!finalLayers.some(l => l.section === 'Background')) {
       let bgPool = layersBySection['Background'] || [];
       let bg = null;
@@ -970,7 +791,7 @@ async function startMint() {
       gender: tokenGender,
       tokenIdRef: tokenId,
       skinTone: skinTone || null,
-      csvGender: csvGender || null,
+      csvType: csvEntry.type || null,
       createdAt: new Date().toISOString()
     });
 
@@ -981,20 +802,15 @@ async function startMint() {
   await updateNFTsInFirebase();
   renderCollection();
 
-  let msg = `✅ ${newNFTs.length} NFTs created!`;
-  if (csvMissingReport.length) {
-    msg += ` ⚠️ ${csvMissingReport.length} tokens missing in CSV`;
-    console.warn('CSV Missing:', csvMissingReport);
-  }
+  let msg = `✅ ${newNFTs.length} NFTs created from CSV!`;
   if (missingReport.length) {
-    console.warn('404PUNKS - Missing layers in library:', missingReport);
+    console.warn('Missing layers:', missingReport);
     msg += ` ⚠️ ${missingReport.length} value(s) missing from library (see console)`;
   }
   showToast(msg);
 
   btn.disabled = false;
   progWrap.classList.add('hidden');
-  if (isIndexLoaded) updateAllMatchBadges();
 }
 
 function renderCollection() {
@@ -1015,7 +831,6 @@ function renderCollection() {
       </div>
       <div class="text-pixel text-[8px] text-center">${escapeHtml(nft.name)}</div>
       <div class="text-pixel text-[7px] text-center" style="color:#808080;">${nft.gender || ''} ${nft.skinTone ? '🎨 '+nft.skinTone : ''}</div>
-      <div id="match-badge-${nft.id}">${isIndexLoaded ? '<div class="match-badge-loading">🔍 MATCHING...</div>' : '<div class="match-badge-loading">📡 LOAD INDEX...</div>'}</div>
       <div style="display:flex; gap:5px; margin-top:8px;">
         <button onclick="App.viewNFTDetails('${nft.id}')" class="win95-btn" style="padding:4px; font-size:7px; flex:1;">📝 EDIT</button>
         <button onclick="App.downloadSingleImage('${nft.id}', ${idx+1})" class="win95-btn" style="padding:4px; font-size:7px; flex:1;">PNG</button>
@@ -1023,7 +838,6 @@ function renderCollection() {
         <button onclick="App.deleteSingleNFT('${nft.id}')" class="win95-btn" style="padding:4px; font-size:7px; flex:1; border-color:#ff4444;">DEL</button>
       </div>
     </div>`).join('');
-  if (isIndexLoaded) updateAllMatchBadges();
 }
 
 function searchNFTs() {
@@ -1202,18 +1016,12 @@ async function viewNFTDetails(id) {
     }
   });
 
-  const matches = isIndexLoaded ? findMatchesForNFT(nft) : [];
-  const matchHtml = matches.length > 0
-    ? `<div style="background:#006400;color:#ffff00;border:2px solid #ffff00;padding:8px;margin-bottom:10px;font-family:'Press Start 2P',monospace;font-size:8px;text-align:center;">🎯 MATCHES TOKEN ID: ${matches.map(n=>'#'+n).join(', ')}</div>`
-    : (isIndexLoaded ? `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#aa0000;background:#333;padding:6px;text-align:center;margin-bottom:8px;">❌ NO MATCH IN INDEX.JSON</div>` : `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#666;margin-bottom:8px;">💡 Load index first</div>`);
-
   modal.innerHTML = `<div class="win95-window" style="width:100%;max-width:500px;max-height:90vh;overflow:auto;">
     <div class="win95-titlebar"><span>✏️ EDIT: ${escapeHtml(nft.name)}</span><button onclick="document.getElementById('nft-modal-${id}').remove()">✕</button></div>
     <div class="win95-content">
       <div style="display:flex;justify-content:center;margin-bottom:10px;">
         <img src="${nft.image}" style="width:200px;height:200px;object-fit:contain;border:3px outset #808080;background:#fff;">
       </div>
-      ${matchHtml}
 
       <div class="text-pixel text-[8px] mb-2" style="color:#000080;">➕ ADD LAYER FROM LIBRARY</div>
       <select id="add-layer-select-${id}" class="win95-select w-full mb-4" onchange="App.addLayerToNFT('${id}', this.value)">
@@ -1296,14 +1104,14 @@ async function deleteNFTLayer(nftId, layerIndex) {
 }
 
 window.App = {
-  switchTab, loadIndexJSON, deleteAllMatched,
+  switchTab, loadCSVOnly, 
   toggleSectionLayers: (s) => { openSectionLayers = openSectionLayers === s ? null : s; renderSections(); },
   toggleSectionCreate: (s) => { openSectionCreate = openSectionCreate === s ? null : s; renderCreateSections(); },
   addLayer,
   deleteLayer: deleteLayerFromFirebase,
   toggleLayerSelection,
   updateProbability: updateSectionProbability,
-  startMint, deleteAllNFTs,
+  startMintFromCSV, deleteAllNFTs,
   downloadAllPNG, downloadAllJSON, downloadAllAsZip,
   viewNFTDetails, downloadSingleImage, downloadSingleJSON, deleteSingleNFT,
   searchNFTs, clearSearch, editNFTLayer, deleteNFTLayer, addLayerToNFT
@@ -1314,7 +1122,7 @@ async function init() {
   previewCtx = document.getElementById('live-preview-canvas')?.getContext('2d');
   listenFirebase();
   renderCreateSections();
-  await loadIndexJSON();
+  await loadCSVOnly();
 }
 init();
 </script>
