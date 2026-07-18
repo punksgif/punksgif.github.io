@@ -98,7 +98,7 @@
               <input id="layer-value" placeholder="[ VALUE ]" class="win95-input flex-1">
               <select id="layer-section" class="win95-select flex-1">
                 <option value="Background">Background</option>
-                <option value="Base">Base (Type)</option>
+                <option value="Base">Base (Skin Tone)</option>
                 <option value="Face">Face</option>
                 <option value="Beard">Beard</option>
                 <option value="Mouth">Mouth</option>
@@ -127,8 +127,9 @@
           <div class="win95-titlebar" style="background: #808080;">📜 HOW IT WORKS</div>
           <div class="win95-content">
             <div class="info-text">✓ Each NFT is built to exactly match its Token ID in index.json</div>
-            <div class="info-text">✓ Base (Skin Tone) is taken from Cryptopunks.csv based on Token ID</div>
-            <div class="info-text">✓ In index.json, "Type" = Base (Male / Female / Ape / Zombie / Alien) - This is OVERRIDDEN by CSV</div>
+            <div class="info-text">✓ Base (Skin Tone) is taken from cryptopunk.csv based on Token ID and Gender</div>
+            <div class="info-text">✓ CSV columns: id, type, gender, skin tone, count, accessories</div>
+            <div class="info-text">✓ Skin Tone examples: Medium, Dark, Light, Albino</div>
             <div class="info-text">✓ Gender-matched layers are used (Male layers for Male tokens, Female layers for Female tokens)</div>
             <div class="info-text">✓ Layer Order: Background → Base → Face → Beard → Mouth → Nose → Neck → Ear → Head → Eyes → Accessory</div>
             <div class="info-text">✓ MAX 10,000 NFTs</div>
@@ -220,7 +221,7 @@
         <div class="win95-window" style="margin-bottom: 16px; overflow: hidden;">
           <div class="win95-titlebar match-engine-header">
             <span>🎯 UNIVERSAL MATCH ENGINE <span class="pulse-text" style="color: #ffff00;">● LIVE</span></span>
-            <span style="font-size: 8px;">v12.0</span>
+            <span style="font-size: 8px;">v13.0</span>
           </div>
           <div class="win95-content" style="background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -258,19 +259,20 @@
 // UNIVERSAL MATCH ENGINE
 // ============================================================
 const FIXED_INDEX_URL = "https://raw.githubusercontent.com/punksgif/punksgif.github.io/main/index.json";
-const CSV_URL = "https://raw.githubusercontent.com/punksgif/punksgif.github.io/main/Cryptopunks.csv";
+const CSV_URL = "https://raw.githubusercontent.com/punksgif/punksgif.github.io/main/cryptopunk.csv";
 
 let matchIndexMap = new Map();
 let indexRawData = {};
 let indexTokenIdsSorted = [];
 let isIndexLoaded = false;
 
-// CSV Data: Token ID -> Skin Tone
-let csvSkinToneMap = new Map();
+// CSV Data: Token ID -> { gender, skinTone, type, count, accessories }
+let csvDataMap = new Map();
 let isCSVLoaded = false;
 
 // ============================================================
-// CSV LOADER - Load Cryptopunks.csv and map Token ID to Skin Tone
+// CSV LOADER - Load cryptopunk.csv
+// Format: id,type,gender,skin tone,count,accessories
 // ============================================================
 async function loadCSV() {
   try {
@@ -278,27 +280,40 @@ async function loadCSV() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const csvText = await response.text();
     
-    // Parse CSV - assuming format: TokenID, Skin Tone
+    csvDataMap.clear();
     const lines = csvText.split('\n').filter(line => line.trim());
-    csvSkinToneMap.clear();
     
-    for (let line of lines) {
-      // Skip header if exists
-      if (line.toLowerCase().includes('token') || line.toLowerCase().includes('skin')) continue;
+    // Skip header if exists
+    let startIndex = 0;
+    if (lines[0].toLowerCase().includes('id') && lines[0].toLowerCase().includes('type')) {
+      startIndex = 1;
+    }
+    
+    for (let i = startIndex; i < lines.length; i++) {
+      const parts = lines[i].split(',').map(s => s.trim());
+      if (parts.length < 6) continue;
       
-      const parts = line.split(',').map(s => s.trim());
-      if (parts.length >= 2) {
-        const tokenId = parseInt(parts[0]);
-        const skinTone = parts[1];
-        if (!isNaN(tokenId) && skinTone) {
-          csvSkinToneMap.set(tokenId, skinTone);
-        }
+      const tokenId = parseInt(parts[0]);
+      const type = parts[1] || '';
+      const gender = parts[2] || '';
+      const skinTone = parts[3] || '';
+      const count = parseInt(parts[4]) || 0;
+      const accessories = parts.slice(5).join(',') || '';
+      
+      if (!isNaN(tokenId) && skinTone) {
+        csvDataMap.set(tokenId, {
+          type: type,
+          gender: gender.toLowerCase(),
+          skinTone: skinTone,
+          count: count,
+          accessories: accessories
+        });
       }
     }
     
     isCSVLoaded = true;
-    console.log(`✅ CSV Loaded: ${csvSkinToneMap.size} skin tones mapped`);
-    document.getElementById('index-status').innerHTML += `<br><span style="color:#006400;">✅ CSV LOADED: ${csvSkinToneMap.size} skin tones</span>`;
+    console.log(`✅ CSV Loaded: ${csvDataMap.size} entries`);
+    document.getElementById('index-status').innerHTML += `<br><span style="color:#006400;">✅ CSV LOADED: ${csvDataMap.size} entries</span>`;
     return true;
   } catch(err) {
     console.error('CSV Load Error:', err);
@@ -308,9 +323,9 @@ async function loadCSV() {
   }
 }
 
-function getSkinToneFromCSV(tokenId) {
+function getCSVData(tokenId) {
   if (!isCSVLoaded) return null;
-  return csvSkinToneMap.get(tokenId) || null;
+  return csvDataMap.get(tokenId) || null;
 }
 
 function showToast(m) {
@@ -445,7 +460,6 @@ async function deleteAllMatched() {
 // ============================================================
 // MAIN APP
 // ============================================================
-// ORDER: Background → Base → Face → Beard → Mouth → Nose → Neck → Ear → Head → Eyes → Accessory
 const SECTIONS_ORDER = ["Background", "Base", "Face", "Beard", "Mouth", "Nose", "Neck", "Ear", "Head", "Eyes", "Accessory"];
 const MAX_NFT_LIMIT = 10000;
 
@@ -750,17 +764,14 @@ function findLayerForTrait(section, value, gender) {
   const pool = layersBySection[section] || [];
   const target = String(value).toLowerCase().trim();
   
-  // First try: match gender-specific (male/female) or 'both'
   if (gender) {
     let found = pool.find(l => String(l.value).toLowerCase().trim() === target && (l.gender === gender || l.gender === 'both'));
     if (found) return found;
   }
   
-  // Second try: any gender
   return pool.find(l => String(l.value).toLowerCase().trim() === target) || null;
 }
 
-// Searches every folder by VALUE only, with gender preference
 function findLayerByValueAnySection(value, gender) {
   if (value === undefined || value === null || value === '') return null;
   const target = String(value).toLowerCase().trim();
@@ -878,25 +889,37 @@ async function startMint() {
       }
     }
 
-    // STEP 2: Get Skin Tone from CSV (OVERRIDES index.json base)
-    let skinTone = getSkinToneFromCSV(tokenId);
-    let finalBaseValue = baseValue; // fallback
+    // STEP 2: Get CSV data for this token
+    let csvData = getCSVData(tokenId);
+    let skinTone = null;
+    let csvGender = '';
     
-    if (skinTone) {
-      // Use CSV skin tone as Base
-      finalBaseValue = skinTone;
-      // Gender stays the same from index.json
+    if (csvData) {
+      skinTone = csvData.skinTone;
+      csvGender = csvData.gender;
+      
+      // If CSV has gender but we don't have one from index, use CSV gender
+      if (!tokenGender && csvGender) {
+        tokenGender = csvGender;
+      }
+      
+      // If CSV has skin tone, use it as Base (OVERRIDES index.json base)
+      if (skinTone) {
+        baseValue = skinTone;
+      } else {
+        csvMissingReport.push(`#${tokenId}: No skin tone in CSV`);
+      }
     } else {
-      csvMissingReport.push(`#${tokenId}: No skin tone found in CSV, using index.json base "${baseValue}"`);
+      csvMissingReport.push(`#${tokenId}: Not found in CSV`);
     }
 
     // STEP 3: Add Base layer with CSV skin tone (or fallback)
-    if (finalBaseValue) {
-      let baseLayer = findLayerForTrait('Base', finalBaseValue, tokenGender);
+    if (baseValue) {
+      let baseLayer = findLayerForTrait('Base', baseValue, tokenGender);
       if (baseLayer) {
         finalLayers.push({ section: 'Base', value: baseLayer.value, imageUrl: baseLayer.imageUrl, gender: baseLayer.gender });
       } else {
-        missingReport.push(`#${tokenId}: Base value "${finalBaseValue}" not found in Base folder (gender: ${tokenGender || 'any'})`);
+        missingReport.push(`#${tokenId}: Base value "${baseValue}" not found in Base folder (gender: ${tokenGender || 'any'})`);
       }
     }
 
@@ -906,9 +929,9 @@ async function startMint() {
       let traitType = attr.trait_type || attr.traitType || attr.type || '';
       if (String(traitType).toLowerCase().trim() === 'attribute count') continue;
       if (isTypeTrait(traitType)) continue;
+      
+      // Skip if this value matches the base (to avoid duplicates)
       if (baseValue && String(attr.value).toLowerCase().trim() === baseValue.toLowerCase().trim()) continue;
-      // Also skip if the value matches the skin tone (to avoid duplicate)
-      if (skinTone && String(attr.value).toLowerCase().trim() === skinTone.toLowerCase().trim()) continue;
 
       let found = findLayerByValueAnySection(attr.value, tokenGender);
       if (!found) {
@@ -947,6 +970,7 @@ async function startMint() {
       gender: tokenGender,
       tokenIdRef: tokenId,
       skinTone: skinTone || null,
+      csvGender: csvGender || null,
       createdAt: new Date().toISOString()
     });
 
@@ -959,7 +983,7 @@ async function startMint() {
 
   let msg = `✅ ${newNFTs.length} NFTs created!`;
   if (csvMissingReport.length) {
-    msg += ` ⚠️ ${csvMissingReport.length} tokens missing skin tone in CSV`;
+    msg += ` ⚠️ ${csvMissingReport.length} tokens missing in CSV`;
     console.warn('CSV Missing:', csvMissingReport);
   }
   if (missingReport.length) {
@@ -1290,7 +1314,7 @@ async function init() {
   previewCtx = document.getElementById('live-preview-canvas')?.getContext('2d');
   listenFirebase();
   renderCreateSections();
-  await loadIndexJSON(); // This also loads CSV
+  await loadIndexJSON();
 }
 init();
 </script>
