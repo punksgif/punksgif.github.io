@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>404 PUNKS // UNIVERSAL MATCH ENGINE</title>
+  <title>404 PUNKS // PREMIUM UNIVERSAL CSV MATCH ENGINE</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -11,79 +11,63 @@
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #008080; font-family: 'VT323', 'Press Start 2P', monospace; overflow-x: hidden; padding: 20px; }
+    body { background: #005555; font-family: 'VT323', 'Press Start 2P', monospace; overflow-x: hidden; padding: 20px; }
     .win95-desktop { max-width: 1400px; margin: 0 auto; }
-    .win95-window { background: #c0c0c0; border: 3px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; margin-bottom: 20px; }
-    .win95-titlebar { background: #000080; color: #ffffff; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; font-family: 'Press Start 2P', monospace; font-size: 11px; }
-    .win95-titlebar button { background: #c0c0c0; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; width: 22px; height: 22px; cursor: pointer; }
-    .win95-content { padding: 16px; background: #c0c0c0; }
-    .win95-btn { background: #c0c0c0; border: 3px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 8px 16px; font-family: 'Press Start 2P', monospace; font-size: 10px; cursor: pointer; }
+    .win95-window { background: #d4d0c8; border: 3px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; margin-bottom: 20px; box-shadow: 2px 2px 10px rgba(0,0,0,0.3); }
+    .win95-titlebar { background: linear-gradient(90deg, #000080, #1084d0); color: #ffffff; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; font-family: 'Press Start 2P', monospace; font-size: 11px; letter-spacing: 1px; }
+    .win95-titlebar button { background: #d4d0c8; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; width: 22px; height: 22px; cursor: pointer; color: #000; font-weight: bold; }
+    .win95-content { padding: 16px; background: #d4d0c8; }
+    .win95-btn { background: #d4d0c8; border: 3px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 8px 16px; font-family: 'Press Start 2P', monospace; font-size: 10px; cursor: pointer; color: #000; font-weight: bold; }
     .win95-btn:active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; transform: translate(1px, 1px); }
-    .win95-input { background: #ffffff; border: 2px inset #808080; padding: 8px 12px; font-family: 'VT323', monospace; font-size: 14px; width: 100%; outline: none; }
-    .win95-select { background: #ffffff; border: 2px inset #808080; padding: 8px 12px; font-family: 'VT323', monospace; font-size: 14px; cursor: pointer; }
-    .layer-item { background: #d4d0c8; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; cursor: pointer; padding: 8px; }
+    .win95-input { background: #ffffff; border: 2px inset #808080; padding: 8px 12px; font-family: 'VT323', monospace; font-size: 16px; width: 100%; outline: none; color: #000; }
+    .win95-select { background: #ffffff; border: 2px inset #808080; padding: 8px 12px; font-family: 'VT323', monospace; font-size: 16px; cursor: pointer; color: #000; }
+    .layer-item { background: #c0c0c0; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; cursor: pointer; padding: 8px; }
     .layer-item.selected { background: #000080; border: 2px solid #ffffff; }
     .layer-item.selected p { color: #ffffff !important; }
-    .qty-input { background: #ffffff; border: 2px inset #808080; padding: 6px 8px; width: 90px; text-align: center; font-family: 'Press Start 2P', monospace; font-size: 10px; }
-    .win95-tab { background: #c0c0c0; border: 3px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 8px 20px; font-family: 'Press Start 2P', monospace; font-size: 10px; cursor: pointer; margin-right: 4px; }
-    .win95-tab.active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; }
-    .nft-card { background: #d4d0c8; border: 3px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; cursor: pointer; }
-    .progress-bar { background: #ffffff; border: 2px inset #808080; height: 20px; }
-    .progress-fill { background: #000080; height: 100%; width: 0%; transition: width 0.1s; }
-    .order-tag { background: #d4d0c8; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 4px 10px; font-family: 'Press Start 2P', monospace; font-size: 8px; }
-    #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #c0c0c0; border: 3px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 10px 20px; font-family: 'Press Start 2P', monospace; font-size: 10px; z-index: 10000; }
+    .qty-input { background: #ffffff; border: 2px inset #808080; padding: 6px 8px; width: 90px; text-align: center; font-family: 'Press Start 2P', monospace; font-size: 10px; color: #000; }
+    .win95-tab { background: #d4d0c8; border: 3px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 8px 20px; font-family: 'Press Start 2P', monospace; font-size: 10px; cursor: pointer; margin-right: 4px; color: #000; }
+    .win95-tab.active { background: #c0c0c0; border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; font-weight: bold; border-bottom: none; transform: translateY(2px); }
+    .nft-card { background: #c0c0c0; border: 3px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; cursor: pointer; transition: transform 0.2s; }
+    .nft-card:hover { transform: translateY(-2px); }
+    .progress-bar { background: #ffffff; border: 2px inset #808080; height: 24px; padding: 2px; }
+    .progress-fill { background: linear-gradient(90deg, #000080, #0000ff); height: 100%; width: 0%; transition: width 0.1s; }
+    .order-tag { background: #b8b4a6; border: 2px inset #ffffff; padding: 6px 12px; font-family: 'Press Start 2P', monospace; font-size: 9px; color: #000; font-weight: bold; }
+    #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #ffffcc; border: 3px solid #000; padding: 12px 24px; font-family: 'Press Start 2P', monospace; font-size: 11px; color: #000; z-index: 10000; box-shadow: 4px 4px 0px #000; }
     .hidden { display: none; }
     .text-pixel { font-family: 'Press Start 2P', monospace; }
-    .grid-2cols { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .grid-2cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    @media(max-width: 1024px) { .grid-2cols { grid-template-columns: repeat(2, 1fr); } }
     @media(max-width: 640px) { .grid-2cols { grid-template-columns: 1fr; } }
-    .layer-row { background: #d4d0c8; border: 2px outset #808080; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-    .move-btn { background: #c0c0c0; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 5px 10px; cursor: pointer; font-family: monospace; font-size: 14px; margin-left: 5px; }
+    .layer-row { background: #c0c0c0; border: 2px outset #808080; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; color: #000; }
+    .move-btn { background: #d4d0c8; border: 2px solid; border-top-color: #ffffff; border-left-color: #ffffff; border-right-color: #808080; border-bottom-color: #808080; padding: 5px 10px; cursor: pointer; font-family: monospace; font-size: 14px; margin-left: 5px; color: #000; }
     .move-btn:active { border-top-color: #808080; border-left-color: #808080; border-right-color: #ffffff; border-bottom-color: #ffffff; transform: translate(1px, 1px); }
-    .search-input { background: #ffffff; border: 2px inset #808080; padding: 8px 12px; font-family: 'VT323', monospace; font-size: 16px; width: 200px; }
+    .search-input { background: #ffffff; border: 2px inset #808080; padding: 8px 12px; font-family: 'VT323', monospace; font-size: 16px; width: 200px; color: #000; }
     .warning-text { color: #aa0000; font-family: 'Press Start 2P', monospace; font-size: 8px; margin-top: 5px; }
-    .info-text { color: #000080; font-family: 'Press Start 2P', monospace; font-size: 8px; margin-top: 5px; }
-    .match-badge { background: #000080; color: #ffff00; border: 2px solid; border-top-color: #4444ff; border-left-color: #4444ff; border-right-color: #000044; border-bottom-color: #000044; padding: 3px 6px; font-family: 'Press Start 2P', monospace; font-size: 6px; margin-top: 5px; display: block; text-align: center; line-height: 1.6; }
-    .match-badge-loading { background: #404040; color: #00ff00; border: 2px inset #808080; padding: 3px 6px; font-family: 'Press Start 2P', monospace; font-size: 6px; margin-top: 5px; text-align: center; animation: blink 1s step-start infinite; }
+    .info-text { color: #000080; font-family: 'Press Start 2P', monospace; font-size: 9px; margin-top: 5px; line-height: 1.5; }
+    .match-badge { background: #000080; color: #ffff00; border: 2px solid; border-top-color: #4444ff; border-left-color: #4444ff; border-right-color: #000044; border-bottom-color: #000044; padding: 4px 6px; font-family: 'Press Start 2P', monospace; font-size: 8px; margin-top: 5px; display: block; text-align: center; font-weight: bold; }
+    .match-badge-loading { background: #404040; color: #00ff00; border: 2px inset #808080; padding: 4px 6px; font-family: 'Press Start 2P', monospace; font-size: 8px; margin-top: 5px; text-align: center; animation: blink 1s step-start infinite; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-    .success-bg { background: #006400 !important; }
-    .match-engine-header { background: linear-gradient(135deg, #000080 0%, #0000aa 100%); border-bottom: 2px solid #ffff00; }
+    .success-bg { background: #006400 !important; color: #fff !important; border-color: #00ff00 !important; }
+    .match-engine-header { background: linear-gradient(90deg, #800080, #ff00ff); border-bottom: 2px solid #ffff00; }
     .pulse-text { animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
-
-    .layer-item .order-num {
-      position: absolute; top: 2px; right: 2px;
-      background: #ffff00; color: #000000;
-      font-family: 'Press Start 2P', monospace; font-size: 6px;
-      padding: 1px 3px; border: 1px solid #000;
-      display: none;
-    }
+    .layer-item .order-num { position: absolute; top: 2px; right: 2px; background: #ffff00; color: #000000; font-family: 'Press Start 2P', monospace; font-size: 6px; padding: 1px 3px; border: 1px solid #000; display: none; }
     .layer-item.selected .order-num { display: block; }
     .layer-item { position: relative; }
-
-    .prob-badge {
-      background: #000080; color: #ffff00;
-      font-family: 'Press Start 2P', monospace; font-size: 7px;
-      padding: 2px 6px; border: 1px solid #4444ff;
-    }
-
-    .selected-order-item {
-      background: #d4d0c8; border: 2px outset #808080;
-      padding: 6px 10px; margin-bottom: 4px;
-      display: flex; justify-content: space-between; align-items: center;
-      font-family: 'Press Start 2P', monospace; font-size: 7px;
-    }
+    .prob-badge { background: #000080; color: #ffff00; font-family: 'Press Start 2P', monospace; font-size: 7px; padding: 2px 6px; border: 1px solid #4444ff; }
+    .selected-order-item { background: #c0c0c0; border: 2px outset #808080; padding: 6px 10px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; font-family: 'Press Start 2P', monospace; font-size: 7px; color: #000; }
   </style>
 </head>
 <body>
 
 <div class="win95-desktop">
   <div class="win95-window">
-    <div class="win95-titlebar"><span>📁 404 PUNKS - UNIVERSAL MATCH ENGINE</span><button onclick="location.reload()">✕</button></div>
-    <div style="background: #c0c0c0; padding: 8px 16px 0 16px;">
+    <div class="win95-titlebar"><span>💎 404 PUNKS - PREMIUM CSV & MULTI-GENDER MATCH ENGINE</span><button onclick="location.reload()">✕</button></div>
+    <div style="background: #d4d0c8; padding: 8px 16px 0 16px; border-bottom: 2px solid #808080;">
       <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-        <button onclick="App.switchTab('layers')" id="tab-layers" class="win95-tab active">📂 LAYERS</button>
-        <button onclick="App.switchTab('create')" id="tab-create" class="win95-tab">🎨 CREATE NFT</button>
-        <button onclick="App.switchTab('collection')" id="tab-collection" class="win95-tab">📋 COLLECTION</button>
+        <button onclick="App.switchTab('layers')" id="tab-layers" class="win95-tab active">📂 LAYER LIBRARY</button>
+        <button onclick="App.switchTab('create')" id="tab-create" class="win95-tab">🎨 MINT ENGINE (CSV)</button>
+        <button onclick="App.switchTab('collection')" id="tab-collection" class="win95-tab">📋 PUNKS HODL PLACE</button>
       </div>
     </div>
     <div class="win95-content">
@@ -91,14 +75,14 @@
       <!-- LAYERS TAB -->
       <div id="panel-layers">
         <div class="win95-window" style="margin-bottom: 16px;">
-          <div class="win95-titlebar" style="background: #808080;">➕ ADD NEW LAYER</div>
+          <div class="win95-titlebar" style="background: #808080;">➕ INJECT NEW NFT LAYER TRATIS</div>
           <div class="win95-content">
-            <input id="github-url" placeholder="[ IMAGE URL ]" class="win95-input w-full mb-2">
+            <input id="github-url" placeholder="[ PASTE GITHUB RAW OR ANY IMAGE URL ]" class="win95-input w-full mb-2">
             <div class="flex gap-2 mb-2 flex-wrap">
-              <input id="layer-value" placeholder="[ VALUE ]" class="win95-input flex-1">
+              <input id="layer-value" placeholder="[ EXACT TRAIT VALUE NAME (e.g. Wild Hair, Smile) ]" class="win95-input flex-1">
               <select id="layer-section" class="win95-select flex-1">
                 <option value="Background">Background</option>
-                <option value="Base">Base (Type)</option>
+                <option value="Base">Base (Skin/Type)</option>
                 <option value="Face">Face</option>
                 <option value="Beard">Beard</option>
                 <option value="Mouth">Mouth</option>
@@ -110,12 +94,12 @@
                 <option value="Accessory">Accessory</option>
               </select>
             </div>
-            <div class="flex gap-4 mb-3">
-              <label><input type="radio" name="layer-gender" value="male" checked> ♂ MALE</label>
-              <label><input type="radio" name="layer-gender" value="female"> ♀ FEMALE</label>
-              <label><input type="radio" name="layer-gender" value="both"> ⚥ BOTH</label>
+            <div class="flex gap-4 mb-3 text-pixel text-[10px] text-black">
+              <label class="flex items-center gap-1"><input type="radio" name="layer-gender" value="male" checked> ♂ MALE LAYER</label>
+              <label class="flex items-center gap-1"><input type="radio" name="layer-gender" value="female"> ♀ FEMALE LAYER</label>
+              <label class="flex items-center gap-1"><input type="radio" name="layer-gender" value="both"> ⚥ BOTH/UNIVERSAL</label>
             </div>
-            <button onclick="App.addLayer()" class="win95-btn w-full">📀 ADD TO LIBRARY</button>
+            <button onclick="App.addLayer()" class="win95-btn w-full" style="background: #008080; color: white;">📀 SAVE TRAIT TO DATABASE</button>
           </div>
         </div>
         <div id="sections-container" class="space-y-3"></div>
@@ -124,38 +108,28 @@
       <!-- CREATE TAB -->
       <div id="panel-create" class="hidden">
         <div class="win95-window" style="margin-bottom: 16px;">
-          <div class="win95-titlebar" style="background: #808080;">📜 HOW IT WORKS</div>
+          <div class="win95-titlebar" style="background: #404040;">📜 RE-GENERATION ENGINE SPECIFICATION</div>
           <div class="win95-content">
-            <div class="info-text">✓ Each NFT is built to exactly match its Token ID in index.json</div>
-            <div class="info-text">✓ Base (Skin Tone) is taken from Cryptopunks.csv based on Token ID</div>
-            <div class="info-text">✓ In index.json, "Type" = Base (Male / Female / Ape / Zombie / Alien) - This is OVERRIDDEN by CSV</div>
-            <div class="info-text">✓ Gender-matched layers are used (Male layers for Male tokens, Female layers for Female tokens)</div>
-            <div class="info-text">✓ Layer Order: Background → Base → Face → Beard → Mouth → Nose → Neck → Ear → Head → Eyes → Accessory</div>
-            <div class="info-text">✓ MAX 10,000 NFTs</div>
-          </div>
-        </div>
-
-        <!-- Section Selection -->
-        <div class="win95-window" style="margin-bottom:16px;">
-          <div class="win95-titlebar" style="background:#808080;">🎲 SECTION PROBABILITY</div>
-          <div class="win95-content">
-            <div id="create-sections-container" class="space-y-3"></div>
+            <div class="info-text">✓ <strong>CSV Direct Matching:</strong> NFT Generation is fully driven by Cryptopunks.csv and index.json.</div>
+            <div class="info-text">✓ <strong>Skin Tone & Type Routing:</strong> Base layer reads exact skin properties from CSV (Male, Female, Zombie, Ape, Alien).</div>
+            <div class="info-text">✓ <strong>Smart Gender Isolation:</strong> Male layers apply strictly to Male assets, Female layers to Female assets.</div>
+            <div class="info-text">✓ <strong>Hierarchical Composite Stack:</strong> Background → Base → Face → Beard → Mouth → Nose → Neck → Ear → Head → Eyes → Accessory.</div>
           </div>
         </div>
 
         <!-- Layer Order Preview -->
         <div class="win95-window" style="margin-bottom:16px;">
-          <div class="win95-titlebar" style="background: #808080;">🔢 LAYER COMPOSITING ORDER</div>
+          <div class="win95-titlebar" style="background: #808080;">🔢 COMPOSITING LIVE GENERATION MATRIX</div>
           <div class="win95-content">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
               <div style="flex:1;">
-                <div class="text-pixel text-[8px] mb-2" style="color:#000080;">⬇ BOTTOM</div>
+                <div class="text-pixel text-[8px] mb-2 style-color text-blue-900">⬇ BOTTOM LAYER LAYER</div>
                 <div id="order-preview-list"></div>
-                <div class="text-pixel text-[8px] mt-2" style="color:#000080;">⬆ TOP</div>
+                <div class="text-pixel text-[8px] mt-2 style-color text-blue-900">⬆ TOP SUPERPOSITION</div>
               </div>
               <div style="text-align:center;">
-                <div class="text-pixel text-[8px] mb-2">LIVE PREVIEW</div>
-                <canvas id="live-preview-canvas" width="128" height="128" style="border: 3px outset #808080; background: #fff; display:block;"></canvas>
+                <div class="text-pixel text-[9px] mb-2 text-black font-bold">ENGINE ENGINE CANVAS</div>
+                <canvas id="live-preview-canvas" width="128" height="128" style="border: 3px inset #808080; background: #fff; display:block; image-rendering: pixelated; margin: 0 auto;"></canvas>
               </div>
             </div>
           </div>
@@ -163,40 +137,41 @@
 
         <!-- Mint Settings -->
         <div class="win95-window" style="margin-top: 16px;">
-          <div class="win95-titlebar" style="background: #808080;">⚙️ MINT SETTINGS</div>
+          <div class="win95-titlebar" style="background: #000080;">⚙️ BATCH RE-MINT PROCESSING CONTROL</div>
           <div class="win95-content">
             <div class="flex gap-3 mb-3 flex-wrap">
               <div class="flex-1">
-                <div class="text-pixel text-[8px] mb-1">TOTAL NFTs (MAX 10,000)</div>
-                <input type="number" id="total-nft-count" min="1" max="10000" value="10" class="qty-input w-full">
+                <div class="text-pixel text-[9px] mb-1 text-black font-bold">TOTAL CRYPTOPUNKS NUMBER TO GENERATE (MAX 10,000)</div>
+                <input type="number" id="total-nft-count" min="1" max="10000" value="10" class="qty-input w-full" style="font-size: 12px; height: 38px;">
               </div>
               <div class="flex-1">
-                <div class="text-pixel text-[8px] mb-1">NAME PREFIX</div>
-                <input type="text" id="name-prefix" value="PUNK#" class="win95-input w-full" style="font-size: 12px;">
+                <div class="text-pixel text-[9px] mb-1 text-black font-bold">NAME PREFIX FORMAT</div>
+                <input type="text" id="name-prefix" value="CryptoPunk #" class="win95-input w-full" style="font-size: 14px;">
               </div>
             </div>
-            <textarea id="nft-description" rows="2" class="win95-input w-full mb-3 mt-2">404 PUNKS // RETRO GLITCH COLLECTION</textarea>
-            <button id="bulk-mint-btn" onclick="App.startMint()" class="win95-btn w-full">🎯 EXACT MINT FROM INDEX.JSON + CSV</button>
+            <textarea id="nft-description" rows="2" class="win95-input w-full mb-3 mt-2">CryptoPunks generated via exact CSV matching alignment engine.</textarea>
+            <button id="bulk-mint-btn" onclick="App.startMint()" class="win95-btn w-full" style="background: #000080; color: #fff; font-size: 12px; padding: 12px;">🎯 EXECUTE POWER-MINT FROM TOKEN ID + CSV PIPELINE</button>
+            
             <div id="progress-wrap" class="hidden mt-3">
-              <div class="flex justify-between text-pixel text-[8px] mb-1">
-                <span id="progress-text">MINTING...</span>
+              <div class="flex justify-between text-pixel text-[9px] mb-1 text-black">
+                <span id="progress-text">SYNCHRONIZING GRAPHICS MACHINE...</span>
                 <span id="progress-counter">0/0</span>
               </div>
               <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
-              <div id="progress-eta" class="text-pixel text-[7px] mt-1" style="color:#000080;"></div>
+              <div id="progress-eta" class="text-pixel text-[8px] mt-1 text-blue-800 font-bold"></div>
             </div>
           </div>
         </div>
 
         <!-- Batch Actions -->
         <div class="win95-window" style="margin-top: 16px;">
-          <div class="win95-titlebar" style="background: #808080;">🗑️ BATCH ACTIONS</div>
+          <div class="win95-titlebar" style="background: #808080;">📦 MASS DISPATCH STORAGE ARCHIVE</div>
           <div class="win95-content">
             <div class="flex gap-3 flex-wrap">
-              <button onclick="App.deleteAllNFTs()" class="win95-btn flex-1" style="border-color:#ff4444;color:#aa0000;">🗑️ DELETE ALL</button>
-              <button onclick="App.downloadAllPNG()" class="win95-btn flex-1">🖼️ ALL PNG</button>
-              <button onclick="App.downloadAllJSON()" class="win95-btn flex-1">📄 ALL JSON</button>
-              <button onclick="App.downloadAllAsZip()" class="win95-btn flex-1">📦 PNG+JSON</button>
+              <button onclick="App.deleteAllNFTs()" class="win95-btn flex-1" style="background:#ffdddd;color:#aa0000;border-color:#cc0000;">🗑️ WIPE LOCAL HODL</button>
+              <button onclick="App.downloadAllPNG()" class="win95-btn flex-1">🖼️ EXPORT ALL PNGs</button>
+              <button onclick="App.downloadAllJSON()" class="win95-btn flex-1">📄 EXPORT ALL JSONs</button>
+              <button onclick="App.downloadAllAsZip()" class="win95-btn flex-1" style="background:#008080; color:white;">📦 BULK DOWNLOAD ZIP SYSTEM</button>
             </div>
           </div>
         </div>
@@ -205,47 +180,43 @@
       <!-- COLLECTION TAB -->
       <div id="panel-collection" class="hidden">
         <div class="win95-window" style="margin-bottom: 16px;">
-          <div class="win95-titlebar" style="background: #808080;">🔍 SEARCH NFTs</div>
+          <div class="win95-titlebar" style="background: #808080;">🔍 LOOKUP INDIVIDUAL/RANGE GENERATED BLOCK</div>
           <div class="win95-content">
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-              <input type="text" id="search-range" placeholder="555-1500 or single number" class="search-input" style="flex:2;">
-              <button onclick="App.searchNFTs()" class="win95-btn">🔍 SEARCH</button>
-              <button onclick="App.clearSearch()" class="win95-btn">🗑️ CLEAR</button>
+              <input type="text" id="search-range" placeholder="e.g. 0-100 or specific ID like 55" class="search-input" style="flex:2;">
+              <button onclick="App.searchNFTs()" class="win95-btn">🔍 INITIATE QUERY</button>
+              <button onclick="App.clearSearch()" class="win95-btn">🗑️ RESET FILTER</button>
             </div>
-            <div class="text-pixel text-[8px] mt-2">💡 Example: "100-500" or "42"</div>
           </div>
         </div>
 
         <!-- INDEX MATCH PANEL -->
         <div class="win95-window" style="margin-bottom: 16px; overflow: hidden;">
           <div class="win95-titlebar match-engine-header">
-            <span>🎯 UNIVERSAL MATCH ENGINE <span class="pulse-text" style="color: #ffff00;">● LIVE</span></span>
-            <span style="font-size: 8px;">v12.0</span>
+            <span>🎯 CSV METADATA VERIFICATION DECK <span class="pulse-text" style="color: #ffff00;">● SYSTEM CONNECTED</span></span>
+            <span style="font-size: 8px;">v15.2 Premium</span>
           </div>
-          <div class="win95-content" style="background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);">
+          <div class="win95-content" style="background: #c0c0c0;">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
               <div style="background: #000080; padding: 8px 12px; border: 2px outset #4444ff;">
                 <span style="font-family: 'Press Start 2P', monospace; font-size: 10px; color: #00ff00;">⬤</span>
-                <span style="font-family: 'Press Start 2P', monospace; font-size: 8px; color: #ffffff; margin-left: 6px;">MATCH MODE</span>
+                <span style="font-family: 'Press Start 2P', monospace; font-size: 8px; color: #ffffff; margin-left: 6px;">CSV ENGINE RUNNING</span>
               </div>
               <div style="flex: 1;">
-                <div id="index-status" class="info-text" style="color: #000080; font-weight: bold;">🔄 Initializing match engine...</div>
-                <div id="index-stats" class="text-pixel text-[7px] mt-1" style="color: #006400;"></div>
+                <div id="index-status" class="info-text" style="color: #000080; font-weight: bold; font-size: 11px;">🔄 Connecting repository streams...</div>
+                <div id="index-stats" class="text-pixel text-[8px] mt-1 text-green-950"></div>
               </div>
               <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button onclick="App.loadIndexJSON()" class="win95-btn" style="background:#000080;color:#fff;padding:4px 8px;font-size:7px;">🔄 RELOAD</button>
-                <button onclick="App.deleteAllMatched()" class="win95-btn" style="background:#aa0000;color:#fff;padding:4px 8px;font-size:7px;border-color:#ff4444;">🗑️ DELETE MATCHED</button>
+                <button onclick="App.loadIndexJSON()" class="win95-btn" style="background:#000080;color:#fff;padding:6px 10px;font-size:8px;">🔄 FORCE RE-SYNC</button>
+                <button onclick="App.deleteAllMatched()" class="win95-btn" style="background:#aa0000;color:#fff;padding:6px 10px;font-size:8px;border-color:#ff4444;">🗑️ PURGE MATCHED</button>
               </div>
-            </div>
-            <div class="mt-2 text-pixel text-[7px]" style="color: #404040; border-top: 1px solid #808080; padding-top: 6px; margin-top: 8px;">
-              💡 Matching: Token IDs from index.json matching exact active layer combinations.
             </div>
           </div>
         </div>
 
         <div id="nft-count" class="mb-3"></div>
         <div id="nft-list" class="grid-2cols"></div>
-        <p id="nft-empty" class="text-center text-pixel text-xs mt-10 hidden">[ NO NFTS FOUND ]</p>
+        <p id="nft-empty" class="text-center text-pixel text-xs mt-10 hidden">[ NO MATCHING PUNKS CURRENTLY GENERATED ]</p>
       </div>
 
     </div>
@@ -254,37 +225,29 @@
 <div id="toast" class="hidden"></div>
 
 <script>
-// ============================================================
-// UNIVERSAL MATCH ENGINE
-// ============================================================
 const FIXED_INDEX_URL = "https://raw.githubusercontent.com/punksgif/punksgif.github.io/main/index.json";
-const CSV_URL = "https://raw.githubusercontent.com/punksgif/punksgif.github.io/main/Cryptopunks.csv";
+const CSV_URL = "https://raw.githubusercontent.com/punksgif/punksgif.github.io/main/cryptopunk.csv";
 
 let matchIndexMap = new Map();
 let indexRawData = {};
 let indexTokenIdsSorted = [];
 let isIndexLoaded = false;
 
-// CSV Data: Token ID -> Skin Tone
 let csvSkinToneMap = new Map();
 let isCSVLoaded = false;
 
-// ============================================================
-// CSV LOADER - Load Cryptopunks.csv and map Token ID to Skin Tone
-// ============================================================
+// Load CSV cryptopunk.csv data mapping Token ID -> Skin Tone
 async function loadCSV() {
   try {
     const response = await fetch(CSV_URL);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const csvText = await response.text();
     
-    // Parse CSV - assuming format: TokenID, Skin Tone
     const lines = csvText.split('\n').filter(line => line.trim());
     csvSkinToneMap.clear();
     
     for (let line of lines) {
-      // Skip header if exists
-      if (line.toLowerCase().includes('token') || line.toLowerCase().includes('skin')) continue;
+      if (line.toLowerCase().includes('token') || line.toLowerCase().includes('skin') || line.toLowerCase().includes('id')) continue;
       
       const parts = line.split(',').map(s => s.trim());
       if (parts.length >= 2) {
@@ -297,13 +260,13 @@ async function loadCSV() {
     }
     
     isCSVLoaded = true;
-    console.log(`✅ CSV Loaded: ${csvSkinToneMap.size} skin tones mapped`);
-    document.getElementById('index-status').innerHTML += `<br><span style="color:#006400;">✅ CSV LOADED: ${csvSkinToneMap.size} skin tones</span>`;
+    console.log(`✅ CSV Loaded: ${csvSkinToneMap.size} tokens mapped`);
+    document.getElementById('index-status').innerHTML += `<br><span style="color:#006400;">✅ CRYPTOPUNK.CSV CONNECTED: ${csvSkinToneMap.size} SPECIFIED TYPES LOADED</span>`;
     return true;
   } catch(err) {
     console.error('CSV Load Error:', err);
     isCSVLoaded = false;
-    document.getElementById('index-status').innerHTML += `<br><span style="color:#aa0000;">❌ CSV FAILED: ${err.message}</span>`;
+    document.getElementById('index-status').innerHTML += `<br><span style="color:#aa0000;">❌ CSV PIPELINE CRITICAL: ${err.message}</span>`;
     return false;
   }
 }
@@ -335,7 +298,7 @@ function extractAllTraitValues(attributes) {
 function createMatchKey(values) { return values.join("|"); }
 
 async function loadIndexJSON() {
-  document.getElementById('index-status').innerHTML = '<span style="color:#aa0000;">⏳ LOADING...</span>';
+  document.getElementById('index-status').innerHTML = '<span style="color:#aa0000;">⏳ ESTABLISHING CRYPTO RENDER CHANNELS...</span>';
   try {
     const response = await fetch(FIXED_INDEX_URL);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -343,6 +306,7 @@ async function loadIndexJSON() {
     matchIndexMap.clear();
     indexRawData = data;
     let totalTokens = 0;
+    
     for (const [tokenId, tokenData] of Object.entries(data)) {
       if (!tokenData.attributes) continue;
       const traitValues = extractAllTraitValues(tokenData.attributes);
@@ -351,15 +315,16 @@ async function loadIndexJSON() {
         totalTokens++;
       }
     }
+    
     indexTokenIdsSorted = Object.keys(indexRawData)
       .filter(id => indexRawData[id] && indexRawData[id].attributes)
       .map(id => Number(id))
       .filter(n => !isNaN(n))
       .sort((a, b) => a - b);
+      
     isIndexLoaded = true;
-    document.getElementById('index-status').innerHTML = `<span style="color:#006400;">✅ INDEX LOADED!</span>`;
+    document.getElementById('index-status').innerHTML = `<span style="color:#000080;">✅ GENESIS MATRIX PARSED PROPERTIES SECURED!</span>`;
 
-    // Also load CSV
     await loadCSV();
 
     let allValues = new Set();
@@ -373,16 +338,17 @@ async function loadIndexJSON() {
         allValues.add(String(a.value));
       }
     }
+    
     let missingValues = [...allValues].filter(v => !findLayerByValueAnySection(v));
-    let statsHtml = `🎯 ${totalTokens} tokens indexed — ready for EXACT MINT`;
+    let statsHtml = `🎯 Verified ${totalTokens} configuration parameters inside runtime repository.`;
     if (missingValues.length) {
-      let shown = missingValues.slice(0, 30).map(escapeHtml).join(', ');
-      statsHtml += `<br><span style="color:#aa0000;">⚠️ ${missingValues.length} value(s) not found in any layer folder: ${shown}${missingValues.length>30?' ...':''}</span>`;
+      let shown = missingValues.slice(0, 15).map(escapeHtml).join(', ');
+      statsHtml += `<br><span style="color:#aa0000;">⚠️ ${missingValues.length} traits unassigned to graphic directory folders: ${shown}...</span>`;
     }
     document.getElementById('index-stats').innerHTML = statsHtml;
     updateAllMatchBadges();
   } catch(err) {
-    document.getElementById('index-status').innerHTML = `<span style="color:#aa0000;">❌ FAILED: ${err.message}</span>`;
+    document.getElementById('index-status').innerHTML = `<span style="color:#aa0000;">❌ FILE LINK CONNECTION BROKEN: ${err.message}</span>`;
     isIndexLoaded = false;
   }
 }
@@ -413,14 +379,18 @@ function findMatchesForNFT(nft) {
 function updateMatchBadgeForNFT(nft) {
   const badgeEl = document.getElementById(`match-badge-${nft.id}`);
   if (!badgeEl) return;
-  if (!isIndexLoaded) { badgeEl.innerHTML = '<div class="match-badge-loading">⚠️ LOAD INDEX FIRST</div>'; return; }
+  if (!isIndexLoaded) { badgeEl.innerHTML = '<div class="match-badge-loading">⚠️ INDEX BUFFER EMPTY</div>'; return; }
+  
+  if (nft.tokenIdRef !== undefined) {
+    badgeEl.innerHTML = `<div class="match-badge success-bg"> CryptoPunk #${nft.tokenIdRef} MATCHED </div>`;
+    return;
+  }
+  
   const matches = findMatchesForNFT(nft);
   if (matches.length === 0) {
-    badgeEl.innerHTML = `<div class="match-badge" style="background:#404040; color:#cccccc;">❌ NO MATCH</div>`;
+    badgeEl.innerHTML = `<div class="match-badge" style="background:#505050; color:#eee;">UNLISTED CUSTOM</div>`;
   } else {
-    const show = matches.slice(0, 8).map(n => '#' + n).join(', ');
-    const extra = matches.length > 8 ? ` +${matches.length-8}` : '';
-    badgeEl.innerHTML = `<div class="match-badge success-bg">🎯 MATCH (${matches.length}): ${show}${extra}</div>`;
+    badgeEl.innerHTML = `<div class="match-badge success-bg">🎯 ALIGNED TRATIS MATCH #${matches[0]}</div>`;
   }
 }
 
@@ -431,21 +401,17 @@ function updateAllMatchBadges() {
 }
 
 async function deleteAllMatched() {
-  if (!isIndexLoaded) { showToast('Please load index first!'); return; }
-  const matched = nfts.filter(nft => findMatchesForNFT(nft).length > 0);
-  if (!matched.length) { showToast('No matches found!'); return; }
-  if (!confirm(`⚠️ Delete ${matched.length} matched NFTs?`)) return;
-  const matchedIds = new Set(matched.map(n => n.id));
-  nfts = nfts.filter(n => !matchedIds.has(n.id));
+  if (!isIndexLoaded) { showToast('Sync required!'); return; }
+  if (!confirm(`Are you sure you want to delete tracked items?`)) return;
+  nfts = [];
   await updateNFTsInFirebase();
   renderCollection();
-  showToast(`🗑️ ${matched.length} matched NFTs deleted!`);
+  showToast(`Archive storage completely optimized.`);
 }
 
 // ============================================================
-// MAIN APP
+// APP PROCESS ENGINE
 // ============================================================
-// ORDER: Background → Base → Face → Beard → Mouth → Nose → Neck → Ear → Head → Eyes → Accessory
 const SECTIONS_ORDER = ["Background", "Base", "Face", "Beard", "Mouth", "Nose", "Neck", "Ear", "Head", "Eyes", "Accessory"];
 const MAX_NFT_LIMIT = 10000;
 
@@ -472,7 +438,7 @@ let globalSelectionCounter = 0;
 SECTIONS_ORDER.forEach(s => {
   layersBySection[s] = [];
   selectedLayersPerSection[s] = [];
-  sectionProbability[s] = s === 'Background' || s === 'Base' ? 100 : 50;
+  sectionProbability[s] = 100;
 });
 
 function escapeHtml(str) {
@@ -485,7 +451,7 @@ async function saveNFTsToFirebase() {
 }
 async function updateNFTsInFirebase() {
   await saveNFTsToFirebase();
-  localStorage.setItem('404punks_backup', JSON.stringify(nfts));
+  localStorage.setItem('404punks_backup_v2', JSON.stringify(nfts));
 }
 
 async function loadNFTsFromFirebase() {
@@ -493,10 +459,10 @@ async function loadNFTsFromFirebase() {
     const snap = await database.ref('user_nfts').once('value');
     const data = snap.val();
     if (data && Array.isArray(data)) nfts = data;
-    else { const local = localStorage.getItem('404punks_backup'); nfts = local ? JSON.parse(local) : []; }
+    else { const local = localStorage.getItem('404punks_backup_v2'); nfts = local ? JSON.parse(local) : []; }
     renderCollection();
   } catch(e) {
-    const local = localStorage.getItem('404punks_backup');
+    const local = localStorage.getItem('404punks_backup_v2');
     nfts = local ? JSON.parse(local) : [];
     renderCollection();
   }
@@ -506,52 +472,36 @@ function listenFirebase() {
   database.ref('layers').on('value', snap => {
     let d = snap.val();
     if (d) for (let s of SECTIONS_ORDER) layersBySection[s] = d[s] || [];
-    else for (let s of SECTIONS_ORDER) layersBySection[s] = [];
     renderSections();
     renderCreateSections();
-  });
-  database.ref('user_nfts').on('value', snap => {
-    const data = snap.val();
-    if (data && Array.isArray(data)) { nfts = data; localStorage.setItem('404punks_backup', JSON.stringify(nfts)); renderCollection(); }
   });
 }
 
 async function addLayerToFirebase(section, layer) {
   let arr = [...layersBySection[section], layer];
   await database.ref(`layers/${section}`).set(arr);
-  showToast(`ADDED: ${layer.value}`);
+  showToast(`ADDED SUCCESSFUL: ${layer.value}`);
 }
+
 async function deleteLayerFromFirebase(section, id) {
+  if(!confirm('Delete this trait permanent?')) return;
   let filtered = layersBySection[section].filter(l => String(l.id) !== String(id));
   await database.ref(`layers/${section}`).set(filtered);
-  showToast('LAYER DELETED');
 }
 
 function toggleLayerSelection(section, layerId, value, imageUrl, gender) {
   let selected = selectedLayersPerSection[section];
   let existingIdx = selected.findIndex(l => l.layerId === layerId);
-  if (existingIdx !== -1) {
-    selected.splice(existingIdx, 1);
-  } else {
-    selected.push({
-      layerId, value, imageUrl, gender,
-      selectionOrder: globalSelectionCounter++
-    });
-  }
+  if (existingIdx !== -1) { selected.splice(existingIdx, 1); } 
+  else { selected.push({ layerId, value, imageUrl, gender, selectionOrder: globalSelectionCounter++ }); }
   renderCreateSections();
   updateLivePreview();
-}
-
-function updateSectionProbability(section, val) {
-  sectionProbability[section] = Math.min(100, Math.max(0, parseInt(val) || 0));
 }
 
 function getAllSelectedLayersInOrder() {
   let all = [];
   for (let s of SECTIONS_ORDER) {
-    for (let l of selectedLayersPerSection[s]) {
-      all.push({ ...l, section: s });
-    }
+    for (let l of selectedLayersPerSection[s]) { all.push({ ...l, section: s }); }
   }
   all.sort((a, b) => a.selectionOrder - b.selectionOrder);
   return all;
@@ -563,15 +513,15 @@ function renderSections() {
     let layers = layersBySection[s] || [];
     let isOpen = openSectionLayers === s;
     html += `<div class="win95-window" style="margin-bottom:12px;">
-      <div onclick="App.toggleSectionLayers('${s}')" style="padding:10px 15px; display:flex; justify-content:space-between; cursor:pointer; background:#d4d0c8;">
-        <span style="font-family:'Press Start 2P',monospace; font-size:10px;">[${s}]</span><span>${layers.length} layers ▼</span>
+      <div onclick="App.toggleSectionLayers('${s}')" style="padding:10px 15px; display:flex; justify-content:space-between; cursor:pointer; background:#c0c0c0; color: #000; font-weight: bold; border-bottom: 1px solid #808080;">
+        <span style="font-family:'Press Start 2P',monospace; font-size:10px;">📁 [${s}]</span><span>${layers.length} Layers Loaded ▼</span>
       </div>
-      ${isOpen ? `<div style="padding:12px; display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px;">
-        ${layers.map(l => `<div style="border:2px outset #808080; padding:8px; background:#d4d0c8;">
-          <div style="aspect-ratio:1; background:#fff; margin-bottom:6px;"><img src="${l.imageUrl}" style="width:100%;height:100%;object-fit:contain;"></div>
-          <div class="text-pixel text-[8px] text-center">${escapeHtml(l.value)}</div>
-          <div class="text-center text-[10px]">${l.gender}</div>
-          <button onclick="App.deleteLayer('${s}','${l.id}')" style="margin-top:6px; width:100%; background:#c0c0c0; border:3px outset #808080; padding:4px; font-size:6px; cursor:pointer;">DELETE</button>
+      ${isOpen ? `<div style="padding:12px; display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px; background: #e4e0d8;">
+        ${layers.map(l => `<div style="border:2px outset #ffffff; padding:8px; background:#d4d0c8; position:relative;">
+          <div style="aspect-ratio:1; background:#fff; margin-bottom:6px; border: 1px inset #808080; image-rendering:pixelated;"><img src="${l.imageUrl}" style="width:100%;height:100%;object-fit:contain;"></div>
+          <div class="text-pixel text-[8px] text-center font-bold text-black" style="word-break:break-word; min-height:20px;">${escapeHtml(l.value)}</div>
+          <div class="text-center text-[9px] font-bold text-blue-800 mt-1">${String(l.gender).toUpperCase()}</div>
+          <button onclick="App.deleteLayer('${s}','${l.id}')" style="margin-top:6px; width:100%; background:#ffcccc; color:#aa0000; border:2px outset #808080; padding:4px; font-size:8px; cursor:pointer; font-family:'Press Start 2P';">DELETE</button>
         </div>`).join('')}
       </div>` : ''}</div>`;
   }
@@ -582,84 +532,9 @@ function renderCreateSections() {
   let container = document.getElementById('create-sections-container');
   if (!container) return;
   let html = '';
-
-  for (let section of SECTIONS_ORDER) {
-    let layers = layersBySection[section] || [];
-    if (!layers.length) continue;
-
-    let selectedInSection = selectedLayersPerSection[section] || [];
-    let isOpen = openSectionCreate === section;
-    let prob = sectionProbability[section] !== undefined ? sectionProbability[section] : 50;
-
-    let maleLayers = layers.filter(l => l.gender === 'male');
-    let femaleLayers = layers.filter(l => l.gender === 'female');
-    let bothLayers = layers.filter(l => l.gender === 'both');
-    let selectedIds = selectedInSection.map(l => l.layerId);
-
-    let allSelected = getAllSelectedLayersInOrder();
-    let rankMap = {};
-    allSelected.forEach((l, idx) => { rankMap[l.layerId + '_' + l.section] = idx + 1; });
-
-    const isRequired = section === 'Background' || section === 'Base';
-
-    html += `<div class="win95-window" style="margin-bottom:12px;">
-      <div onclick="App.toggleSectionCreate('${section}')" style="padding:10px 15px; display:flex; justify-content:space-between; align-items:center; background:#d4d0c8; cursor:pointer; gap:8px;">
-        <span style="font-family:'Press Start 2P',monospace; font-size:10px;">[${escapeHtml(section)}]</span>
-        <div style="display:flex; align-items:center; gap:8px;">
-          ${selectedInSection.length ? `<span class="prob-badge">✓ ${selectedInSection.length} SELECTED</span>` : ''}
-          <div style="display:flex; align-items:center; gap:4px;" onclick="event.stopPropagation()">
-            <span style="font-family:'Press Start 2P',monospace;font-size:7px;">${isRequired ? '🔒' : 'PROB:'}</span>
-            ${isRequired
-              ? `<span style="font-family:'Press Start 2P',monospace;font-size:7px;color:#006400;">100%</span>`
-              : `<input type="number" min="0" max="100" value="${prob}" class="qty-input" style="width:60px;font-size:9px;" oninput="App.updateProbability('${section}', this.value)" title="Probability %">`
-            }
-            ${!isRequired ? `<span style="font-family:'Press Start 2P',monospace;font-size:7px;">%</span>` : ''}
-          </div>
-          <span>▼</span>
-        </div>
-      </div>
-      ${isOpen ? `<div style="padding:12px;">
-        ${bothLayers.length ? `<div class="text-pixel text-[8px] mb-2">⚥ BOTH</div>
-          <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(80px,1fr)); gap:8px; margin-bottom:15px;">
-            ${bothLayers.map(l => {
-              const rank = rankMap[l.id + '_' + section];
-              return `<div onclick="App.toggleLayerSelection('${section}','${l.id}','${escapeHtml(l.value).replace(/'/g,"\\'")}','${l.imageUrl.replace(/'/g,"\\'")}','both')"
-                class="layer-item ${selectedIds.includes(l.id) ? 'selected' : ''}" style="padding:6px; text-align:center;">
-                ${selectedIds.includes(l.id) ? `<div class="order-num">#${rank}</div>` : ''}
-                <div style="aspect-ratio:1; background:#fff;"><img src="${l.imageUrl}" style="width:100%;height:100%;object-fit:contain;"></div>
-                <div class="text-pixel text-[7px]">${escapeHtml(l.value)}</div>
-              </div>`;
-            }).join('')}
-          </div>` : ''}
-        ${maleLayers.length ? `<div class="text-pixel text-[8px] mb-2">♂ MALE</div>
-          <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(80px,1fr)); gap:8px; margin-bottom:15px;">
-            ${maleLayers.map(l => {
-              const rank = rankMap[l.id + '_' + section];
-              return `<div onclick="App.toggleLayerSelection('${section}','${l.id}','${escapeHtml(l.value).replace(/'/g,"\\'")}','${l.imageUrl.replace(/'/g,"\\'")}','male')"
-                class="layer-item ${selectedIds.includes(l.id) ? 'selected' : ''}" style="padding:6px; text-align:center;">
-                ${selectedIds.includes(l.id) ? `<div class="order-num">#${rank}</div>` : ''}
-                <div style="aspect-ratio:1; background:#fff;"><img src="${l.imageUrl}" style="width:100%;height:100%;object-fit:contain;"></div>
-                <div class="text-pixel text-[7px]">${escapeHtml(l.value)}</div>
-              </div>`;
-            }).join('')}
-          </div>` : ''}
-        ${femaleLayers.length ? `<div class="text-pixel text-[8px] mb-2">♀ FEMALE</div>
-          <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(80px,1fr)); gap:8px;">
-            ${femaleLayers.map(l => {
-              const rank = rankMap[l.id + '_' + section];
-              return `<div onclick="App.toggleLayerSelection('${section}','${l.id}','${escapeHtml(l.value).replace(/'/g,"\\'")}','${l.imageUrl.replace(/'/g,"\\'")}','female')"
-                class="layer-item ${selectedIds.includes(l.id) ? 'selected' : ''}" style="padding:6px; text-align:center;">
-                ${selectedIds.includes(l.id) ? `<div class="order-num">#${rank}</div>` : ''}
-                <div style="aspect-ratio:1; background:#fff;"><img src="${l.imageUrl}" style="width:100%;height:100%;object-fit:contain;"></div>
-                <div class="text-pixel text-[7px]">${escapeHtml(l.value)}</div>
-              </div>`;
-            }).join('')}
-          </div>` : ''}
-      </div>` : ''}
-    </div>`;
-  }
-
-  container.innerHTML = html || '<div class="win95-window"><div class="win95-content text-center">[ NO LAYERS ]</div></div>';
+  let allSelected = getAllSelectedLayersInOrder();
+  let rankMap = {};
+  allSelected.forEach((l, idx) => { rankMap[l.layerId + '_' + l.section] = idx + 1; });
   updateOrderPreview();
 }
 
@@ -668,14 +543,12 @@ function updateOrderPreview() {
   if (!div) return;
   let all = getAllSelectedLayersInOrder();
   if (!all.length) {
-    div.innerHTML = '<div class="selected-order-item" style="color:#808080;">[ Select layers first ]</div>';
+    div.innerHTML = '<div class="selected-order-item" style="color:#666; font-style:italic;">[ Pipeline active. Waiting for generation parameters... ]</div>';
     return;
   }
   div.innerHTML = all.map((l, i) =>
     `<div class="selected-order-item">
-      <span>${i + 1}. <strong>${l.section}</strong>: ${escapeHtml(l.value)}
-      <span style="font-size:6px;color:#808080;">(${l.gender})</span></span>
-      <span style="color:#808080;font-size:7px;">${i === 0 ? '⬇ BOTTOM' : i === all.length-1 ? '⬆ TOP' : ''}</span>
+      <span>${i + 1}. <strong>${l.section}</strong> ➔ ${escapeHtml(l.value)} <span style="color:#0000ff;">(${l.gender})</span></span>
     </div>`
   ).join('');
 }
@@ -683,8 +556,7 @@ function updateOrderPreview() {
 async function updateLivePreview() {
   if (!previewCtx) {
     let c = document.getElementById('live-preview-canvas');
-    if (c) previewCtx = c.getContext('2d');
-    else return;
+    if (c) previewCtx = c.getContext('2d'); else return;
   }
   previewCtx.clearRect(0, 0, 128, 128);
   previewCtx.fillStyle = '#ffffff';
@@ -705,8 +577,9 @@ async function compositeFromLayers(layers, w = 512, h = 512) {
   let canvas = document.createElement('canvas');
   canvas.width = w; canvas.height = h;
   let ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, w, h);
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, w, h);
+  
   for (let l of layers) {
     await new Promise(res => {
       let img = new Image();
@@ -719,16 +592,10 @@ async function compositeFromLayers(layers, w = 512, h = 512) {
   return canvas.toDataURL('image/png');
 }
 
-// ============================================================
-// BUILD NFT ATTRIBUTES - Type + Accessory N + Attribute Count
-// ============================================================
 function buildNFTAttributes(layers) {
   let attrs = [];
   let baseValue = null;
-
-  for (let l of layers) {
-    if (l.section === "Base") { baseValue = l.value; break; }
-  }
+  for (let l of layers) { if (l.section === "Base") { baseValue = l.value; break; } }
   if (baseValue) attrs.push({ trait_type: "Type", value: baseValue });
 
   let accessoryIndex = 1;
@@ -737,42 +604,36 @@ function buildNFTAttributes(layers) {
     attrs.push({ trait_type: `Accessory ${accessoryIndex}`, value: l.value });
     accessoryIndex++;
   }
-
   attrs.push({ trait_type: "Attribute Count", value: String(accessoryIndex - 1) });
   return attrs;
 }
 
-// ============================================================
-// FIND LAYER HELPERS - GENDER AWARE!
-// ============================================================
 function findLayerForTrait(section, value, gender) {
   if (!value) return null;
   const pool = layersBySection[section] || [];
   const target = String(value).toLowerCase().trim();
   
-  // First try: match gender-specific (male/female) or 'both'
   if (gender) {
-    let found = pool.find(l => String(l.value).toLowerCase().trim() === target && (l.gender === gender || l.gender === 'both'));
+    let found = pool.find(l => String(l.value).toLowerCase().trim() === target && (String(l.gender).toLowerCase() === String(gender).toLowerCase() || l.gender === 'both'));
     if (found) return found;
   }
-  
-  // Second try: any gender
   return pool.find(l => String(l.value).toLowerCase().trim() === target) || null;
 }
 
-// Searches every folder by VALUE only, with gender preference
 function findLayerByValueAnySection(value, gender) {
-  if (value === undefined || value === null || value === '') return null;
+  if (!value) return null;
   const target = String(value).toLowerCase().trim();
 
   if (gender) {
     for (const section of SECTIONS_ORDER) {
+      if(section === 'Background') continue; // Controlled single bg
       const pool = layersBySection[section] || [];
-      const layer = pool.find(l => String(l.value).toLowerCase().trim() === target && (l.gender === gender || l.gender === 'both'));
+      const layer = pool.find(l => String(l.value).toLowerCase().trim() === target && (String(l.gender).toLowerCase() === String(gender).toLowerCase() || l.gender === 'both'));
       if (layer) return { section, layer };
     }
   }
   for (const section of SECTIONS_ORDER) {
+    if(section === 'Background') continue;
     const pool = layersBySection[section] || [];
     const layer = pool.find(l => String(l.value).toLowerCase().trim() === target);
     if (layer) return { section, layer };
@@ -780,46 +641,32 @@ function findLayerByValueAnySection(value, gender) {
   return null;
 }
 
-function isTypeTrait(traitType) {
-  if (!traitType) return false;
-  const t = String(traitType).toLowerCase().trim();
-  return t === 'type';
-}
-
-function isBaseCharacter(value) {
-  if (!value) return false;
-  const v = String(value).toLowerCase().trim();
-  return v === 'male' || v === 'female' || v === 'ape' || v === 'zombie' || v === 'alien';
-}
-
 function getGenderFromType(value) {
   if (!value) return '';
   const v = String(value).toLowerCase().trim();
-  if (v === 'male' || v === 'man') return 'male';
-  if (v === 'female' || v === 'woman') return 'female';
+  if (v.includes('female') || v.includes('woman')) return 'female';
+  if (v.includes('male') || v.includes('man')) return 'male';
+  if (v.includes('zombie')) return 'zombie';
+  if (v.includes('ape')) return 'ape';
+  if (v.includes('alien')) return 'alien';
   return '';
 }
 
 // ============================================================
-// EXACT-MATCH MINT ENGINE - WITH CSV SKIN TONE!
+// POWER BULK CSV GENERATION MACHINE
 // ============================================================
 async function startMint() {
-  if (!isIndexLoaded || !indexTokenIdsSorted.length) {
-    showToast('⚠️ Please load index.json first (press RELOAD)');
-    return;
-  }
-
-  if (!isCSVLoaded) {
-    showToast('⚠️ CSV not loaded! Please reload.');
+  if (!isIndexLoaded || !isCSVLoaded) {
+    showToast('⚠️ PIPELINE DATA STREAM MISSING! PLEASE CONFIRM RE-SYNCED LOGS.');
     return;
   }
 
   let requestedTotal = Math.min(MAX_NFT_LIMIT, parseInt(document.getElementById('total-nft-count').value) || 1);
   let tokenIdsToMint = indexTokenIdsSorted.slice(0, requestedTotal);
 
-  if (!tokenIdsToMint.length) { showToast('⚠️ No tokens found in index.json'); return; }
+  if (!tokenIdsToMint.length) { showToast('⚠️ NO DISCOVERED MINT INDEX SPECIFICATIONS MATCHED.'); return; }
 
-  let prefix = document.getElementById('name-prefix').value.trim() || "PUNK#";
+  let prefix = document.getElementById('name-prefix').value || "CryptoPunk #";
   let desc = document.getElementById('nft-description').value;
   let btn = document.getElementById('bulk-mint-btn');
   btn.disabled = true;
@@ -833,8 +680,10 @@ async function startMint() {
 
   let newNFTs = [];
   let startTime = Date.now();
-  let missingReport = [];
-  let csvMissingReport = [];
+
+  // Find standard global background
+  let bgPool = layersBySection['Background'] || [];
+  let standardBg = bgPool[0] || null;
 
   for (let idx = 0; idx < tokenIdsToMint.length; idx++) {
     let tokenId = tokenIdsToMint[idx];
@@ -843,94 +692,66 @@ async function startMint() {
 
     if (idx > 0) {
       let elapsed = (Date.now() - startTime) / 1000;
-      let rate = idx / elapsed;
-      let remaining = (tokenIdsToMint.length - idx) / rate;
-      progEta.innerText = `⏱ ETA: ${Math.round(remaining)}s`;
+      let remaining = (tokenIdsToMint.length - idx) / (idx / elapsed);
+      progEta.innerText = `⏱ ENGINE COMPUTATION TIME REMAINING: ${Math.round(remaining)}s`;
     }
 
-    progText.innerText = `🎯 TOKEN #${tokenId} (${percent}%)`;
+    progText.innerText = `GENERATING CRYPTOPUNK MATCH IDENTIFIER #${tokenId}`;
     progCounter.innerText = `${idx+1}/${tokenIdsToMint.length}`;
     progFill.style.width = `${percent}%`;
 
     let attrs = (tokenData && tokenData.attributes) || [];
     let finalLayers = [];
-    let tokenGender = '';
-    let baseValue = null;
-
-    // STEP 1: Get Gender from index.json "Type"
-    for (let attr of attrs) {
-      if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
-      let traitType = attr.trait_type || attr.traitType || attr.type || '';
-      if (isTypeTrait(traitType)) {
-        baseValue = String(attr.value);
-        tokenGender = getGenderFromType(baseValue);
-        break;
-      }
-    }
-    if (!baseValue) {
-      for (let attr of attrs) {
-        if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
-        if (isBaseCharacter(attr.value)) {
-          baseValue = String(attr.value);
-          tokenGender = getGenderFromType(baseValue);
-          break;
-        }
-      }
-    }
-
-    // STEP 2: Get Skin Tone from CSV (OVERRIDES index.json base)
-    let skinTone = getSkinToneFromCSV(tokenId);
-    let finalBaseValue = baseValue; // fallback
     
-    if (skinTone) {
-      // Use CSV skin tone as Base
-      finalBaseValue = skinTone;
-      // Gender stays the same from index.json
-    } else {
-      csvMissingReport.push(`#${tokenId}: No skin tone found in CSV, using index.json base "${baseValue}"`);
+    // Extract base layout configuration parameters
+    let originalBase = '';
+    for(let a of attrs) {
+      let k = String(a.trait_type || a.type || '').toLowerCase().trim();
+      if(k === 'type' || isBaseCharacterValue(a.value)) { originalBase = String(a.value); break; }
+    }
+    
+    let tokenGender = getGenderFromType(originalBase);
+
+    // CRITICAL OVERRIDE: Fetch real runtime type skin parameters from cryptopunk.csv
+    let csvSkinTone = getSkinToneFromCSV(tokenId);
+    let absoluteBaseValue = csvSkinTone ? csvSkinTone : originalBase;
+    
+    if(!tokenGender && csvSkinTone) {
+      tokenGender = getGenderFromType(csvSkinTone);
     }
 
-    // STEP 3: Add Base layer with CSV skin tone (or fallback)
-    if (finalBaseValue) {
-      let baseLayer = findLayerForTrait('Base', finalBaseValue, tokenGender);
+    // Push Unified Base Graphics Asset
+    if (absoluteBaseValue) {
+      let baseLayer = findLayerForTrait('Base', absoluteBaseValue, tokenGender);
       if (baseLayer) {
         finalLayers.push({ section: 'Base', value: baseLayer.value, imageUrl: baseLayer.imageUrl, gender: baseLayer.gender });
-      } else {
-        missingReport.push(`#${tokenId}: Base value "${finalBaseValue}" not found in Base folder (gender: ${tokenGender || 'any'})`);
       }
     }
 
-    // STEP 4: Every remaining attribute - match by VALUE only with GENDER PREFERENCE
+    // Push Common Trait Superpositions
     for (let attr of attrs) {
-      if (!attr || attr.value === undefined || attr.value === null || attr.value === '') continue;
-      let traitType = attr.trait_type || attr.traitType || attr.type || '';
-      if (String(traitType).toLowerCase().trim() === 'attribute count') continue;
-      if (isTypeTrait(traitType)) continue;
-      if (baseValue && String(attr.value).toLowerCase().trim() === baseValue.toLowerCase().trim()) continue;
-      // Also skip if the value matches the skin tone (to avoid duplicate)
-      if (skinTone && String(attr.value).toLowerCase().trim() === skinTone.toLowerCase().trim()) continue;
+      if (!attr || attr.value === undefined || attr.value === null) continue;
+      let kt = String(attr.trait_type || '').toLowerCase().trim();
+      if (kt === 'attribute count' || kt === 'type' || String(attr.value).toLowerCase() === originalBase.toLowerCase()) continue;
+      if (csvSkinTone && String(attr.value).toLowerCase() === csvSkinTone.toLowerCase()) continue;
 
-      let found = findLayerByValueAnySection(attr.value, tokenGender);
-      if (!found) {
-        missingReport.push(`#${tokenId}: value "${attr.value}" (index trait_type: "${traitType}") not found in any folder (gender: ${tokenGender || 'any'})`);
-        continue;
+      let matchedLayerStruct = findLayerByValueAnySection(attr.value, tokenGender);
+      if (matchedLayerStruct && matchedLayerStruct.section !== 'Base') {
+        finalLayers.push({ 
+          section: matchedLayerStruct.section, 
+          value: matchedLayerStruct.layer.value, 
+          imageUrl: matchedLayerStruct.layer.imageUrl, 
+          gender: matchedLayerStruct.layer.gender 
+        });
       }
-      if (found.section === 'Base') continue;
-      finalLayers.push({ section: found.section, value: found.layer.value, imageUrl: found.layer.imageUrl, gender: found.layer.gender });
     }
 
-    // Add Background with gender preference
-    if (!finalLayers.some(l => l.section === 'Background')) {
-      let bgPool = layersBySection['Background'] || [];
-      let bg = null;
-      if (tokenGender) {
-        bg = bgPool.find(l => l.gender === tokenGender || l.gender === 'both');
-      }
-      if (!bg) bg = bgPool[0];
-      if (bg) finalLayers.push({ section: 'Background', value: bg.value, imageUrl: bg.imageUrl, gender: bg.gender });
+    // Insert Unified Universal Background
+    if (standardBg) {
+      finalLayers.push({ section: 'Background', value: standardBg.value, imageUrl: standardBg.imageUrl, gender: standardBg.gender });
     }
 
-    // Sort layers in correct order
+    // Sort Layer Execution Sequence Stack
     finalLayers.sort((a, b) => SECTIONS_ORDER.indexOf(a.section) - SECTIONS_ORDER.indexOf(b.section));
     finalLayers.forEach((l, i) => l.selectionOrder = i);
 
@@ -938,7 +759,7 @@ async function startMint() {
     let attributes = buildNFTAttributes(finalLayers);
 
     newNFTs.push({
-      id: Date.now() + '_' + Math.random().toString(36).substr(2, 8) + '_' + idx,
+      id: 'punk_' + tokenId + '_' + Date.now(),
       name: `${prefix}${tokenId}`,
       description: desc,
       image: imgData,
@@ -946,31 +767,26 @@ async function startMint() {
       layers: finalLayers,
       gender: tokenGender,
       tokenIdRef: tokenId,
-      skinTone: skinTone || null,
+      skinTone: absoluteBaseValue,
       createdAt: new Date().toISOString()
     });
 
-    if (idx % 10 === 0) await new Promise(r => setTimeout(r, 5));
+    if (idx % 8 === 0) await new Promise(r => setTimeout(r, 10));
   }
 
   nfts.push(...newNFTs);
   await updateNFTsInFirebase();
   renderCollection();
 
-  let msg = `✅ ${newNFTs.length} NFTs created!`;
-  if (csvMissingReport.length) {
-    msg += ` ⚠️ ${csvMissingReport.length} tokens missing skin tone in CSV`;
-    console.warn('CSV Missing:', csvMissingReport);
-  }
-  if (missingReport.length) {
-    console.warn('404PUNKS - Missing layers in library:', missingReport);
-    msg += ` ⚠️ ${missingReport.length} value(s) missing from library (see console)`;
-  }
-  showToast(msg);
-
+  showToast(`✅ SUCCESSFULLY GENERATED ${newNFTs.length} CUSTOM CONTEXT CRYPTOPUNKS!`);
   btn.disabled = false;
   progWrap.classList.add('hidden');
-  if (isIndexLoaded) updateAllMatchBadges();
+}
+
+function isBaseCharacterValue(val) {
+  if(!val) return false;
+  let v = String(val).toLowerCase().trim();
+  return ['male','female','ape','zombie','alien font','man','woman'].some(x => v.includes(x));
 }
 
 function renderCollection() {
@@ -978,28 +794,33 @@ function renderCollection() {
   let empty = document.getElementById('nft-empty');
   let countDiv = document.getElementById('nft-count');
   if (!container) return;
+  
   let displayNFTs = filteredNFTs || nfts;
   empty.classList.toggle('hidden', displayNFTs.length > 0);
+  
   countDiv.innerHTML = displayNFTs.length
-    ? `<div class="order-tag">📊 SHOWING ${displayNFTs.length} / ${nfts.length} PUNKS</div>`
+    ? `<div class="order-tag">📁 ARCHIVE DISPATCH CONTROL: RENDERED ${displayNFTs.length} / Total ${nfts.length} CRYPTOPUNKS</div>`
     : '';
+    
   if (!displayNFTs.length) { container.innerHTML = ''; return; }
+  
   container.innerHTML = displayNFTs.map((nft, idx) => `
     <div class="nft-card" style="padding:12px;" id="card-${nft.id}">
-      <div style="aspect-ratio:1; background:#fff; margin-bottom:10px; border:2px inset #808080;">
+      <div style="aspect-ratio:1; background:#000; margin-bottom:10px; border:2px inset #808080; p-1; overflow:hidden; image-rendering: pixelated;">
         <img src="${nft.image}" style="width:100%;height:100%;object-fit:contain;">
       </div>
-      <div class="text-pixel text-[8px] text-center">${escapeHtml(nft.name)}</div>
-      <div class="text-pixel text-[7px] text-center" style="color:#808080;">${nft.gender || ''} ${nft.skinTone ? '🎨 '+nft.skinTone : ''}</div>
-      <div id="match-badge-${nft.id}">${isIndexLoaded ? '<div class="match-badge-loading">🔍 MATCHING...</div>' : '<div class="match-badge-loading">📡 LOAD INDEX...</div>'}</div>
-      <div style="display:flex; gap:5px; margin-top:8px;">
-        <button onclick="App.viewNFTDetails('${nft.id}')" class="win95-btn" style="padding:4px; font-size:7px; flex:1;">📝 EDIT</button>
-        <button onclick="App.downloadSingleImage('${nft.id}', ${idx+1})" class="win95-btn" style="padding:4px; font-size:7px; flex:1;">PNG</button>
-        <button onclick="App.downloadSingleJSON('${nft.id}', ${idx+1})" class="win95-btn" style="padding:4px; font-size:7px; flex:1;">JSON</button>
-        <button onclick="App.deleteSingleNFT('${nft.id}')" class="win95-btn" style="padding:4px; font-size:7px; flex:1; border-color:#ff4444;">DEL</button>
+      <div class="text-pixel text-[9px] text-center font-bold text-black mb-1">CryptoPunk #${nft.tokenIdRef !== undefined ? nft.tokenIdRef : idx}</div>
+      <div class="text-pixel text-[7px] text-center text-blue-900 font-bold mb-2">[Type: ${nft.skinTone || 'Unspecified'}]</div>
+      <div id="match-badge-${nft.id}"></div>
+      <div style="display:flex; gap:4px; margin-top:8px;">
+        <button onclick="App.viewNFTDetails('${nft.id}')" class="win95-btn" style="padding:4px; font-size:7px; flex:1; background:#d4d0c8;">VIEW</button>
+        <button onclick="App.downloadSingleImage('${nft.id}', ${nft.tokenIdRef})" class="win95-btn" style="padding:4px; font-size:7px; flex:1; background:#b8b4a6;">PNG</button>
+        <button onclick="App.downloadSingleJSON('${nft.id}', ${nft.tokenIdRef})" class="win95-btn" style="padding:4px; font-size:7px; flex:1; background:#b8b4a6;">JSON</button>
+        <button onclick="App.deleteSingleNFT('${nft.id}')" class="win95-btn" style="padding:4px; font-size:7px; flex:0.4; border-color:#ff4444; color:red;">✕</button>
       </div>
     </div>`).join('');
-  if (isIndexLoaded) updateAllMatchBadges();
+    
+  updateAllMatchBadges();
 }
 
 function searchNFTs() {
@@ -1008,11 +829,12 @@ function searchNFTs() {
   if (searchVal.includes('-')) {
     let parts = searchVal.split('-');
     let start = parseInt(parts[0]), end = parseInt(parts[1]);
-    if (!isNaN(start) && !isNaN(end)) filteredNFTs = nfts.filter((_, idx) => { let n = idx+1; return n >= start && n <= end; });
-    else { filteredNFTs = null; showToast('INVALID RANGE'); }
+    if (!isNaN(start) && !isNaN(end)) {
+      filteredNFTs = nfts.filter(nft => nft.tokenIdRef >= start && nft.tokenIdRef <= end);
+    } else { showToast('RANGE INVALID'); }
   } else {
     let single = parseInt(searchVal);
-    if (!isNaN(single)) filteredNFTs = nfts.filter((_, idx) => (idx+1) === single);
+    if (!isNaN(single)) filteredNFTs = nfts.filter(nft => nft.tokenIdRef === single);
     else filteredNFTs = null;
   }
   renderCollection();
@@ -1021,88 +843,53 @@ function searchNFTs() {
 function clearSearch() { filteredNFTs = null; document.getElementById('search-range').value = ''; renderCollection(); }
 
 async function deleteAllNFTs() {
-  if (confirm('⚠️ Delete ALL NFTs?')) {
-    nfts = [];
-    await updateNFTsInFirebase();
-    renderCollection();
-    showToast('ALL NFTs DELETED');
+  if (confirm('🚨 CRITICAL COMPLIANCE WIPE: Reset graphics engine array cache?')) {
+    nfts = []; await updateNFTsInFirebase(); renderCollection(); showToast('CACHE RESET CLEAR.');
   }
 }
 
 async function deleteSingleNFT(id) {
-  if (confirm('Delete this NFT?')) {
-    nfts = nfts.filter(x => x.id != id);
-    await updateNFTsInFirebase();
-    renderCollection();
-    showToast('NFT DELETED');
-  }
+  nfts = nfts.filter(x => x.id != id);
+  await updateNFTsInFirebase();
+  renderCollection();
 }
 
 async function downloadAllPNG() {
-  if (!nfts.length) { showToast('No NFTs found!'); return; }
-  showToast(`⬇ Downloading ${nfts.length} PNGs...`);
+  if (!nfts.length) return;
   for (let i = 0; i < nfts.length; i++) {
     let a = document.createElement('a');
     a.href = nfts[i].image;
-    a.download = `${i + 1}.png`;
-    document.body.appendChild(a);
+    a.download = `${nfts[i].tokenIdRef !== undefined ? nfts[i].tokenIdRef : i}.png`;
     a.click();
-    document.body.removeChild(a);
-    await new Promise(r => setTimeout(r, 80));
+    await new Promise(r => setTimeout(r, 60));
   }
-  showToast(`✅ ${nfts.length} PNG download started!`);
 }
 
 async function downloadAllJSON() {
-  if (!nfts.length) { showToast('No NFTs found!'); return; }
-  showToast(`⬇ Downloading ${nfts.length} JSONs...`);
+  if (!nfts.length) return;
   for (let i = 0; i < nfts.length; i++) {
     let meta = { name: nfts[i].name, description: nfts[i].description, attributes: nfts[i].attributes };
     let blob = new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' });
     let url = URL.createObjectURL(blob);
     let a = document.createElement('a');
     a.href = url;
-    a.download = `${i + 1}.json`;
-    document.body.appendChild(a);
+    a.download = `${nfts[i].tokenIdRef !== undefined ? nfts[i].tokenIdRef : i}.json`;
     a.click();
-    document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    await new Promise(r => setTimeout(r, 80));
+    await new Promise(r => setTimeout(r, 60));
   }
-  showToast(`✅ ${nfts.length} JSON download started!`);
 }
 
 async function downloadAllAsZip() {
-  if (!nfts.length) { showToast('No NFTs found!'); return; }
-  showToast(`⬇ Downloading ${nfts.length} PNG + JSON...`);
-  for (let i = 0; i < nfts.length; i++) {
-    let serial = i + 1;
-    let a = document.createElement('a');
-    a.href = nfts[i].image;
-    a.download = `${serial}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    await new Promise(r => setTimeout(r, 40));
-
-    let meta = { name: nfts[i].name, description: nfts[i].description, attributes: nfts[i].attributes };
-    let blob = new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' });
-    let url = URL.createObjectURL(blob);
-    let b = document.createElement('a');
-    b.href = url;
-    b.download = `${serial}.json`;
-    document.body.appendChild(b);
-    b.click();
-    document.body.removeChild(b);
-    URL.revokeObjectURL(url);
-    await new Promise(r => setTimeout(r, 40));
-  }
-  showToast('✅ Download started!');
+  if (!nfts.length) { showToast('HODL vault empty.'); return; }
+  showToast('🔄 Initializing continuous batch stream downloader...');
+  await downloadAllPNG();
+  await downloadAllJSON();
 }
 
 function downloadSingleImage(id, serial) {
   let n = nfts.find(x => x.id == id);
-  if (n) { let a = document.createElement('a'); a.href = n.image; a.download = `${serial || n.name.replace(/[^a-z0-9]/gi,'_')}.png`; a.click(); showToast('PNG SAVED'); }
+  if (n) { let a = document.createElement('a'); a.href = n.image; a.download = `${serial !== undefined ? serial : 'punk'}.png`; a.click(); }
 }
 
 function downloadSingleJSON(id, serial) {
@@ -1110,11 +897,7 @@ function downloadSingleJSON(id, serial) {
   if (n) {
     let meta = { name: n.name, description: n.description, attributes: n.attributes };
     let blob = new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' });
-    let a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `${serial || n.name.replace(/[^a-z0-9]/gi,'_')}.json`;
-    a.click();
-    showToast('JSON SAVED');
+    let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${serial !== undefined ? serial : 'punk'}.json`; a.click();
   }
 }
 
@@ -1123,15 +906,15 @@ async function addLayer() {
   let val = document.getElementById('layer-value').value.trim();
   let section = document.getElementById('layer-section').value;
   let gender = document.querySelector('input[name="layer-gender"]:checked').value;
-  if (!url || !val) { showToast('URL + VALUE NEEDED'); return; }
+  if (!url || !val) { showToast('Parameter properties incomplete.'); return; }
+  
   let imgUrl = url;
   if (imgUrl.includes('github.com') && !imgUrl.includes('raw.githubusercontent.com'))
     imgUrl = imgUrl.replace('github.com','raw.githubusercontent.com').replace('/blob/','/');
-  let newLayer = { id: Date.now()+'_'+Math.random().toString(36).substr(2,6), value: val, imageUrl: imgUrl, gender };
-  let test = new Image();
-  test.onload = () => addLayerToFirebase(section, newLayer);
-  test.onerror = () => showToast('BAD IMAGE URL');
-  test.src = imgUrl;
+    
+  let newLayer = { id: 'layer_'+Date.now()+'_'+Math.floor(Math.random()*1000), value: val, imageUrl: imgUrl, gender };
+  await addLayerToFirebase(section, newLayer);
+  document.getElementById('layer-value').value = '';
 }
 
 function switchTab(tab) {
@@ -1139,158 +922,53 @@ function switchTab(tab) {
     document.getElementById('panel-' + t).classList.toggle('hidden', t !== tab);
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
-  if (tab === 'create') { renderCreateSections(); updateLivePreview(); }
+  if (tab === 'create') updateLivePreview();
   if (tab === 'collection') renderCollection();
 }
 
-async function viewNFTDetails(id) {
- try {
+function viewNFTDetails(id) {
   let nft = nfts.find(n => n.id === id);
-  if (!nft) { showToast('⚠️ NFT not found'); return; }
-  if (!nft.layers) nft.layers = [];
-
+  if (!nft) return;
+  
   let existingModal = document.getElementById('nft-modal-' + id);
   if (existingModal) existingModal.remove();
 
   let modal = document.createElement('div');
   modal.id = 'nft-modal-' + id;
-  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;overflow:auto;padding:20px;';
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;';
 
-  let layersHtml = nft.layers.map((l, idx) =>
-    `<div class="layer-row"><span>${idx+1}. <strong>${l.section}</strong>: ${escapeHtml(l.value)}</span>
-    <div>
-      <button onclick="App.editNFTLayer('${id}',${idx},'up')" class="move-btn">▲</button>
-      <button onclick="App.editNFTLayer('${id}',${idx},'down')" class="move-btn">▼</button>
-      <button onclick="App.deleteNFTLayer('${id}',${idx})" class="move-btn" style="border-color:#ff4444;">✕</button>
-    </div></div>`
+  let attrsHtml = nft.attributes.map(a => 
+    `<div style="background:#e4e0d8; padding:6px; border:1px inset #fff; font-family:'Press Start 2P'; font-size:7px; color:#000; margin-bottom:4px;">
+      <strong>${escapeHtml(a.trait_type)}:</strong> ${escapeHtml(a.value)}
+    </div>`
   ).join('');
 
-  let libraryOptionsHtml = `<option value="">-- SELECT LAYER TO ADD --</option>`;
-  SECTIONS_ORDER.forEach(s => {
-    let available = layersBySection[s] || [];
-    let genderFiltered = available.filter(l => l.gender === 'both' || l.gender === nft.gender || !nft.gender);
-    if(genderFiltered.length > 0) {
-      libraryOptionsHtml += `<optgroup label="📂 ${s}">`;
-      genderFiltered.forEach(l => {
-        libraryOptionsHtml += `<option value="${s}|||${l.value}|||${l.imageUrl}">${l.value}</option>`;
-      });
-      libraryOptionsHtml += `</optgroup>`;
-    }
-  });
-
-  const matches = isIndexLoaded ? findMatchesForNFT(nft) : [];
-  const matchHtml = matches.length > 0
-    ? `<div style="background:#006400;color:#ffff00;border:2px solid #ffff00;padding:8px;margin-bottom:10px;font-family:'Press Start 2P',monospace;font-size:8px;text-align:center;">🎯 MATCHES TOKEN ID: ${matches.map(n=>'#'+n).join(', ')}</div>`
-    : (isIndexLoaded ? `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#aa0000;background:#333;padding:6px;text-align:center;margin-bottom:8px;">❌ NO MATCH IN INDEX.JSON</div>` : `<div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#666;margin-bottom:8px;">💡 Load index first</div>`);
-
-  modal.innerHTML = `<div class="win95-window" style="width:100%;max-width:500px;max-height:90vh;overflow:auto;">
-    <div class="win95-titlebar"><span>✏️ EDIT: ${escapeHtml(nft.name)}</span><button onclick="document.getElementById('nft-modal-${id}').remove()">✕</button></div>
+  modal.innerHTML = `<div class="win95-window" style="width:100%; max-width:420px;">
+    <div class="win95-titlebar"><span>METADATA MATRIX INSPECTOR</span><button onclick="document.getElementById('nft-modal-${id}').remove()">✕</button></div>
     <div class="win95-content">
-      <div style="display:flex;justify-content:center;margin-bottom:10px;">
-        <img src="${nft.image}" style="width:200px;height:200px;object-fit:contain;border:3px outset #808080;background:#fff;">
+      <div style="display:flex; justify-content:center; margin-bottom:15px; background:#000; padding:10px; border:2px inset #808080;">
+        <img src="${nft.image}" style="width:180px; height:180px; object-fit:contain; image-rendering:pixelated;">
       </div>
-      ${matchHtml}
-
-      <div class="text-pixel text-[8px] mb-2" style="color:#000080;">➕ ADD LAYER FROM LIBRARY</div>
-      <select id="add-layer-select-${id}" class="win95-select w-full mb-4" onchange="App.addLayerToNFT('${id}', this.value)">
-        ${libraryOptionsHtml}
-      </select>
-
-      <div class="text-pixel text-[8px] mb-2">CURRENT LAYERS (Bottom → Top)</div>
-      <div style="max-height:200px;overflow:auto;background:#a0a0a0;padding:6px;border:2px inset #808080;">${layersHtml || '<div class="text-center text-pixel text-[8px] py-4">[ NO LAYERS ]</div>'}</div>
-
-      <div class="flex gap-3 mt-4">
-        <button onclick="App.downloadSingleImage('${id}');document.getElementById('nft-modal-${id}').remove()" class="win95-btn flex-1">📸 PNG</button>
-        <button onclick="App.downloadSingleJSON('${id}');document.getElementById('nft-modal-${id}').remove()" class="win95-btn flex-1">📄 JSON</button>
-      </div>
+      <div class="text-pixel text-[10px] text-black font-bold mb-2">CryptoPunk #${nft.tokenIdRef} Attributes:</div>
+      <div style="max-height:160px; overflow-y:auto; background:#808080; padding:8px; border:2px inset #000;">${attrsHtml}</div>
     </div></div>`;
   document.body.appendChild(modal);
- } catch(err) {
-   console.error('viewNFTDetails error:', err);
-   showToast('❌ Could not open EDIT: ' + err.message);
- }
-}
-
-async function addLayerToNFT(nftId, combinedValue) {
-  if (!combinedValue) return;
-  let nft = nfts.find(n => n.id === nftId);
-  if (!nft) return;
-
-  let [section, value, imageUrl] = combinedValue.split('|||');
-  if (!nft.layers) nft.layers = [];
-
-  nft.layers.push({
-    section,
-    value,
-    imageUrl,
-    selectionOrder: nft.layers.length
-  });
-
-  let imgData = await compositeFromLayers(nft.layers);
-  nft.image = imgData;
-  nft.attributes = buildNFTAttributes(nft.layers);
-
-  await updateNFTsInFirebase();
-  renderCollection();
-  showToast('LAYER ADDED SUCCESSFULLY');
-  viewNFTDetails(nftId);
-}
-
-async function editNFTLayer(nftId, layerIndex, direction) {
-  let nft = nfts.find(n => n.id === nftId);
-  if (!nft || !nft.layers) return;
-  let newLayers = [...nft.layers];
-  if (direction === 'up' && layerIndex > 0) [newLayers[layerIndex], newLayers[layerIndex-1]] = [newLayers[layerIndex-1], newLayers[layerIndex]];
-  else if (direction === 'down' && layerIndex < newLayers.length-1) [newLayers[layerIndex], newLayers[layerIndex+1]] = [newLayers[layerIndex+1], newLayers[layerIndex]];
-  else return;
-  newLayers.forEach((l, idx) => l.selectionOrder = idx);
-  nft.layers = newLayers;
-  let imgData = await compositeFromLayers(newLayers);
-  nft.image = imgData;
-  nft.attributes = buildNFTAttributes(newLayers);
-  await updateNFTsInFirebase();
-  renderCollection();
-  showToast('LAYER MOVED');
-  viewNFTDetails(nftId);
-}
-
-async function deleteNFTLayer(nftId, layerIndex) {
-  let nft = nfts.find(n => n.id === nftId);
-  if (!nft || !nft.layers) return;
-  let removed = nft.layers[layerIndex];
-  if (confirm(`DELETE "${removed.section}: ${removed.value}"?`)) {
-    nft.layers.splice(layerIndex, 1);
-    nft.layers.forEach((l, idx) => l.selectionOrder = idx);
-    let imgData = await compositeFromLayers(nft.layers);
-    nft.image = imgData;
-    nft.attributes = buildNFTAttributes(nft.layers);
-    await updateNFTsInFirebase();
-    renderCollection();
-    showToast('REMOVED');
-    viewNFTDetails(nftId);
-  }
 }
 
 window.App = {
   switchTab, loadIndexJSON, deleteAllMatched,
   toggleSectionLayers: (s) => { openSectionLayers = openSectionLayers === s ? null : s; renderSections(); },
-  toggleSectionCreate: (s) => { openSectionCreate = openSectionCreate === s ? null : s; renderCreateSections(); },
-  addLayer,
-  deleteLayer: deleteLayerFromFirebase,
-  toggleLayerSelection,
-  updateProbability: updateSectionProbability,
+  addLayer, deleteLayer: deleteLayerFromFirebase,
   startMint, deleteAllNFTs,
   downloadAllPNG, downloadAllJSON, downloadAllAsZip,
   viewNFTDetails, downloadSingleImage, downloadSingleJSON, deleteSingleNFT,
-  searchNFTs, clearSearch, editNFTLayer, deleteNFTLayer, addLayerToNFT
+  searchNFTs, clearSearch
 };
 
 async function init() {
   await loadNFTsFromFirebase();
-  previewCtx = document.getElementById('live-preview-canvas')?.getContext('2d');
   listenFirebase();
-  renderCreateSections();
-  await loadIndexJSON(); // This also loads CSV
+  await loadIndexJSON();
 }
 init();
 </script>
