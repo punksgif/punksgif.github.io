@@ -303,7 +303,22 @@ async function loadIndexJSON() {
       .sort((a, b) => a - b);
     isIndexLoaded = true;
     document.getElementById('index-status').innerHTML = `<span style="color:#006400;">✅ INDEX LOADED!</span>`;
-    document.getElementById('index-stats').innerHTML = `🎯 ${totalTokens} tokens indexed — EXACT MINT এর জন্য প্রস্তুত`;
+
+    // Diagnostic: detect any trait_type names in index.json that don't match our SECTIONS_ORDER
+    let allTraitTypes = new Set();
+    for (const td of Object.values(data)) {
+      if (!td || !td.attributes) continue;
+      for (const a of td.attributes) {
+        let rawType = a && (a.trait_type || a.traitType || a.type);
+        if (rawType && String(rawType).toLowerCase().trim() !== 'attribute count') allTraitTypes.add(String(rawType));
+      }
+    }
+    let unmapped = [...allTraitTypes].filter(t => !normalizeSectionName(t));
+    let statsHtml = `🎯 ${totalTokens} tokens indexed — EXACT MINT এর জন্য প্রস্তুত`;
+    if (unmapped.length) {
+      statsHtml += `<br><span style="color:#aa0000;">⚠️ এই trait_type নামগুলো SECTIONS_ORDER-এ নেই, তাই ওই layer গুলো মিন্টে যুক্ত হবে না: ${unmapped.map(escapeHtml).join(', ')}</span>`;
+    }
+    document.getElementById('index-stats').innerHTML = statsHtml;
     updateAllMatchBadges();
   } catch(err) {
     document.getElementById('index-status').innerHTML = `<span style="color:#aa0000;">❌ FAILED: ${err.message}</span>`;
@@ -675,6 +690,13 @@ function findLayerForTrait(section, value) {
   return pool.find(l => String(l.value).toLowerCase().trim() === target) || null;
 }
 
+// Maps any trait_type spelling/case from index.json to our canonical SECTIONS_ORDER name
+function normalizeSectionName(name) {
+  if (!name) return null;
+  const target = String(name).trim().toLowerCase();
+  return SECTIONS_ORDER.find(s => s.toLowerCase() === target) || null;
+}
+
 async function startMint() {
   if (!isIndexLoaded || !indexTokenIdsSorted.length) {
     showToast('⚠️ প্রথমে Index.json লোড করুন (RELOAD বাটন চাপুন)');
@@ -722,16 +744,30 @@ async function startMint() {
     let finalLayers = [];
 
     for (let attr of attrs) {
-      if (!attr.trait_type || !attr.value) continue;
-      if (attr.trait_type.toLowerCase() === 'attribute count') continue;
-      let section = attr.trait_type;
-      if (!SECTIONS_ORDER.includes(section)) continue;
+      if (!attr) continue;
+      let rawType = attr.trait_type || attr.traitType || attr.type || '';
+      if (attr.value === undefined || attr.value === null || attr.value === '') continue;
+      if (String(rawType).toLowerCase().trim() === 'attribute count') continue;
+      let section = normalizeSectionName(rawType);
+      if (!section) {
+        missingReport.push(`#${tokenId}: অজানা সেকশন নাম "${rawType}" (value: "${attr.value}") — SECTIONS_ORDER এ নেই`);
+        continue;
+      }
       let layer = findLayerForTrait(section, attr.value);
       if (!layer) {
-        missingReport.push(`#${tokenId}: ${section} = "${attr.value}"`);
+        missingReport.push(`#${tokenId}: ${section} = "${attr.value}" লাইব্রেরিতে পাওয়া যায়নি`);
         continue;
       }
       finalLayers.push({ section, value: layer.value, imageUrl: layer.imageUrl, selectionOrder: 0 });
+    }
+
+    // Index.json সাধারণত Background কে distinguishing trait হিসেবে রাখে না, তাই সেটা আলাদাভাবে যোগ করা হচ্ছে
+    if (!finalLayers.some(l => l.section === 'Background')) {
+      let bgPool = layersBySection['Background'] || [];
+      if (bgPool.length) {
+        let bg = bgPool[0];
+        finalLayers.push({ section: 'Background', value: bg.value, imageUrl: bg.imageUrl, selectionOrder: -1 });
+      }
     }
 
     // Force fixed compositing order: Background(bottom) -> ... -> Eyes(top)
@@ -947,8 +983,10 @@ function switchTab(tab) {
 }
 
 async function viewNFTDetails(id) {
+ try {
   let nft = nfts.find(n => n.id === id);
-  if (!nft) return;
+  if (!nft) { showToast('⚠️ NFT পাওয়া যায়নি'); return; }
+  if (!nft.layers) nft.layers = [];
   
   let existingModal = document.getElementById('nft-modal-' + id);
   if (existingModal) existingModal.remove();
@@ -1006,6 +1044,10 @@ async function viewNFTDetails(id) {
       </div>
     </div></div>`;
   document.body.appendChild(modal);
+ } catch(err) {
+   console.error('viewNFTDetails error:', err);
+   showToast('❌ EDIT খুলতে সমস্যা হয়েছে: ' + err.message);
+ }
 }
 
 async function addLayerToNFT(nftId, combinedValue) {
