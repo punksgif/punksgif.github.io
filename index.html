@@ -594,9 +594,9 @@ async function updateLivePreview() {
     if (c) previewCtx = c.getContext('2d');
     else return;
   }
+  // Clear with TRANSPARENT background (no fill)
   previewCtx.clearRect(0, 0, 128, 128);
-  previewCtx.fillStyle = '#ffffff';
-  previewCtx.fillRect(0, 0, 128, 128);
+  // Do NOT fill with white — now transparent
   let all = getAllSelectedLayersInOrder();
   for (let l of all) {
     await new Promise(res => {
@@ -609,12 +609,14 @@ async function updateLivePreview() {
   }
 }
 
+// IMPORTANT: compositeFromLayers now returns transparent background (no white fill)
 async function compositeFromLayers(layers, w = 512, h = 512) {
   let canvas = document.createElement('canvas');
   canvas.width = w; canvas.height = h;
   let ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, w, h);
+  // DO NOT fill with background color — keep transparent
+  // ctx.fillStyle = '#ffffff';  // removed
+  // ctx.fillRect(0, 0, w, h);   // removed
   for (let l of layers) {
     await new Promise(res => {
       let img = new Image();
@@ -982,8 +984,8 @@ function renderCollection() {
   if (!displayNFTs.length) { container.innerHTML = ''; return; }
   container.innerHTML = displayNFTs.map((nft, idx) => `
     <div class="nft-card" style="padding:12px;" id="card-${nft.id}">
-      <div style="aspect-ratio:1; background:#fff; margin-bottom:10px; border:2px inset #808080;">
-        <img src="${nft.image}" style="width:100%;height:100%;object-fit:contain;">
+      <div style="aspect-ratio:1; background: #fff; margin-bottom:10px; border:2px inset #808080; display: flex; align-items: center; justify-content: center;">
+        <img src="${nft.image}" style="width:100%;height:100%;object-fit:contain; background: transparent;">
       </div>
       <div class="text-pixel text-[8px] text-center">${escapeHtml(nft.name)}</div>
       <div class="text-pixel text-[7px] text-center" style="color:#808080;">${nft.gender || ''} ${nft.baseUsed ? '🎨 '+nft.baseUsed : ''}</div>
@@ -1114,7 +1116,7 @@ async function viewNFTDetails(id) {
     <div class="win95-titlebar"><span>✏️ EDIT: ${escapeHtml(nft.name)}</span><button onclick="document.getElementById('nft-modal-${id}').remove()">✕</button></div>
     <div class="win95-content">
       <div style="display:flex;justify-content:center;margin-bottom:10px;">
-        <img src="${nft.image}" style="width:200px;height:200px;object-fit:contain;border:3px outset #808080;background:#fff;">
+        <img src="${nft.image}" style="width:200px;height:200px;object-fit:contain;border:3px outset #808080;background: transparent;">
       </div>
 
       <div class="text-pixel text-[8px] mb-2" style="color:#000080;">➕ ADD LAYER FROM LIBRARY</div>
