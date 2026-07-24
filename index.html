@@ -831,6 +831,15 @@ async function startMintFromCSV() {
 }
 
 // ============================================================
+// TRANSPARENT EXPORT HELPER (background layer excluded on download only)
+// ============================================================
+async function compositeForExport(nft) {
+  let layers = (nft.layers || []).filter(l => l.section !== 'Background');
+  if (!layers.length) return nft.image;
+  return await compositeFromLayers(layers);
+}
+
+// ============================================================
 // ZIP DOWNLOAD FUNCTIONS - FIXED
 // ============================================================
 function dataURLtoBlob(dataURL) {
@@ -862,12 +871,13 @@ async function downloadAllPNG() {
     const zip = new JSZip();
     const folder = zip.folder('nfts_png');
     
-    showToast(`📦 Zipping ${nfts.length} PNGs...`);
+    showToast(`📦 Zipping ${nfts.length} PNGs (transparent bg)...`);
     
     for (let i = 0; i < nfts.length; i++) {
       const nft = nfts[i];
       const fileName = `${i + 1}.png`;
-      const blob = dataURLtoBlob(nft.image);
+      const transparentImage = await compositeForExport(nft);
+      const blob = dataURLtoBlob(transparentImage);
       folder.file(fileName, blob);
       
       if (i % 50 === 0 && i > 0) {
@@ -878,7 +888,7 @@ async function downloadAllPNG() {
     
     const content = await zip.generateAsync({ type: 'blob' });
     saveAs(content, `nfts_png_${Date.now()}.zip`);
-    showToast(`✅ ${nfts.length} PNGs downloaded as ZIP!`);
+    showToast(`✅ ${nfts.length} PNGs downloaded as ZIP (transparent bg)!`);
   } catch(err) {
     console.error(err);
     showToast('❌ ZIP creation failed: ' + err.message);
@@ -943,13 +953,14 @@ async function downloadAllAsZip() {
     const pngFolder = zip.folder('png');
     const jsonFolder = zip.folder('json');
     
-    showToast(`📦 Zipping ${nfts.length} PNG + JSON...`);
+    showToast(`📦 Zipping ${nfts.length} PNG (transparent bg) + JSON...`);
     
     for (let i = 0; i < nfts.length; i++) {
       const nft = nfts[i];
       const fileName = `${i + 1}`;
       
-      const pngBlob = dataURLtoBlob(nft.image);
+      const transparentImage = await compositeForExport(nft);
+      const pngBlob = dataURLtoBlob(transparentImage);
       pngFolder.file(`${fileName}.png`, pngBlob);
       
       const meta = { 
@@ -967,7 +978,7 @@ async function downloadAllAsZip() {
     
     const content = await zip.generateAsync({ type: 'blob' });
     saveAs(content, `nfts_png_json_${Date.now()}.zip`);
-    showToast(`✅ ${nfts.length} PNG + JSON downloaded as ZIP!`);
+    showToast(`✅ ${nfts.length} PNG (transparent bg) + JSON downloaded as ZIP!`);
   } catch(err) {
     console.error(err);
     showToast('❌ ZIP creation failed: ' + err.message);
@@ -1040,17 +1051,18 @@ async function deleteSingleNFT(id) {
   }
 }
 
-function downloadSingleImage(id, serial) {
+async function downloadSingleImage(id, serial) {
   let n = nfts.find(x => x.id == id);
   if (n) {
     try {
+      const transparentImage = await compositeForExport(n);
       let a = document.createElement('a');
-      a.href = n.image;
+      a.href = transparentImage;
       a.download = `${serial || n.name.replace(/[^a-z0-9]/gi,'_')}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      showToast('PNG SAVED');
+      showToast('PNG SAVED (transparent bg)');
     } catch(e) {
       showToast('❌ Download failed: ' + e.message);
     }
